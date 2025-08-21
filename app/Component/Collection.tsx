@@ -30,7 +30,7 @@ const Collection = () => {
         {collectionItems.map((item, index) => (
           <button 
             key={index} 
-            className="border px-4 py-2 font-general uppercase text-sm rounded-lg hover:bg-black hover:text-white transition"
+            className="border px-4 py-2 font-general uppercase text-sm rounded-lg hover:bg-zinc-800 hover:text-white transition"
           >
             {item.title}
           </button>

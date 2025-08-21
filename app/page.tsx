@@ -4,6 +4,7 @@ import Hero from './Component/Hero'
 import Explore from './Component/Explore'
 import Collection from './Component/Collection'
 import Promotion from './Component/Promotion'
+import Footer from './Component/Footer'
 
 const page = () => {
   return (
@@ -13,6 +14,7 @@ const page = () => {
       <Explore/>
       <Collection/>
       <Promotion/>
+      <Footer/>
     </div>
   )
 }

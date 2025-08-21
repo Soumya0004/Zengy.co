@@ -3,7 +3,7 @@ import React from "react";
 
 const Hero = () => {
   return (
-    <main className="grid grid-cols-1 md:grid-cols-[1.1fr_0.9fr] items-center bg-white text-black 
+    <main className="grid grid-cols-1 md:grid-cols-[1.1fr_0.9fr] items-center bg-white text-zinc-800 
     px-4 sm:px-8 md:px-12 lg:px-28 pt-8 sm:pt-12 md:py-20 lg:pt-10">
       {/* Left Content */}
       <div className="flex flex-col justify-center space-y-4 sm:space-y-6 items-center md:items-start text-center md:text-left lg:pl-10">
@@ -13,17 +13,17 @@ const Hero = () => {
           <span className="block md:ml-7"><b>M</b>o<b>v</b>es Wi<b>th</b> Y<b>o</b>u</span>
         </h1>
 
-        <p className="text-sm sm:text-base md:text-md lg:text-lg text-black max-w-xl font-circular-web md:ml-7">
+        <p className="text-sm sm:text-base md:text-md lg:text-lg text-zinc-800 max-w-xl font-circular-web md:ml-7">
           At Zengy.go, we create fashion that moves with you comfortable, stylish,
           and bold clothing designed for everyday energy and confidence.
         </p>
 
         {/* Desktop & Tablet Buttons */}
         <div className="hidden md:flex gap-4 pt-4 md:ml-7 ">
-          <button className="bg-black text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-900 transition">
+          <button className="bg-zinc-800 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-900 transition">
             Buy Product
           </button>
-          <button className="border border-black text-black px-6 py-3 rounded-xl font-semibold hover:bg-gray-100 transition">
+          <button className="border border-black text-zinc-800 px-6 py-3 rounded-xl font-semibold hover:bg-gray-100 transition">
             Explore Product
           </button>
         </div>
@@ -44,10 +44,10 @@ const Hero = () => {
 
         {/* Mobile Buttons */}
         <div className="flex md:hidden flex-col sm:flex-row gap-4 mt-6 w-full justify-center">
-          <button className="bg-black text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-900 transition w-full sm:w-auto">
+          <button className="bg-zinc-800 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-900 transition w-full sm:w-auto">
             Buy Product
           </button>
-          <button className="border border-black text-black px-6 py-3 rounded-xl font-semibold hover:bg-gray-100 transition w-full sm:w-auto">
+          <button className="border border-black text-zinc-800 px-6 py-3 rounded-xl font-semibold hover:bg-gray-100 transition w-full sm:w-auto">
             Explore Product
           </button>
         </div>

@@ -15,7 +15,7 @@ const Explore = () => {
             fill
     className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
-          <button className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white text-black px-4 py-2 rounded-md font-medium shadow hover:bg-gray-100">
+          <button className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white text-zinc-800 px-4 py-2 rounded-md font-medium shadow hover:bg-gray-100">
             Explore Now
           </button>
         </div>
@@ -29,7 +29,7 @@ const Explore = () => {
     className="object-cover transition-transform duration-300 group-hover:scale-105"
   />
 
-  <button className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white text-black px-4 py-2 rounded-md font-medium shadow hover:bg-gray-100">
+  <button className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white text-zinc-800 px-4 py-2 rounded-md font-medium shadow hover:bg-gray-100">
     Explore Now
   </button>
 </div>
@@ -47,14 +47,14 @@ const Explore = () => {
               height={240}
               className="object-cover w-full h-[250px] md:h-[270px] transition-transform duration-300 group-hover:scale-105"
             />
-            <div className="absolute top-4 left-4 text-black">
+            <div className="absolute top-4 left-4 text-zinc-800">
               <p className="text-md uppercase special-font font-zentry -tracking-tight ">
                 Wi<b>nt</b>er Coll<b>e</b>cti<b>on</b>
               </p>
               <h3 className="font-semibold text-lg">
                 Stylish Winter T-Shirt for Men
               </h3>
-              <button className="mt-2 border border-black px-3 py-1 text-sm rounded-md hover:bg-black hover:text-white">
+              <button className="mt-2 border border-black px-3 py-1 text-sm rounded-md hover:bg-zinc-800 hover:text-white">
                 Check Now
               </button>
             </div>
@@ -76,7 +76,7 @@ const Explore = () => {
               <h3 className="font-semibold text-lg">
                 Stylish Winter Shirt for Man
               </h3>
-              <button className="mt-2 border border-black px-3 py-1 text-sm rounded-md hover:bg-black hover:text-white text-black">
+              <button className="mt-2 border border-black px-3 py-1 text-sm rounded-md hover:bg-zinc-800 hover:text-white text-zinc-800">
                 Check Now
               </button>
             </div>

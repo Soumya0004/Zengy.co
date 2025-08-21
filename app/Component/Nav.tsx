@@ -16,7 +16,7 @@ const Nav = () => {
   ];
 
   return (
-    <nav className="w-full bg-white text-black shadow-sm ">
+    <nav className="w-full bg-white text-zinc-800 shadow-sm ">
       <div className="max-w-8xl mx-auto px-4 md:px-10 py-5 flex items-center justify-between ">
         {/* Left: desktop nav links */}
         <div className="hidden md:flex items-center gap-6">
