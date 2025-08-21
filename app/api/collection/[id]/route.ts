@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
-import Collection from "@/app/Component/Collection";
 import Collections from "@/models/Collections";
 
 // ✅ Get single collection by ID
