@@ -9,7 +9,6 @@ const Footer = () => {
       <div className="container mx-auto px-6 md:px-12">
         {/* Grid Layout */}
         <div className="grid grid-cols-1  md:grid-cols-3 gap-10 text-center md:text-left">
-          
           {/* Logo Section */}
           <div>
             <Image
@@ -30,17 +29,21 @@ const Footer = () => {
               Information
             </h2>
             <div className="flex flex-col space-y-2 text-sm">
-              <Link href="/privacy-policy" className="hover:text-white">Privacy Policy</Link>
-              <Link href="/about-us" className="hover:text-white">About Us</Link>
-              <Link href="/contact-us" className="hover:text-white">Contact Us</Link>
+              <Link href="/privacy-policy" className="hover:text-white">
+                Privacy Policy
+              </Link>
+              <Link href="/about-us" className="hover:text-white">
+                About Us
+              </Link>
+              <Link href="/contact-us" className="hover:text-white">
+                Contact Us
+              </Link>
             </div>
           </div>
 
           {/* Services Section */}
           <div>
-            <h2 className="text-lg font-semibold text-white mb-4">
-              Services
-            </h2>
+            <h2 className="text-lg font-semibold text-white mb-4">Services</h2>
             <div className="flex flex-col space-y-2 text-sm">
               <p>COD</p>
               <p>Free Shipping</p>
@@ -51,16 +54,28 @@ const Footer = () => {
 
         {/* Social Media */}
         <div className="flex flex-wrap justify-center md:justify-end space-x-4 mt-10">
-          <Link href="#" className="p-2 bg-zinc-700 rounded-full hover:bg-white hover:text-black">
+          <Link
+            href="#"
+            className="p-2 bg-zinc-700 rounded-full hover:bg-white hover:text-black"
+          >
             <Facebook size={18} />
           </Link>
-          <Link href="#" className="p-2 bg-zinc-700 rounded-full hover:bg-white hover:text-black">
+          <Link
+            href="#"
+            className="p-2 bg-zinc-700 rounded-full hover:bg-white hover:text-black"
+          >
             <Twitter size={18} />
           </Link>
-          <Link href="#" className="p-2 bg-zinc-700 rounded-full hover:bg-white hover:text-black">
+          <Link
+            href="#"
+            className="p-2 bg-zinc-700 rounded-full hover:bg-white hover:text-black"
+          >
             <Instagram size={18} />
           </Link>
-          <Link href="#" className="p-2 bg-zinc-700 rounded-full hover:bg-white hover:text-black">
+          <Link
+            href="#"
+            className="p-2 bg-zinc-700 rounded-full hover:bg-white hover:text-black"
+          >
             <Linkedin size={18} />
           </Link>
         </div>

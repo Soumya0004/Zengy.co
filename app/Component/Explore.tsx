@@ -6,14 +6,13 @@ const Explore = () => {
     <div className="px-6 md:px-12 py-16">
       {/* Responsive grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        
         {/* Card 1 */}
         <div className="relative rounded-xl overflow-hidden shadow-md group h-[300px] md:h-[565px] w-full">
           <Image
             src="/img10.jpg"
             alt="Image 1"
             fill
-    className="object-cover transition-transform duration-300 group-hover:scale-105"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
           <button className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white text-zinc-800 px-4 py-2 rounded-md font-medium shadow hover:bg-gray-100">
             Explore Now
@@ -22,22 +21,20 @@ const Explore = () => {
 
         {/* Card 2 */}
         <div className="relative rounded-xl overflow-hidden shadow-md group h-[300px] md:h-[565px] w-full">
-  <Image
-    src="/img11.jpg"
-    alt="Image 2"
-    fill
-    className="object-cover transition-transform duration-300 group-hover:scale-105"
-  />
+          <Image
+            src="/img11.jpg"
+            alt="Image 2"
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+          />
 
-  <button className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white text-zinc-800 px-4 py-2 rounded-md font-medium shadow hover:bg-gray-100">
-    Explore Now
-  </button>
-</div>
-
+          <button className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white text-zinc-800 px-4 py-2 rounded-md font-medium shadow hover:bg-gray-100">
+            Explore Now
+          </button>
+        </div>
 
         {/* Right Side (2 stacked cards) */}
         <div className="flex flex-col gap-6">
-          
           {/* Top small card */}
           <div className="relative rounded-xl overflow-hidden shadow-md group">
             <Image
@@ -81,7 +78,6 @@ const Explore = () => {
               </button>
             </div>
           </div>
-
         </div>
       </div>
     </div>

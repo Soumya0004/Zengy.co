@@ -3,19 +3,26 @@ import React from "react";
 
 const Hero = () => {
   return (
-    <main className="grid grid-cols-1 md:grid-cols-[1.1fr_0.9fr] items-center bg-white text-zinc-800 
-    px-4 sm:px-8 md:px-12 lg:px-28 pt-8 sm:pt-12 md:py-20 lg:pt-10">
+    <main
+      className="grid grid-cols-1 md:grid-cols-[1.1fr_0.9fr] items-center bg-white text-zinc-800 
+    px-4 sm:px-8 md:px-12 lg:px-28 pt-8 sm:pt-12 md:py-20 lg:pt-10"
+    >
       {/* Left Content */}
       <div className="flex flex-col justify-center space-y-4 sm:space-y-6 items-center md:items-start text-center md:text-left lg:pl-10">
-        <h1 className="special-font font-zentry font-bold   
-        text-3xl sm:text-5xl md:text-5xl lg:text-7xl -tracking-tight">
+        <h1
+          className="special-font font-zentry font-bold   
+        text-3xl sm:text-5xl md:text-5xl lg:text-7xl -tracking-tight"
+        >
           <b>F</b>as<b>h</b>ion T<b>ha</b>t <br />
-          <span className="block md:ml-7"><b>M</b>o<b>v</b>es Wi<b>th</b> Y<b>o</b>u</span>
+          <span className="block md:ml-7">
+            <b>M</b>o<b>v</b>es Wi<b>th</b> Y<b>o</b>u
+          </span>
         </h1>
 
         <p className="text-sm sm:text-base md:text-md lg:text-lg text-zinc-800 max-w-xl font-circular-web md:ml-7">
-          At Zengy.go, we create fashion that moves with you comfortable, stylish,
-          and bold clothing designed for everyday energy and confidence.
+          At Zengy.go, we create fashion that moves with you comfortable,
+          stylish, and bold clothing designed for everyday energy and
+          confidence.
         </p>
 
         {/* Desktop & Tablet Buttons */}

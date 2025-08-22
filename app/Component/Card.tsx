@@ -21,7 +21,7 @@ const Card = () => {
   useEffect(() => {
     const fetchCollections = async () => {
       try {
-        const res = await axios.get("/api/collection"); 
+        const res = await axios.get("/api/collection");
         setCollections(res.data);
       } catch (err) {
         console.error("Failed to fetch collections:", err);
@@ -50,8 +50,10 @@ const Card = () => {
           />
 
           {/* Hover Overlay */}
-          <div className="absolute inset-0 bg-zinc-800/40 backdrop-blur-md flex flex-col items-center justify-center 
-              opacity-0 group-hover:opacity-100 transition duration-300 font-robert-medium">
+          <div
+            className="absolute inset-0 bg-zinc-800/40 backdrop-blur-md flex flex-col items-center justify-center 
+              opacity-0 group-hover:opacity-100 transition duration-300 font-robert-medium"
+          >
             <h2 className="text-white text-lg sm:text-xl">{item.title}</h2>
             <p className="text-white font-semibold mt-1">₹ {item.price}</p>
 
