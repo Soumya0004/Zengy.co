@@ -11,11 +11,13 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { signIn } from "next-auth/react"; // ✅ import signIn
 
 export default function SignUpCard({ onSwitch }: { onSwitch: () => void }) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Sign Up submitted");
+    // 🔹 here you can call your backend API if you want to handle manual sign up
   };
 
   return (
@@ -57,9 +59,15 @@ export default function SignUpCard({ onSwitch }: { onSwitch: () => void }) {
       </CardContent>
 
       <CardFooter className="flex flex-col gap-3">
-        <Button variant="outline" className="w-full">
+        {/* 🔹 Google sign up (actually works same as login with Google) */}
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => signIn("google", { callbackUrl: "/" })}
+        >
           Sign Up with Google
         </Button>
+
         <p className="text-sm text-muted-foreground text-center">
           Already have an account?{" "}
           <button

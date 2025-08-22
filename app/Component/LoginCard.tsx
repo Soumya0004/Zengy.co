@@ -12,12 +12,13 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { signIn } from "next-auth/react"; // ✅ import signIn
 
 export default function LoginCard({ onSwitch }: { onSwitch: () => void }) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Login submitted");
-    // 🔹 call backend API here
+    // 🔹 If you want, call your backend API here for email+password auth
   };
 
   return (
@@ -63,7 +64,12 @@ export default function LoginCard({ onSwitch }: { onSwitch: () => void }) {
       </CardContent>
 
       <CardFooter className="flex-col gap-2">
-        <Button variant="outline" className="w-full">
+        {/* 🔹 Google login */}
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => signIn("google", { callbackUrl: "/" })} // ✅ here
+        >
           Login with Google
         </Button>
       </CardFooter>
