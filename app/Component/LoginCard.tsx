@@ -12,27 +12,46 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { signIn } from "next-auth/react"; // ✅ import signIn
+import { signIn } from "next-auth/react"; 
+import axios from "axios";
+import { useState } from "react";
 
 export default function LoginCard({ onSwitch }: { onSwitch: () => void }) {
-  const handleSubmit = (e: React.FormEvent) => {
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.id]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login submitted");
-    // 🔹 If you want, call your backend API here for email+password auth
+    setLoading(true);
+    setMessage("");
+
+    try {
+      const res = await axios.post("/api/auth/login", form);
+
+      setMessage("✅ " + res.data.message);
+
+      // Example: redirect to profile after login success
+      setTimeout(() => {
+        window.location.href = "/profile";
+      }, 1500);
+    } catch (err: any) {
+      setMessage("❌ " + (err.response?.data?.error || "Login failed"));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
         <CardTitle>Login to your account</CardTitle>
-        <CardDescription>
-          Enter your email and password below
-        </CardDescription>
-        <CardAction>
-          <Button variant="link" onClick={onSwitch}>
-            Sign Up
-          </Button>
-        </CardAction>
+        
+        
       </CardHeader>
 
       <CardContent>
@@ -40,7 +59,14 @@ export default function LoginCard({ onSwitch }: { onSwitch: () => void }) {
           {/* Email */}
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="m@example.com" required />
+            <Input
+              id="email"
+              type="email"
+              placeholder="m@example.com"
+              value={form.email}
+              onChange={handleChange}
+              required
+            />
           </div>
 
           {/* Password */}
@@ -54,24 +80,45 @@ export default function LoginCard({ onSwitch }: { onSwitch: () => void }) {
                 Forgot your password?
               </a>
             </div>
-            <Input id="password" type="password" required />
+            <Input
+              id="password"
+              type="password"
+              value={form.password}
+              onChange={handleChange}
+              required
+            />
           </div>
 
-          <Button type="submit" className="w-full">
-            Login
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? "Logging in..." : "Login"}
           </Button>
         </form>
+        
+
+        {message && (
+          <p className="text-sm mt-3 text-center text-gray-600">{message}</p>
+        )}
       </CardContent>
 
       <CardFooter className="flex-col gap-2">
-        {/* 🔹 Google login */}
+        {/* Google login */}
         <Button
           variant="outline"
           className="w-full"
-          onClick={() => signIn("google", { callbackUrl: "/" })} // ✅ here
+          onClick={() => signIn("google", { callbackUrl: "/" })} 
         >
           Login with Google
         </Button>
+        <p className="text-sm text-muted-foreground text-center ">
+          Don&apos;t have an account?{" "}
+          <button
+            type="button"
+            onClick={onSwitch}
+            className="text-primary underline-offset-4 hover:underline"
+          >
+            Sign Up
+          </button>
+        </p>
       </CardFooter>
     </Card>
   );

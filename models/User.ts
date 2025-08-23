@@ -1,16 +1,24 @@
-import mongoose, { Schema, Document, models } from "mongoose";
+import mongoose, { Schema, models, model, InferSchemaType } from "mongoose";
 
-export interface IUser extends Document {
-  name: string;
-  email: string;
-}
-
-const UserSchema = new Schema<IUser>(
-  {
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
+const UserSchema = new Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  address: { type: String, required: true },
+  avatar: {
+    type: String,
+    default: "https://cdn-icons-png.flaticon.com/128/3177/3177440.png",
   },
-  { timestamps: true }
-);
+  role: {
+    type: String,
+    default: "user",
+    enum: ["user", "admin"],
+  },
+  favourites: [{ type: mongoose.Types.ObjectId, ref: "Collection" }],
+  cart: [{ type: mongoose.Types.ObjectId, ref: "Collection" }],
+  orders: [{ type: mongoose.Types.ObjectId, ref: "order" }],
+}, { timestamps: true });
 
-export default models.User || mongoose.model<IUser>("User", UserSchema);
+export type IUser = InferSchemaType<typeof UserSchema>;
+
+export default models.User || model<IUser>("User", UserSchema);

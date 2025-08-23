@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/mongodb";
 import Collections from "@/models/Collections";
+import { dbConnect } from "@/lib/mongodb";
 
 // ✅ GET all collections
 export async function GET() {
   try {
-    await connectDB();
+    await dbConnect();
     const collections = await Collections.find().sort({ createdAt: -1 });
     return NextResponse.json(collections);
   } catch (err) {
@@ -16,7 +16,7 @@ export async function GET() {
 // ✅ POST new collection
 export async function POST(req: Request) {
   try {
-    await connectDB();
+    await dbConnect();
     const body = await req.json();
     const { img, title, price, rating, category } = body;
 

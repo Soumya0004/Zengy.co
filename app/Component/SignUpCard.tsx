@@ -11,13 +11,41 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { signIn } from "next-auth/react"; // ✅ import signIn
+import axios from "axios";
+import { signIn } from "next-auth/react";
+import { useState } from "react";
 
 export default function SignUpCard({ onSwitch }: { onSwitch: () => void }) {
-  const handleSubmit = (e: React.FormEvent) => {
+
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    address: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.id]: e.target.value });
+  };
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Sign Up submitted");
-    // 🔹 here you can call your backend API if you want to handle manual sign up
+    setLoading(true);
+    setMessage("");
+
+    try {
+      const res = await axios.post("/api/auth/signup", form);
+
+      setMessage("✅ " + res.data.message);
+
+      setTimeout(() => {
+        onSwitch(); // switch to login form
+      }, 1500);
+    } catch (err: any) {
+      setMessage("❌ " + (err.response?.data?.error || "Signup failed"));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -32,7 +60,14 @@ export default function SignUpCard({ onSwitch }: { onSwitch: () => void }) {
           {/* Name */}
           <div className="grid gap-2">
             <Label htmlFor="name">Name</Label>
-            <Input id="name" type="text" placeholder="John Doe" required />
+            <Input
+              id="name"
+              type="text"
+              placeholder="Enter your name"
+              value={form.name}
+              onChange={handleChange}
+              required
+            />
           </div>
 
           {/* Email */}
@@ -42,6 +77,8 @@ export default function SignUpCard({ onSwitch }: { onSwitch: () => void }) {
               id="email"
               type="email"
               placeholder="m@example.com"
+              value={form.email}
+              onChange={handleChange}
               required
             />
           </div>
@@ -49,17 +86,40 @@ export default function SignUpCard({ onSwitch }: { onSwitch: () => void }) {
           {/* Password */}
           <div className="grid gap-2">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" required />
+            <Input
+              id="password"
+              type="password"
+              value={form.password}
+              onChange={handleChange}
+              required
+            />
           </div>
 
-          <Button type="submit" className="w-full">
-            Sign Up
+          {/* Address */}
+          <div className="grid gap-2">
+            <Label htmlFor="address">Address</Label>
+            <Input
+              id="address"
+              type="text"
+              placeholder="123 Main St"
+              value={form.address}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? "Signing up..." : "Sign Up"}
           </Button>
         </form>
+
+        {message && (
+          <p className="text-sm mt-3 text-center text-gray-600">{message}</p>
+        )}
       </CardContent>
 
       <CardFooter className="flex flex-col gap-3">
-        {/* 🔹 Google sign up (actually works same as login with Google) */}
+        {/* Google sign up */}
         <Button
           variant="outline"
           className="w-full"

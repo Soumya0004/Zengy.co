@@ -1,13 +1,18 @@
 "use client";
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
 import { LogIn, ShoppingCart, UserIcon, Menu, X, LogOut } from "lucide-react";
 import React, { useState } from "react";
+import Modal from "./Modal";
+import SignUpCard from "./SignUpCard"; // signup form
+import LoginCard from "./LoginCard";
 
 const Nav = () => {
   const { data: session, status } = useSession();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false); // mobile menu
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isLogin, setIsLogin] = useState(true); // toggle between login/signup
 
   const navLinks = [
     { label: "Home", href: "/" },
@@ -16,7 +21,7 @@ const Nav = () => {
     { label: "About Us", href: "/about" },
   ];
 
-  const isLogin = status === "authenticated";
+  const loggedIn = status === "authenticated";
 
   return (
     <>
@@ -45,7 +50,7 @@ const Nav = () => {
           {/* Right: Desktop Auth */}
           <div className="flex items-center gap-4">
             <div className="hidden md:flex items-center gap-5">
-              {isLogin ? (
+              {loggedIn ? (
                 <>
                   <Link href="/cart">
                     <ShoppingCart size={20} />
@@ -62,7 +67,7 @@ const Nav = () => {
                 </>
               ) : (
                 <button
-                  onClick={() => signIn("google")}
+                  onClick={() => setShowAuthModal(true)} // 👈 open modal instead
                   className="inline-flex items-center gap-2 uppercase text-sm hover:text-sky-600"
                 >
                   <LogIn size={20} /> Login
@@ -85,57 +90,62 @@ const Nav = () => {
 
         {/* Mobile Menu */}
         {open && (
-  <div className="md:hidden border-t bg-white shadow-sm">
-    <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-3">
-      {/* Mobile Nav Links */}
-      {navLinks.map((link) => (
-        <Link
-          key={link.href}
-          href={link.href}
-          className="block uppercase text-sm py-2 px-2 rounded hover:bg-gray-50"
-          onClick={() => setOpen(false)} // close menu on click
-        >
-          {link.label}
-        </Link>
-      ))}
-
-      {/* Divider */}
-      <div className="pt-2 border-t mt-2 flex items-center justify-between">
-        {isLogin ? (
-          <div className="flex items-center gap-4">
-            <Link href="/cart" aria-label="Cart">
-              <ShoppingCart size={18} />
-            </Link>
-            <Link href="/profile" aria-label="Profile">
-              <UserIcon size={18} />
-            </Link>
-            <button
-              onClick={() => {
-                setOpen(false);
-                signOut();
-              }}
-              className="text-sm text-red-600 inline-flex items-center gap-2"
-            >
-              <LogOut size={18} /> Logout
-            </button>
+          <div className="md:hidden border-t bg-white shadow-sm">
+            <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-3">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="block uppercase text-sm py-2 px-2 rounded hover:bg-gray-50"
+                  onClick={() => setOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <div className="pt-2 border-t mt-2 flex items-center justify-between">
+                {loggedIn ? (
+                  <div className="flex items-center gap-4">
+                    <Link href="/cart">
+                      <ShoppingCart size={18} />
+                    </Link>
+                    <Link href="/profile">
+                      <UserIcon size={18} />
+                    </Link>
+                    <button
+                      onClick={() => {
+                        setOpen(false);
+                        signOut();
+                      }}
+                      className="text-sm text-red-600 inline-flex items-center gap-2"
+                    >
+                      <LogOut size={18} /> Logout
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setOpen(false);
+                      setShowAuthModal(true); // 👈 open modal on mobile too
+                    }}
+                    className="inline-flex items-center gap-2 uppercase text-sm hover:text-sky-600"
+                  >
+                    <LogIn size={18} /> Login
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
-        ) : (
-          <button
-            onClick={() => {
-              setOpen(false); // close mobile menu
-              signIn("google"); // directly Google login
-            }}
-            className="inline-flex items-center gap-2 uppercase text-sm hover:text-sky-600"
-          >
-            <LogIn size={18} /> Login
-          </button>
         )}
-      </div>
-    </div>
-  </div>
-)}
-
       </nav>
+
+      {/* Auth Modal */}
+      <Modal open={showAuthModal} onClose={() => setShowAuthModal(false)}>
+        {isLogin ? (
+          <LoginCard onSwitch={() => setIsLogin(false)} />
+        ) : (
+          <SignUpCard onSwitch={() => setIsLogin(true)} />
+        )}
+      </Modal>
     </>
   );
 };
