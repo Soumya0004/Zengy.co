@@ -1,8 +1,6 @@
-"use client"; // ✅ Needed in App Router when using hooks
+"use client";
 
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
-import axios from "axios";
 
 interface Collection {
   _id: string;
@@ -14,27 +12,11 @@ interface Collection {
   rating?: number;
 }
 
-const Card = () => {
-  const [collections, setCollections] = useState<Collection[]>([]);
-  const [loading, setLoading] = useState(true);
+interface CardProps {
+  collections: Collection[];
+}
 
-  useEffect(() => {
-    const fetchCollections = async () => {
-      try {
-        const res = await axios.get("/api/collection");
-        setCollections(res.data);
-      } catch (err) {
-        console.error("Failed to fetch collections:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCollections();
-  }, []);
-
-  if (loading) return <p className="text-center py-10">Loading...</p>;
-
+const Card = ({ collections }: CardProps) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 py-10">
       {collections.map((item) => (

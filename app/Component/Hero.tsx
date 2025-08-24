@@ -1,17 +1,118 @@
+"use client";
+
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
-import React from "react";
+import React, { useEffect, useRef } from "react";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const Hero = () => {
+  const frameRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLElement>(null);
+
+  // === Tilt Effect ===
+  const handleMouseLeave = () => {
+    const element = frameRef.current;
+    if (!element) return;
+
+    gsap.to(element, {
+      duration: 0.3,
+      rotateX: 0,
+      rotateY: 0,
+      ease: "power1.inOut",
+    });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const element = frameRef.current;
+    if (!element) return;
+
+    const rect = element.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    const rotateX = ((y - centerY) / centerY) * -10;
+    const rotateY = ((x - centerX) / centerX) * 10;
+
+    gsap.to(element, {
+      duration: 0.3,
+      rotateX,
+      rotateY,
+      transformPerspective: 500,
+      ease: "power1.inOut",
+    });
+  };
+
+  // === Scroll Animations ===
+  useEffect(() => {
+    // Text Fade + Slide In
+    if (textRef.current) {
+      gsap.from(textRef.current, {
+        y: 100,
+        opacity: 0,
+        duration: 1,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: textRef.current,
+          start: "top 80%", // animate when 80% of viewport
+          toggleActions: "play none none reverse",
+        },
+      });
+    }
+
+    // Image Scale + Fade In
+    if (frameRef.current) {
+      gsap.from(frameRef.current, {
+        scale: 0.9,
+        opacity: 0,
+        duration: 1,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: frameRef.current,
+          start: "top 85%",
+          toggleActions: "play none none reverse",
+        },
+      });
+    }
+
+    // === Page Transition Animation ===
+    if (containerRef.current) {
+      gsap.fromTo(
+        containerRef.current,
+        { opacity: 1, y: 0 },
+        {
+          opacity: 0,
+          y: -100,
+          ease: "power2.inOut",
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "bottom bottom", // when bottom of Hero hits bottom of viewport
+            end: "bottom top", // until it leaves screen
+            scrub: true, // smooth animation linked to scroll
+          },
+        }
+      );
+    }
+  }, []);
+
   return (
     <main
+      ref={containerRef}
       className="grid grid-cols-1 md:grid-cols-[1.1fr_0.9fr] items-center bg-white text-zinc-800 
-    px-4 sm:px-8 md:px-12 lg:px-28 pt-8 sm:pt-12 md:py-20 lg:pt-10"
+      px-4 sm:px-8 md:px-12 lg:px-28 pt-8 sm:pt-12 md:py-20 lg:pt-10 min-h-screen"
     >
       {/* Left Content */}
-      <div className="flex flex-col justify-center space-y-4 sm:space-y-6 items-center md:items-start text-center md:text-left lg:pl-10">
+      <div
+        ref={textRef}
+        className="flex flex-col justify-center space-y-4 sm:space-y-6 items-center md:items-start text-center md:text-left lg:pl-10"
+      >
         <h1
           className="special-font font-zentry font-bold   
-        text-3xl sm:text-5xl md:text-5xl lg:text-7xl -tracking-tight"
+          text-3xl sm:text-5xl md:text-5xl lg:text-7xl -tracking-tight"
         >
           <b>F</b>as<b>h</b>ion T<b>ha</b>t <br />
           <span className="block md:ml-7">
@@ -38,7 +139,14 @@ const Hero = () => {
 
       {/* Right Image */}
       <div className="flex flex-col items-center md:items-start w-full">
-        <div className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl">
+        <div
+          ref={frameRef}
+          className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl rounded overflow-hidden"
+          onMouseLeave={handleMouseLeave}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseLeave}
+          onMouseEnter={handleMouseLeave}
+        >
           <Image
             src="/img7.jpg"
             alt="Fashion model wearing Zengy.go clothing"
