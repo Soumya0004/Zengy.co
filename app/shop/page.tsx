@@ -31,14 +31,18 @@ const page = () => {
     }
   fetchProducts();
   }, [])
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-lg">Loading products...</p>
+if (loading) {
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white">
+      <div className="three-body">
+        <div className="three-body__dot" />
+        <div className="three-body__dot" />
+        <div className="three-body__dot" />
       </div>
-    );
-  }
-  
+    </div>
+  );
+}
+
 
   return (
     <div className="min-h-screen py-10 px-4 sm:px-8 md:px-12 lg:px-20">

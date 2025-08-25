@@ -1,18 +1,37 @@
 "use client";
-import { useSession, signOut } from "next-auth/react";
+import { useSession, signOut as nextSignOut } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
 import { LogIn, ShoppingCart, UserIcon, Menu, X, LogOut } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Modal from "./Modal";
-import SignUpCard from "./SignUpCard"; // signup form
+import SignUpCard from "./SignUpCard";
 import LoginCard from "./LoginCard";
 
 const Nav = () => {
   const { data: session, status } = useSession();
-  const [open, setOpen] = useState(false); // mobile menu
+  const [open, setOpen] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [isLogin, setIsLogin] = useState(true); // toggle between login/signup
+  const [isLogin, setIsLogin] = useState(true);
+
+  // 👇 manual login state
+  const [manualUser, setManualUser] = useState<any>(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) setManualUser(JSON.parse(storedUser));
+  }, []);
+
+  const loggedIn = status === "authenticated" || !!manualUser;
+
+  const handleLogout = () => {
+    if (status === "authenticated") {
+      nextSignOut();
+    }
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setManualUser(null);
+  };
 
   const navLinks = [
     { label: "Home", href: "/" },
@@ -21,13 +40,11 @@ const Nav = () => {
     { label: "About Us", href: "/about" },
   ];
 
-  const loggedIn = status === "authenticated";
-
   return (
     <>
       <nav className="w-full bg-white text-zinc-800 shadow-sm">
         <div className="max-w-8xl mx-auto px-4 md:px-10 py-5 flex items-center justify-between">
-          {/* Left: Desktop Nav */}
+          {/* Left nav */}
           <div className="hidden md:flex items-center gap-6">
             {navLinks.map((link) => (
               <Link
@@ -40,26 +57,22 @@ const Nav = () => {
             ))}
           </div>
 
-          {/* Center: Logo */}
+          {/* Logo */}
           <div className="flex-1 flex justify-center">
             <Link href="/">
               <Image src="/logo.svg" alt="Logo" width={140} height={40} />
             </Link>
           </div>
 
-          {/* Right: Desktop Auth */}
+          {/* Right actions */}
           <div className="flex items-center gap-4">
             <div className="hidden md:flex items-center gap-5">
               {loggedIn ? (
                 <>
-                  <Link href="/cart">
-                    <ShoppingCart size={20} />
-                  </Link>
-                  <Link href="/profile">
-                    <UserIcon size={20} />
-                  </Link>
+                  <Link href="/cart"><ShoppingCart size={20} /></Link>
+                  <Link href="/profile"><UserIcon size={20} /></Link>
                   <button
-                    onClick={() => signOut()}
+                    onClick={handleLogout}
                     className="text-sm text-red-600 inline-flex items-center gap-2 uppercase"
                   >
                     <LogOut size={20} /> Logout
@@ -67,7 +80,7 @@ const Nav = () => {
                 </>
               ) : (
                 <button
-                  onClick={() => setShowAuthModal(true)} // 👈 open modal instead
+                  onClick={() => setShowAuthModal(true)}
                   className="inline-flex items-center gap-2 uppercase text-sm hover:text-sky-600"
                 >
                   <LogIn size={20} /> Login
@@ -105,16 +118,12 @@ const Nav = () => {
               <div className="pt-2 border-t mt-2 flex items-center justify-between">
                 {loggedIn ? (
                   <div className="flex items-center gap-4">
-                    <Link href="/cart">
-                      <ShoppingCart size={18} />
-                    </Link>
-                    <Link href="/profile">
-                      <UserIcon size={18} />
-                    </Link>
+                    <Link href="/cart"><ShoppingCart size={18} /></Link>
+                    <Link href="/profile"><UserIcon size={18} /></Link>
                     <button
                       onClick={() => {
                         setOpen(false);
-                        signOut();
+                        handleLogout();
                       }}
                       className="text-sm text-red-600 inline-flex items-center gap-2"
                     >
@@ -125,7 +134,7 @@ const Nav = () => {
                   <button
                     onClick={() => {
                       setOpen(false);
-                      setShowAuthModal(true); // 👈 open modal on mobile too
+                      setShowAuthModal(true);
                     }}
                     className="inline-flex items-center gap-2 uppercase text-sm hover:text-sky-600"
                   >

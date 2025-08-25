@@ -12,11 +12,18 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import axios from "axios";
+import { jwtDecode } from "jwt-decode";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 
-export default function SignUpCard({ onSwitch }: { onSwitch: () => void }) {
+type DecodedToken = {
+  id: string;
+  email: string;
+  exp: number;
+  iat: number;
+};
 
+export default function SignUpCard({ onSwitch }: { onSwitch: () => void }) {
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -25,9 +32,11 @@ export default function SignUpCard({ onSwitch }: { onSwitch: () => void }) {
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.id]: e.target.value });
   };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -36,13 +45,22 @@ export default function SignUpCard({ onSwitch }: { onSwitch: () => void }) {
     try {
       const res = await axios.post("/api/auth/signup", form);
 
-      setMessage("✅ " + res.data.message);
+      // Save JWT token in localStorage
+      const token = res.data.token;
+      if (token) {
+        localStorage.setItem("token", token);
+
+        const decoded: DecodedToken = jwtDecode(token);
+        console.log("Decoded token:", decoded);
+      }
+
+      setMessage(res.data.message);
 
       setTimeout(() => {
         onSwitch(); // switch to login form
       }, 1500);
     } catch (err: any) {
-      setMessage("❌ " + (err.response?.data?.error || "Signup failed"));
+      setMessage(err.response?.data?.error || "Signup failed");
     } finally {
       setLoading(false);
     }
@@ -52,12 +70,11 @@ export default function SignUpCard({ onSwitch }: { onSwitch: () => void }) {
     <Card className="w-full max-w-sm">
       <CardHeader>
         <CardTitle>Create an account</CardTitle>
-        <CardDescription>Enter your details to get started</CardDescription>
+        <CardDescription>Enter your details or use Google</CardDescription>
       </CardHeader>
 
       <CardContent>
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-          {/* Name */}
           <div className="grid gap-2">
             <Label htmlFor="name">Name</Label>
             <Input
@@ -70,7 +87,6 @@ export default function SignUpCard({ onSwitch }: { onSwitch: () => void }) {
             />
           </div>
 
-          {/* Email */}
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -83,7 +99,6 @@ export default function SignUpCard({ onSwitch }: { onSwitch: () => void }) {
             />
           </div>
 
-          {/* Password */}
           <div className="grid gap-2">
             <Label htmlFor="password">Password</Label>
             <Input
@@ -95,7 +110,6 @@ export default function SignUpCard({ onSwitch }: { onSwitch: () => void }) {
             />
           </div>
 
-          {/* Address */}
           <div className="grid gap-2">
             <Label htmlFor="address">Address</Label>
             <Input
@@ -119,13 +133,13 @@ export default function SignUpCard({ onSwitch }: { onSwitch: () => void }) {
       </CardContent>
 
       <CardFooter className="flex flex-col gap-3">
-        {/* Google sign up */}
+        {/* Social Signup */}
         <Button
           variant="outline"
           className="w-full"
           onClick={() => signIn("google", { callbackUrl: "/" })}
         >
-          Sign Up with Google
+          Continue with Google
         </Button>
 
         <p className="text-sm text-muted-foreground text-center">

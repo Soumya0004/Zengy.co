@@ -49,54 +49,62 @@ const Hero = () => {
 
   // === Scroll Animations ===
   useEffect(() => {
-    // Text Fade + Slide In
-    if (textRef.current) {
-      gsap.from(textRef.current, {
-        y: 100,
-        opacity: 0,
-        duration: 1,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: textRef.current,
-          start: "top 80%", // animate when 80% of viewport
-          toggleActions: "play none none reverse",
-        },
-      });
-    }
-
-    // Image Scale + Fade In
-    if (frameRef.current) {
-      gsap.from(frameRef.current, {
-        scale: 0.9,
-        opacity: 0,
-        duration: 1,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: frameRef.current,
-          start: "top 85%",
-          toggleActions: "play none none reverse",
-        },
-      });
-    }
-
-    // === Page Transition Animation ===
-    if (containerRef.current) {
-      gsap.fromTo(
-        containerRef.current,
-        { opacity: 1, y: 0 },
-        {
+    const ctx = gsap.context(() => {
+      // Text Fade + Slide In
+      if (textRef.current) {
+        gsap.from(textRef.current, {
+          y: 100,
           opacity: 0,
-          y: -100,
-          ease: "power2.inOut",
+          duration: 1,
+          ease: "power3.out",
           scrollTrigger: {
-            trigger: containerRef.current,
-            start: "bottom bottom", // when bottom of Hero hits bottom of viewport
-            end: "bottom top", // until it leaves screen
-            scrub: true, // smooth animation linked to scroll
+            trigger: textRef.current,
+            start: "top 80%",
+            toggleActions: "play none none reverse",
           },
-        }
-      );
-    }
+        });
+      }
+
+      // Image Scale + Fade In
+      if (frameRef.current) {
+        gsap.from(frameRef.current, {
+          scale: 0.9,
+          opacity: 0,
+          duration: 1,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: frameRef.current,
+            start: "top 85%",
+            toggleActions: "play none none reverse",
+          },
+        });
+      }
+
+      // Page Transition Animation
+      if (containerRef.current) {
+        gsap.fromTo(
+          containerRef.current,
+          { opacity: 1, y: 0 },
+          {
+            opacity: 0,
+            y: -100,
+            ease: "power2.inOut",
+            scrollTrigger: {
+              trigger: containerRef.current,
+              start: "bottom bottom",
+              end: "bottom top",
+              scrub: true,
+            },
+          }
+        );
+      }
+    }, containerRef);
+
+    return () => {
+      ctx.revert(); // cleanup GSAP animations & ScrollTriggers
+      // alternative manual cleanup (not needed if ctx.revert() is used):
+      // ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+    };
   }, []);
 
   return (
@@ -121,7 +129,7 @@ const Hero = () => {
         </h1>
 
         <p className="text-sm sm:text-base md:text-md lg:text-lg text-zinc-800 max-w-xl font-circular-web md:ml-7">
-          At Zengy.go, we create fashion that moves with you comfortable,
+          At Zengy.go, we create fashion that moves with you — comfortable,
           stylish, and bold clothing designed for everyday energy and
           confidence.
         </p>

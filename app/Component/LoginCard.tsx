@@ -1,19 +1,10 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { signIn } from "next-auth/react"; 
-import axios from "axios";
+import { signIn } from "next-auth/react";
 import { useState } from "react";
 
 export default function LoginCard({ onSwitch }: { onSwitch: () => void }) {
@@ -30,87 +21,57 @@ export default function LoginCard({ onSwitch }: { onSwitch: () => void }) {
     setLoading(true);
     setMessage("");
 
-    try {
-      const res = await axios.post("/api/auth/login", form);
+    const res = await signIn("credentials", {
+      redirect: false,
+      email: form.email,
+      password: form.password,
+    });
 
-      setMessage("✅ " + res.data.message);
-
-      // Example: redirect to profile after login success
-      setTimeout(() => {
-        window.location.href = "/profile";
-      }, 1500);
-    } catch (err: any) {
-      setMessage("❌ " + (err.response?.data?.error || "Login failed"));
-    } finally {
-      setLoading(false);
+    if (res?.error) {
+      setMessage(res.error);
+    } else {
+      window.location.href = "/";
     }
+
+    setLoading(false);
   };
 
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
-        <CardTitle>Login to your account</CardTitle>
-        
-        
+        <CardTitle>Login</CardTitle>
       </CardHeader>
-
       <CardContent>
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-          {/* Email */}
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="m@example.com"
-              value={form.email}
-              onChange={handleChange}
-              required
-            />
+            <Input id="email" type="email" value={form.email} onChange={handleChange} required />
           </div>
 
-          {/* Password */}
           <div className="grid gap-2">
-            <div className="flex items-center">
-              <Label htmlFor="password">Password</Label>
-              <a
-                href="#"
-                className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-              >
-                Forgot your password?
-              </a>
-            </div>
-            <Input
-              id="password"
-              type="password"
-              value={form.password}
-              onChange={handleChange}
-              required
-            />
+            <Label htmlFor="password">Password</Label>
+            <Input id="password" type="password" value={form.password} onChange={handleChange} required />
           </div>
 
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Logging in..." : "Login"}
           </Button>
         </form>
-        
 
-        {message && (
-          <p className="text-sm mt-3 text-center text-gray-600">{message}</p>
-        )}
+        {message && <p className="text-sm mt-3 text-center">{message}</p>}
       </CardContent>
 
-      <CardFooter className="flex-col gap-2">
-        {/* Google login */}
+      <CardFooter className="flex flex-col gap-3">
         <Button
           variant="outline"
           className="w-full"
-          onClick={() => signIn("google", { callbackUrl: "/" })} 
+          onClick={() => signIn("google", { callbackUrl: "/" })}
         >
-          Login with Google
+          Continue with Google
         </Button>
-        <p className="text-sm text-muted-foreground text-center ">
-          Don&apos;t have an account?{" "}
+
+        <p className="text-sm text-muted-foreground text-center">
+          Don’t have an account?{" "}
           <button
             type="button"
             onClick={onSwitch}

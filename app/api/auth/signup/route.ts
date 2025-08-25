@@ -5,40 +5,46 @@ import { dbConnect } from "@/lib/mongodb";
 
 export async function POST(req: Request) {
   try {
+    await dbConnect();
     const { name, email, password, address } = await req.json();
 
+    // Validate fields
     if (!name || !email || !password || !address) {
-      return NextResponse.json({ error: "All fields are required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "All fields are required" },
+        { status: 400 }
+      );
     }
-
-    // Connect to DB
-    await dbConnect();
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return NextResponse.json({ error: "User already exists" }, { status: 400 });
+      return NextResponse.json(
+        { error: "User already exists" },
+        { status: 409 }
+      );
     }
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create new user
-    const newUser = await User.create({
+    // Create user
+    const user = await User.create({
       name,
       email,
       password: hashedPassword,
-      address,
+      address, // required field
     });
 
     return NextResponse.json(
       {
-        message: "User registered successfully",
-        user: { id: newUser._id, email: newUser.email },
+        message: "Signup successful",
+        user: { id: user._id, email: user.email, name: user.name },
       },
       { status: 201 }
     );
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error("Signup Error:", err.message || err);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

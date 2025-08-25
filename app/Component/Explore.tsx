@@ -7,31 +7,35 @@ const Explore = () => {
       {/* Responsive grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {/* Card 1 */}
-        <div className="relative rounded-xl overflow-hidden shadow-md group h-[300px] md:h-[565px] w-full">
-          <Image
-            src="/img10.jpg"
-            alt="Image 1"
-            fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-          />
-          <button className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white text-zinc-800 px-4 py-2 rounded-md font-medium shadow hover:bg-gray-100">
-            Explore Now
-          </button>
-        </div>
+       <div className="relative rounded-xl overflow-hidden shadow-md group h-[300px] md:h-[565px] w-full">
+  <video
+    src="/get.mp4"
+    autoPlay
+    muted
+    loop
+    playsInline
+    className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+  />
+  <button className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white text-zinc-800 px-4 py-2 rounded-md font-medium shadow hover:bg-gray-100">
+    Explore Now
+  </button>
+</div>
+
 
         {/* Card 2 */}
         <div className="relative rounded-xl overflow-hidden shadow-md group h-[300px] md:h-[565px] w-full">
-          <Image
-            src="/img11.jpg"
-            alt="Image 2"
-            fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-          />
-
-          <button className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white text-zinc-800 px-4 py-2 rounded-md font-medium shadow hover:bg-gray-100">
-            Explore Now
-          </button>
-        </div>
+  <video
+    src="/video2.mp4"
+    autoPlay
+    muted
+    loop
+    playsInline
+    className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+  />
+  <button className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white text-zinc-800 px-4 py-2 rounded-md font-medium shadow hover:bg-gray-100">
+    Explore Now
+  </button>
+</div>
 
         {/* Right Side (2 stacked cards) */}
         <div className="flex flex-col gap-6">
