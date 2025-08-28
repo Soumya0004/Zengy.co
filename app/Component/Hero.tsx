@@ -101,9 +101,7 @@ const Hero = () => {
     }, containerRef);
 
     return () => {
-      ctx.revert(); // cleanup GSAP animations & ScrollTriggers
-      // alternative manual cleanup (not needed if ctx.revert() is used):
-      // ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+      ctx.revert(); 
     };
   }, []);
 
