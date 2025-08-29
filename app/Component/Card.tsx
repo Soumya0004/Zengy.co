@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link"; // 👈 import Link
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -86,9 +87,12 @@ const Card = ({ collections }: CardProps) => {
             <h2 className="text-white text-lg sm:text-xl">{item.title}</h2>
             <p className="text-white font-semibold mt-1">₹ {item.price}</p>
 
-            <button className="mt-3 px-4 py-2 bg-white text-zinc-800 rounded-lg font-medium hover:bg-zinc-800 hover:text-white transition">
-              Shop Now
-            </button>
+            {/* Link to /shop/[id] */}
+            <Link href={`/shop/${item._id}`}>
+              <button className="mt-3 px-4 py-2 bg-white text-zinc-800 rounded-lg font-medium hover:bg-zinc-800 hover:text-white transition">
+                Shop Now
+              </button>
+            </Link>
           </div>
         </div>
       ))}

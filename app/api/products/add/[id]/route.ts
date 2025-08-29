@@ -2,21 +2,41 @@ import { dbConnect } from "@/lib/mongodb";
 import Collections from "@/models/Collections";
 import { NextResponse } from "next/server";
 
-// GET /api/products/:id
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+// POST /api/products
+export async function POST(req: Request) {
   try {
     await dbConnect();
-    const product = await Collections.findById(params.id);
 
-    if (!product) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    const body = await req.json();
+    const { img, title, price, stock, rating, category } = body;
+
+    if (!img || !title || !price || stock === undefined || !category) {
+      return NextResponse.json(
+        { error: "All required fields (img, title, price, stock, category) must be provided" },
+        { status: 400 }
+      );
     }
 
-    return NextResponse.json(product, { status: 200 });
-  } catch (err) {
-    console.error("❌ Error fetching product by id:", err);
+    const newProduct = new Collections({
+      img,
+      title,
+      price,
+      stock,
+      rating: rating || 0,
+      category,
+      availability: Number(stock) > 0 ? "in stock" : "out of stock", 
+    });
+
+    await newProduct.save();
+
     return NextResponse.json(
-      { error: "Failed to fetch product" },
+      { message: "Product added successfully", product: newProduct },
+      { status: 201 }
+    );
+  } catch (err) {
+    console.error("❌ Error adding product:", err);
+    return NextResponse.json(
+      { error: "Failed to add product" },
       { status: 500 }
     );
   }
