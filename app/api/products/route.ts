@@ -3,6 +3,7 @@ import cloudinary from "@/lib/cloudinary";
 import Collections from "@/models/Collections";
 import { dbConnect } from "@/lib/mongodb";
 
+//  POST = Add product
 export async function POST(req: Request) {
   try {
     await dbConnect();
@@ -17,7 +18,7 @@ export async function POST(req: Request) {
     const contentType = req.headers.get("content-type") || "";
 
     if (contentType.includes("multipart/form-data")) {
-      //  Handle FormData request
+      // Handle FormData request
       const formData = await req.formData();
 
       const file = formData.get("img") as File | null;
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
       category = (formData.get("category") as string) || "";
       rating = Number(formData.get("rating")) || 0;
 
-      //  Parse sizes (must be stringified JSON from frontend)
+      // Parse sizes
       const sizesData = formData.get("sizes") as string;
       sizes = sizesData ? JSON.parse(sizesData) : [];
 
@@ -37,7 +38,7 @@ export async function POST(req: Request) {
         );
       }
 
-      //  Upload image to Cloudinary
+      // Upload image to Cloudinary
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
 
@@ -54,7 +55,7 @@ export async function POST(req: Request) {
 
       img = uploadResult.secure_url;
     } else {
-      //  Handle JSON request
+      // Handle JSON request
       const body = await req.json();
 
       img = body.img;
@@ -72,19 +73,33 @@ export async function POST(req: Request) {
       }
     }
 
-    //  Save product with sizes (size + stock)
+    // Save product
     const newProduct = await Collections.create({
       img,
       title,
       price,
       category,
       rating,
-      sizes, 
+      sizes,
     });
 
     return NextResponse.json({ success: true, product: newProduct }, { status: 201 });
   } catch (error: any) {
     console.error("Add product error:", error);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
+}
+
+//  GET = Fetch all products
+export async function GET() {
+  try {
+    await dbConnect();
+
+    const products = await Collections.find().sort({ createdAt: -1 }); // latest first
+
+    return NextResponse.json({ products }, { status: 200 });
+  } catch (error: any) {
+    console.error("Get products error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

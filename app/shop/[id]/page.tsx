@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { Star, StarIcon } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -183,7 +184,7 @@ const Page = () => {
               )}
               {product.rating && (
                 <div className="flex items-center gap-1 text-yellow-500 font-medium">
-                  ⭐ {product.rating}
+                  <StarIcon/> {product.rating}
                   <span className="text-gray-500 text-sm">(128 reviews)</span>
                 </div>
               )}
