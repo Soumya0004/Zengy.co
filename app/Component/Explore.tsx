@@ -63,7 +63,6 @@ const Explore = () => {
   return (
     <div ref={containerRef} className="px-6 md:px-12 py-16">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {/* Card 1 */}
         <div
           ref={(el) => addToRefs(el, 0)}
           className="relative rounded-xl overflow-hidden shadow-md group h-[300px] md:h-[565px] w-full"
@@ -99,10 +98,10 @@ const Explore = () => {
           </button>
         </div>
 
-        {/* Right Side (stacked cards) */}
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6"
+         ref={(el) => addToRefs(el, 2)}>
           <div
-            ref={(el) => addToRefs(el, 2)}
+           
             className="relative rounded-xl overflow-hidden shadow-md group"
           >
             <Image
@@ -126,7 +125,7 @@ const Explore = () => {
           </div>
 
           <div
-            ref={(el) => addToRefs(el, 3)}
+            
             className="relative rounded-xl overflow-hidden shadow-md group"
           >
             <Image

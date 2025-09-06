@@ -4,9 +4,10 @@ import axios from "axios";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
+import { useSession } from "next-auth/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Star, StarIcon } from "lucide-react";
+import { StarIcon } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -26,14 +27,21 @@ interface Product {
 
 const Page = () => {
   const { id } = useParams();
+  const { data: session } = useSession();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLDivElement>(null);
   const detailsRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -53,36 +61,38 @@ const Page = () => {
   }, [id]);
 
   useEffect(() => {
-  if (!loading && product) {
+    if (!hydrated || loading || !product) return;
+
     let ctx = gsap.context(() => {
       const tl = gsap.timeline();
 
-      tl.from(containerRef.current, {
-        opacity: 0,
+      gsap.set(containerRef.current, { opacity: 0 });
+      gsap.set(imgRef.current, { scale: 0.8, opacity: 0 });
+      gsap.set(detailsRef.current?.children || [], { y: 30, opacity: 0 });
+
+      tl.to(containerRef.current, {
+        opacity: 1,
         duration: 0.6,
         ease: "power2.out",
-        clearProps: "all",
       })
-        .from(
+        .to(
           imgRef.current,
           {
-            scale: 0.8,
-            opacity: 0,
+            scale: 1,
+            opacity: 1,
             duration: 0.8,
             ease: "back.out(1.7)",
-            clearProps: "all",
           },
           "-=0.4"
         )
-        .from(
+        .to(
           detailsRef.current?.children || [],
           {
-            y: 30,
-            opacity: 0,
+            y: 0,
+            opacity: 1,
             duration: 0.6,
             stagger: 0.1,
             ease: "power2.out",
-            clearProps: "all",
           },
           "-=0.6"
         );
@@ -105,7 +115,6 @@ const Page = () => {
             duration: 0.6,
             stagger: 0.1,
             ease: "power2.out",
-            clearProps: "all",
             scrollTrigger: {
               trigger: featuresRef.current,
               start: "top 80%",
@@ -117,9 +126,34 @@ const Page = () => {
       }
     });
 
-    return () => ctx.revert(); // cleanup on unmount
-  }
-}, [loading, product]);
+    return () => ctx.revert();
+  }, [hydrated, loading, product]);
+
+  const handleAddToCart = async () => {
+    if (!session?.user?.id) {
+      alert("Please login first");
+      return;
+    }
+    if (!product) return;
+
+    setAdding(true);
+    try {
+      const res = await axios.post("/api/cart/add", {
+        userId: session.user.id,
+        productId: product._id,
+        size: selectedSize,
+        quantity: 1,
+      });
+
+      alert("Added to cart!");
+      console.log("Cart response:", res.data);
+    } catch (err) {
+      console.error("Error adding to cart:", err);
+      alert("Something went wrong. Try again.");
+    } finally {
+      setAdding(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -133,10 +167,8 @@ const Page = () => {
     );
   }
 
-
   if (!product) return <p className="p-6">Product not found</p>;
 
-  // Compute total stock from sizes (preferred) or fallback to product.stock
   const totalStock =
     (product.sizes && product.sizes.reduce((s, p) => s + (p?.stock || 0), 0)) ||
     (product.stock || 0);
@@ -152,7 +184,6 @@ const Page = () => {
     <div ref={containerRef} className="min-h-screen bg-white">
       <div className="container mx-auto px-6 py-12 lg:py-20">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          {/* Product Image */}
           <div ref={imgRef} className="relative">
             <div className="aspect-square rounded-3xl bg-gray-100 p-6 shadow-lg">
               <div className="relative w-full h-full rounded-2xl overflow-hidden">
@@ -166,16 +197,14 @@ const Page = () => {
                 )}
               </div>
             </div>
-              {!inStock && (
-                <div className="absolute top-4 right-4 bg-red-600 text-white px-3 py-1 text-sm rounded-lg shadow">
-                  Out of Stock
-                </div>
-              )}
+            {!inStock && (
+              <div className="absolute top-4 right-4 bg-red-600 text-white px-3 py-1 text-sm rounded-lg shadow">
+                Out of Stock
+              </div>
+            )}
           </div>
 
-          {/* Product Details */}
           <div ref={detailsRef} className="space-y-6">
-            {/* Category & Rating */}
             <div className="flex items-center gap-4">
               {product.category && (
                 <span className="px-3 py-1 bg-gray-200 rounded-full text-sm font-medium">
@@ -184,23 +213,20 @@ const Page = () => {
               )}
               {product.rating && (
                 <div className="flex items-center gap-1 text-yellow-500 font-medium">
-                  <StarIcon/> {product.rating}
+                  <StarIcon /> {product.rating}
                   <span className="text-gray-500 text-sm">(128 reviews)</span>
                 </div>
               )}
             </div>
 
-            {/* Title */}
             <h1 className="text-4xl lg:text-5xl font-bold leading-tight text-gray-900">
               {product.title}
             </h1>
 
-            {/* Description */}
             <p className="text-gray-600 text-lg leading-relaxed">
               {product.description}
             </p>
 
-            {/* Price */}
             <div className="flex items-center gap-4">
               <span className="text-4xl font-bold text-blue-600">
                 ₹{product.price}
@@ -212,8 +238,6 @@ const Page = () => {
               )}
             </div>
 
-            {/* Stock */}
-            {/* Sizes */}
             {product.sizes && product.sizes.length > 0 && (
               <div>
                 <h3 className="font-medium">Sizes</h3>
@@ -237,8 +261,11 @@ const Page = () => {
               </div>
             )}
 
-            {/* Stock summary */}
-            <p className={`font-medium ${inStock ? "text-green-600" : "text-red-600"}`}>
+            <p
+              className={`font-medium ${
+                inStock ? "text-green-600" : "text-red-600"
+              }`}
+            >
               {selectedSize
                 ? `${selectedSize} — ${selectedSizeStock ?? 0} available`
                 : inStock
@@ -246,11 +273,13 @@ const Page = () => {
                 : "Out of Stock"}
             </p>
 
-            {/* Action Buttons */}
             <div className="flex gap-4 pt-4">
               <button
+                onClick={handleAddToCart}
                 disabled={
-                  !inStock || (selectedSize ? (selectedSizeStock ?? 0) <= 0 : false)
+                  adding ||
+                  !inStock ||
+                  (selectedSize ? (selectedSizeStock ?? 0) <= 0 : false)
                 }
                 className={`flex-1 px-6 py-3 rounded-xl transition ${
                   inStock && (!selectedSize || (selectedSizeStock ?? 0) > 0)
@@ -258,7 +287,7 @@ const Page = () => {
                     : "bg-gray-300 text-gray-600 cursor-not-allowed"
                 }`}
               >
-                Add to Cart
+                {adding ? "Adding..." : "Add to Cart"}
               </button>
               <button className="flex-1 border border-gray-300 px-6 py-3 rounded-xl hover:bg-gray-100 transition">
                 Buy Now
@@ -267,7 +296,6 @@ const Page = () => {
           </div>
         </div>
 
-        {/* Features Section */}
         {product.features && (
           <div className="mt-20">
             <h2 className="text-3xl font-bold text-center mb-12">

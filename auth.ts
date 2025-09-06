@@ -19,14 +19,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
         await dbConnect();
 
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("MISSING_FIELDS");
+        }
+
         const user = await User.findOne({ email: credentials.email }).lean();
-        if (!user) return null;
+        if (!user) {
+          throw new Error("USERNAME_NOT_AVAILABLE");
+        }
 
         const isValid = await bcrypt.compare(credentials.password, user.password);
-        if (!isValid) return null;
+        if (!isValid) {
+          throw new Error("INCORRECT_PASSWORD");
+        }
 
         return {
           id: user._id.toString(),
@@ -53,5 +60,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
   pages: {
     signIn: "/login",
+    error: "/login",
   },
 });
