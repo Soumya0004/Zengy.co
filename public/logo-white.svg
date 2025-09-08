@@ -1,19 +1,16 @@
+<?xml version='1.0' encoding='utf-8'?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 150">
   <style>
     * { fill: #ffffff !important; stroke: #ffffff !important; }
   </style>
 
-  <text 
-    x="50%" 
-    y="50%" 
-    dominant-baseline="middle" 
-    text-anchor="middle" 
-    font-family="Impact, Anton, Arial Black, sans-serif" 
-    font-weight="900" 
-    font-size="90" 
-    fill="#ffffff"
-    letter-spacing="2"
-  >
+  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" 
+        font-family="Impact, Anton, Arial Black, sans-serif" 
+        font-weight="900" 
+        font-size="90" 
+        fill="#ffffff" 
+        letter-spacing="0.1rem" 
+        style="letter-spacing:0.1em;">
     ZENGY.GO
   </text>
 </svg>
