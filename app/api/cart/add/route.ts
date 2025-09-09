@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     }
 
     const existingItem = order.products.find(
-      item =>
+      (item) =>
         item.collection.toString() === productId.toString() &&
         (size ? item.size === size : true)
     );

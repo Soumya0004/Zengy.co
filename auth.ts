@@ -30,7 +30,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           throw new Error("USERNAME_NOT_AVAILABLE");
         }
 
-        const isValid = await bcrypt.compare(credentials.password, user.password);
+        const isValid = await bcrypt.compare(
+          credentials.password,
+          user.password
+        );
         if (!isValid) {
           throw new Error("INCORRECT_PASSWORD");
         }

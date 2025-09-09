@@ -70,7 +70,9 @@ export default function CartPage() {
   }
 
   if (status === "unauthenticated") {
-    return <p className="p-6 text-gray-500">Please log in to view your cart.</p>;
+    return (
+      <p className="p-6 text-gray-500">Please log in to view your cart.</p>
+    );
   }
 
   if (!cart || cart.products.length === 0) {
