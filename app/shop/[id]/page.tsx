@@ -8,6 +8,7 @@ import { useSession } from "next-auth/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { StarIcon } from "lucide-react";
+import Loding from "@/app/Component/Loding";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -75,9 +76,11 @@ const Page = () => {
   }, [hydrated, loading, product]);
 
   const handleAddToCart = async () => {
-    if (!session?.user?.id) { alert("Please login first"); return; }
-    if (!product) return;
-    setAdding(true);
+  if (!session?.user?.id) { alert("Please login first"); return; }
+  if (!product) return;
+  // If product has sizes, ensure a size is selected
+  if (product.sizes && product.sizes.length > 0 && !selectedSize) { alert("Please select a size"); return; }
+  setAdding(true);
     try {
       const res = await axios.post("/api/cart/add", {
         userId: session.user.id,
@@ -94,13 +97,7 @@ const Page = () => {
   };
 
   if (loading) return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white">
-      <div className="three-body">
-        <div className="three-body__dot" />
-        <div className="three-body__dot" />
-        <div className="three-body__dot" />
-      </div>
-    </div>
+    <Loding />
   );
 
   if (!product) return <p className="p-6">Product not found</p>;
@@ -108,6 +105,8 @@ const Page = () => {
   const totalStock = product.sizes?.reduce((s, p) => s + (p.stock || 0), 0) || product.stock || 0;
   const inStock = totalStock > 0;
   const selectedSizeStock = selectedSize ? product.sizes?.find(s => s.size === selectedSize)?.stock : undefined;
+  const hasSizes = (product.sizes && product.sizes.length > 0) ?? false;
+  const canAdd = inStock && (hasSizes ? !!selectedSize && (selectedSizeStock ?? 0) > 0 : true);
 
   return (
     <div ref={containerRef} className="min-h-screen bg-white">
@@ -136,11 +135,11 @@ const Page = () => {
               {product.originalPrice && <span className="text-xl text-gray-400 line-through">₹{product.originalPrice}</span>}
             </div>
 
-            {product.sizes?.length > 0 &&
+            {hasSizes &&
               <div>
                 <h3 className="font-medium">Sizes</h3>
                 <div className="flex flex-wrap gap-2 mt-3">
-                  {product.sizes.map(s => (
+                  {product.sizes!.map(s => (
                     <button key={s.size} onClick={() => setSelectedSize(s.size)} disabled={s.stock <= 0} className={`px-3 py-2 rounded-lg border transition flex items-center gap-2 ${selectedSize === s.size ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-800 border-gray-200 hover:bg-gray-50"} ${s.stock <= 0 ? "opacity-50 cursor-not-allowed" : ""}`}>
                       <span className="font-medium">{s.size}</span>
                       <span className="text-sm text-gray-500">({s.stock})</span>
@@ -155,7 +154,7 @@ const Page = () => {
             </p>
 
             <div className="flex gap-4 pt-4">
-              <button onClick={handleAddToCart} disabled={adding || !inStock || (selectedSize ? (selectedSizeStock ?? 0) <= 0 : false)} className={`flex-1 px-6 py-3 rounded-xl transition ${inStock && (!selectedSize || (selectedSizeStock ?? 0) > 0) ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-gray-300 text-gray-600 cursor-not-allowed"}`}>
+              <button type="button" onClick={handleAddToCart} disabled={adding || !canAdd} className={`flex-1 px-6 py-3 rounded-xl transition ${canAdd ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-gray-300 text-gray-600 cursor-not-allowed"}`}>
                 {adding ? "Adding..." : "Add to Cart"}
               </button>
               <button className="flex-1 border border-gray-300 px-6 py-3 rounded-xl hover:bg-gray-100 transition">Buy Now</button>

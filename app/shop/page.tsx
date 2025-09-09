@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import Card from '../Component/Card';
 import axios from 'axios';
+import Loding from '../Component/Loding';
 interface Product {
   _id: string;
   title: string;
@@ -31,17 +32,9 @@ const page = () => {
     }
   fetchProducts();
   }, [])
-if (loading) {
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white">
-      <div className="three-body">
-        <div className="three-body__dot" />
-        <div className="three-body__dot" />
-        <div className="three-body__dot" />
-      </div>
-    </div>
+if (loading) return (
+    <Loding />
   );
-}
 
 
   return (

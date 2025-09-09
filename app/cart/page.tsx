@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSession } from "next-auth/react";
+import gsap from "gsap";
+import Loding from "../Component/Loding";
 
 interface CartProduct {
   collection: {
@@ -25,6 +27,8 @@ export default function CartPage() {
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const cartRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const fetchCart = async () => {
       if (status !== "authenticated") return;
@@ -32,11 +36,10 @@ export default function CartPage() {
       try {
         const res = await fetch("/api/cart/get", {
           method: "GET",
-          credentials: "include", // send cookies
+          credentials: "include",
         });
 
         const data = await res.json();
-
         if (data.success) {
           setCart(data.cart);
         } else {
@@ -52,8 +55,18 @@ export default function CartPage() {
     fetchCart();
   }, [status]);
 
+  useEffect(() => {
+    if (cartRef.current) {
+      gsap.fromTo(
+        cartRef.current.querySelectorAll(".cart-item"),
+        { y: 50, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.6, stagger: 0.2, ease: "power3.out" }
+      );
+    }
+  }, [cart]);
+
   if (status === "loading" || loading) {
-    return <p className="p-6 text-gray-500">Loading cart...</p>;
+    return <Loding />;
   }
 
   if (status === "unauthenticated") {
@@ -64,19 +77,27 @@ export default function CartPage() {
     return <p className="p-6 text-gray-500">Your cart is empty.</p>;
   }
 
+  const subtotal = cart.products.reduce(
+    (acc, item) => acc + item.collection.price * item.quantity,
+    0
+  );
+
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Your Cart</h1>
-      <ul className="space-y-4">
+    <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-8" ref={cartRef}>
+      {/* Cart Items */}
+      <div className="md:col-span-2 space-y-4">
+        <h1 className="text-2xl font-bold mb-6">Your Cart</h1>
         {cart.products.map((item, idx) => (
-          <li
+          <div
             key={idx}
-            className="flex items-center justify-between border p-4 rounded-lg"
+            className="cart-item flex items-center justify-between border p-4 rounded-lg bg-white shadow-sm"
           >
             <div>
               <p className="font-semibold">{item.collection?.title}</p>
               <p className="text-gray-500">₹{item.collection?.price}</p>
-              {item.size && <p className="text-sm text-gray-400">Size: {item.size}</p>}
+              {item.size && (
+                <p className="text-sm text-gray-400">Size: {item.size}</p>
+              )}
               <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
             </div>
             <img
@@ -84,9 +105,36 @@ export default function CartPage() {
               alt={item.collection?.title}
               className="w-16 h-16 object-cover rounded-lg"
             />
-          </li>
+          </div>
         ))}
-      </ul>
+      </div>
+
+      {/* Cart Totals */}
+      <div className="border p-6 rounded-lg bg-white shadow-sm h-fit">
+        <h2 className="text-lg font-bold mb-4">Cart Totals</h2>
+        <div className="flex justify-between mb-2">
+          <span>Shipping (3-5 Business Days)</span>
+          <span>Free</span>
+        </div>
+        <div className="flex justify-between mb-2">
+          <span>Tax (Estimated)</span>
+          <span>₹0.00</span>
+        </div>
+        <div className="flex justify-between font-semibold mb-4">
+          <span>Subtotal</span>
+          <span>₹{subtotal.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between text-lg font-bold mb-6">
+          <span>Total</span>
+          <span> ₹{subtotal.toFixed(2)}</span>
+        </div>
+        <button className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition">
+          Proceed to Checkout
+        </button>
+        <button className="w-full mt-2 text-gray-600 hover:underline">
+          Continue Shopping
+        </button>
+      </div>
     </div>
   );
 }
