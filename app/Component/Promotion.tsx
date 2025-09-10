@@ -34,72 +34,70 @@ const Promotion: React.FC = () => {
   const textRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      // Left Image 1
-      if (leftImg1Ref.current) {
-        gsap.from(leftImg1Ref.current, {
-          x: -100,
-          opacity: 0,
-          duration: 1.2,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: leftImg1Ref.current,
-            start: "top 85%",
-            toggleActions: "play none none reverse",
-          },
-        });
-      }
+  const ctx = gsap.context(() => {
+    // Images animate slightly before section fully enters
+    const imageAnimConfig = {
+      x: -100,
+      opacity: 0,
+      duration: 1.2,
+      ease: "power3.out",
+      scrollTrigger: {
+        trigger: containerRef.current,
+        start: "top 90%",   // Section almost entering viewport
+        end: "bottom top",
+        toggleActions: "play reverse play reverse",
+      },
+    };
 
-      // Left Image 2
-      if (leftImg2Ref.current) {
-        gsap.from(leftImg2Ref.current, {
-          x: -120,
-          opacity: 0,
-          duration: 1.4,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: leftImg2Ref.current,
-            start: "top 85%",
-            toggleActions: "play none none reverse",
-          },
-        });
-      }
+    if (leftImg1Ref.current) {
+      gsap.from(leftImg1Ref.current, { ...imageAnimConfig });
+    }
 
-      // Swordman Image
-      if (swordManRef.current) {
-        gsap.from(swordManRef.current, {
-          y: 100,
-          scale: 0.9,
-          opacity: 0,
-          duration: 1.5,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: swordManRef.current,
-            start: "top 80%",
-            toggleActions: "play none none reverse",
-          },
-        });
-      }
+    if (leftImg2Ref.current) {
+      gsap.from(leftImg2Ref.current, {
+        ...imageAnimConfig,
+        x: -120,
+        duration: 1.4,
+      });
+    }
 
-      // Text Animation
-      if (textRef.current) {
-        gsap.from(textRef.current, {
-          y: 50,
-          opacity: 0,
-          duration: 1,
-          delay: 0.2,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: textRef.current,
-            start: "top 85%",
-            toggleActions: "play none none reverse",
-          },
-        });
-      }
-    }, containerRef);
+    if (swordManRef.current) {
+      gsap.from(swordManRef.current, {
+        y: 100,
+        scale: 0.9,
+        opacity: 0,
+        duration: 1.5,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: "top 85%",   // Slightly earlier than text
+          end: "bottom top",
+          toggleActions: "play reverse play reverse",
+        },
+      });
+    }
 
-    return () => ctx.revert();
-  }, []);
+    // Text animation – only when full section is fully visible
+    if (textRef.current) {
+      gsap.from(textRef.current, {
+        y: 50,
+        opacity: 0,
+        duration: 1,
+        delay: 0.2,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: "top 80%",  // Adjust to ensure text appears when section fully visible
+          end: "bottom top",
+          toggleActions: "play reverse play reverse",
+        },
+      });
+    }
+  }, containerRef);
+
+  return () => ctx.revert();
+}, []);
+
 
   return (
     <div ref={containerRef} className="p-6 sm:p-10 overflow-x-hidden">
