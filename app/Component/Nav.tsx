@@ -123,7 +123,7 @@ const Nav = () => {
               <div className="hidden md:flex items-center gap-5">
                 {loggedIn ? (
                   <>
-                    <Link href="/cart">
+                    <Link href="/Cart">
                       <ShoppingCart size={20} />
                     </Link>
                     <Link href="/profile">

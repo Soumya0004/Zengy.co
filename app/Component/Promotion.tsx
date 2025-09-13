@@ -43,7 +43,7 @@ const Promotion: React.FC = () => {
       ease: "power3.out",
       scrollTrigger: {
         trigger: containerRef.current,
-        start: "top 90%",   // Section almost entering viewport
+        start: "top 90%",  
         end: "bottom top",
         toggleActions: "play reverse play reverse",
       },
@@ -70,7 +70,7 @@ const Promotion: React.FC = () => {
         ease: "power3.out",
         scrollTrigger: {
           trigger: containerRef.current,
-          start: "top 85%",   // Slightly earlier than text
+          start: "top 85%",   
           end: "bottom top",
           toggleActions: "play reverse play reverse",
         },
@@ -87,7 +87,7 @@ const Promotion: React.FC = () => {
         ease: "power3.out",
         scrollTrigger: {
           trigger: containerRef.current,
-          start: "top 80%",  // Adjust to ensure text appears when section fully visible
+          start: "top 80%",  
           end: "bottom top",
           toggleActions: "play reverse play reverse",
         },

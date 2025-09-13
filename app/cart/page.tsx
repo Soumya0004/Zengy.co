@@ -3,9 +3,12 @@
 import { useEffect, useState, useRef } from "react";
 import { useSession } from "next-auth/react";
 import gsap from "gsap";
+import axios from "axios";
+import { ShoppingBag, Trash2 } from "lucide-react";
 import Loding from "../Component/Loding";
 
 interface CartProduct {
+  _id: string;
   collection: {
     _id: string;
     title: string;
@@ -26,24 +29,19 @@ export default function CartPage() {
   const { data: session, status } = useSession();
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(true);
-
+  const [removing, setRemoving] = useState<string | null>(null);
   const cartRef = useRef<HTMLDivElement>(null);
 
+  // --- FETCH CART ---
   useEffect(() => {
     const fetchCart = async () => {
       if (status !== "authenticated") return;
-
       try {
-        const res = await fetch("/api/cart/get", {
-          method: "GET",
-          credentials: "include",
-        });
-
-        const data = await res.json();
-        if (data.success) {
-          setCart(data.cart);
+        const res = await axios.get("/api/cart/get", { withCredentials: true });
+        if (res.data.success) {
+          setCart(res.data.cart);
         } else {
-          setCart({ _id: "", products: [], status: "Pending" });
+          setCart({ _id: "", products: [], status: "pending" });
         }
       } catch (error) {
         console.error("Error fetching cart:", error);
@@ -51,12 +49,12 @@ export default function CartPage() {
         setLoading(false);
       }
     };
-
     fetchCart();
   }, [status]);
 
+  // --- ANIMATION ---
   useEffect(() => {
-    if (cartRef.current) {
+    if (cartRef.current && cart?.products?.length) {
       gsap.fromTo(
         cartRef.current.querySelectorAll(".cart-item"),
         { y: 50, opacity: 0 },
@@ -65,19 +63,35 @@ export default function CartPage() {
     }
   }, [cart]);
 
-  if (status === "loading" || loading) {
-    return <Loding />;
-  }
+  // --- REMOVE ITEM ---
+  const handleRemove = async (itemId: string) => {
+  try {
+    setRemoving(itemId);
+    const res = await axios.post("/api/cart/itemRemove", {
+      orderId: cart?._id,
+      productId: itemId,
+    });
 
-  if (status === "unauthenticated") {
-    return (
-      <p className="p-6 text-gray-500">Please log in to view your cart.</p>
-    );
+    if (res.data.success) {
+      setCart(res.data.order);
+    }
+  } catch (error) {
+    console.error("Error removing item:", error);
+  } finally {
+    setRemoving(null);
   }
+};
 
-  if (!cart || cart.products.length === 0) {
-    return <p className="p-6 text-gray-500">Your cart is empty.</p>;
-  }
+
+  if (status === "loading" || loading) return <Loding />;
+  if (status === "unauthenticated")
+    return <p className="p-6 text-gray-500">Please log in to view your cart.</p>;
+ if (!cart || cart.products.length === 0)
+  return (
+    <div className="flex items-center justify-center h-screen">
+      <p className="text-zinc-700  font-zentry text-6xl special-font"><b>y</b>o<b>u</b>r b<b>ag</b> is e<b>mpt</b>y</p>
+    </div>
+  );
 
   const subtotal = cart.products.reduce(
     (acc, item) => acc + item.collection.price * item.quantity,
@@ -86,12 +100,11 @@ export default function CartPage() {
 
   return (
     <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-8" ref={cartRef}>
-      {/* Cart Items */}
       <div className="md:col-span-2 space-y-4">
         <h1 className="text-2xl font-bold mb-6">Your Cart</h1>
-        {cart.products.map((item, idx) => (
+        {cart.products.map((item) => (
           <div
-            key={idx}
+            key={item._id}
             className="cart-item flex items-center justify-between border p-4 rounded-lg bg-white shadow-sm"
           >
             <div>
@@ -102,16 +115,24 @@ export default function CartPage() {
               )}
               <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
             </div>
-            <img
-              src={item.collection?.img}
-              alt={item.collection?.title}
-              className="w-16 h-16 object-cover rounded-lg"
-            />
+            <div className="flex items-center gap-4">
+              <img
+                src={item.collection?.img}
+                alt={item.collection?.title || "Product image"}
+                className="w-16 h-16 object-cover rounded-lg"
+              />
+              <button
+                onClick={() => handleRemove(item._id)}
+                disabled={removing === item._id}
+                className="text-red-500 hover:text-red-700 disabled:opacity-50"
+              >
+                <Trash2 size={20} />
+              </button>
+            </div>
           </div>
         ))}
       </div>
 
-      {/* Cart Totals */}
       <div className="border p-6 rounded-lg bg-white shadow-sm h-fit">
         <h2 className="text-lg font-bold mb-4">Cart Totals</h2>
         <div className="flex justify-between mb-2">
@@ -128,7 +149,7 @@ export default function CartPage() {
         </div>
         <div className="flex justify-between text-lg font-bold mb-6">
           <span>Total</span>
-          <span> ₹{subtotal.toFixed(2)}</span>
+          <span>₹{subtotal.toFixed(2)}</span>
         </div>
         <button className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition">
           Proceed to Checkout

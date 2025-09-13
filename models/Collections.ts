@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 
 // --- INTERFACES ---
-export interface ISizeStock {
+export interface ISizeStock extends Document {
   size: string;
   stock: number;
 }
@@ -25,7 +25,7 @@ const SizeStockSchema = new Schema<ISizeStock>(
     size: { type: String, required: true, trim: true },
     stock: { type: Number, default: 0, min: 0 },
   },
-  { _id: false }
+  { _id: true } // 👈 enable _id (default, so you could even omit this)
 );
 
 const CollectionSchema = new Schema<ICollection>(

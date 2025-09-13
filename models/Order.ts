@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 
 export interface IOrderProduct {
+  _id: mongoose.Types.ObjectId;
   collection: mongoose.Types.ObjectId;
   size?: string;
   quantity: number;
@@ -34,7 +35,7 @@ const OrderProductSchema = new Schema<IOrderProduct>(
     price: { type: Number },
     name: { type: String },
   },
-  { _id: false }
+  { _id: true } // Ensures each product in the array gets its own unique _id
 );
 
 const OrderSchema = new Schema<IOrder>(

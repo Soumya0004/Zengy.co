@@ -1,9 +1,6 @@
-// /api/cart/route.ts
-
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/mongodb";
 import Order from "@/models/Order";
-import User from "@/models/User";
 import { auth } from "@/auth";
 import mongoose from "mongoose";
 
@@ -21,10 +18,13 @@ export async function GET() {
 
     const userId = session.user.id;
 
-    const userObjectId = new mongoose.Types.ObjectId(userId);
+    const queryUser = mongoose.Types.ObjectId.isValid(userId)
+      ? new mongoose.Types.ObjectId(userId)
+      : userId;
 
+    // ✅ match schema: field = "user", status = "Pending"
     const cart = await Order.findOne({
-      user: userObjectId,
+      user: queryUser,
       status: "Pending",
     }).populate("products.collection");
 
@@ -34,7 +34,7 @@ export async function GET() {
 
     return NextResponse.json({ success: true, cart });
   } catch (error: any) {
-    console.error("Error fetching cart:", error.message);
+    console.error("❌ Error fetching cart:", error.message);
     return NextResponse.json(
       { success: false, message: error.message || "Internal Server Error" },
       { status: 500 }
