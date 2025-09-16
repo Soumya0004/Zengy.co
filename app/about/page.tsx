@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
+import { ImageTrail } from "@/components/ui/image-trail";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -11,50 +12,115 @@ export default function AboutUs() {
   const processRef = useRef<HTMLDivElement | null>(null);
   const pathRef = useRef<SVGPathElement | null>(null);
 
+  // numbered sections data
+  const sections = [
+    { num: "01", title: "BRAND DESIGNER", desc: "Crafting timeless identities with bold detail." },
+    { num: "02", title: "MARKETING", desc: "Strategic campaigns that push boundaries." },
+    { num: "03", title: "VR DESIGNER", desc: "Immersive designs bridging the digital and real." },
+    { num: "04", title: "WEB DEVELOP", desc: "Building sleek, scalable, and modern web solutions." },
+  ];
+
   useEffect(() => {
-    const processElement = processRef.current;
-    const pathElement = pathRef.current;
+    // gsap.context scopes selectors & ensures cleanup (good for React Strict Mode)
+    const ctx = gsap.context(() => {
+      const path = pathRef.current;
+      const container = processRef.current;
+      if (!path || !container) return;
 
-    if (!processElement || !pathElement) return;
+      // SVG line draw setup
+      const length = path.getTotalLength();
+      gsap.set(path, { strokeDasharray: length, strokeDashoffset: length });
 
-    const path = pathElement;
-    const length = path.getTotalLength();
-
-    // reset stroke dash
-    gsap.set(path, {
-      strokeDasharray: length,
-      strokeDashoffset: length,
-    });
-
-    // 🔥 smooth scroll-based path animation
-    gsap.to(path, {
-      strokeDashoffset: 0,
-      ease: "none", // linear, tied directly to scroll
-      scrollTrigger: {
-        trigger: document.body,
-        start: "top top",
-        end: "bottom bottom",
-        scrub: true, // sync with scroll
-      },
-    });
-
-    // Fade/slide in items
-    const processItems = processElement.querySelectorAll(".process-item");
-    if (processItems.length > 0) {
-      gsap.from(processItems, {
-        y: 60,
-        opacity: 0,
-        stagger: 0.15,
-        duration: 0.8,
-        ease: "power3.out",
+      // Draw the path while the ABOUT container is in view.
+      // Using start:"top bottom" ensures it won't already be fully drawn on initial load.
+      gsap.to(path, {
+        strokeDashoffset: 0,
+        ease: "none",
         scrollTrigger: {
-          trigger: processElement,
-          start: "top 85%",
-          toggleActions: "play none none reverse",
+          trigger: container,
+          start: "top bottom",   // start when top of container hits bottom of viewport
+          end: "bottom top",     // end when bottom of container hits top of viewport
+          scrub: true,
+          invalidateOnRefresh: true,
         },
       });
-    }
+
+      // Animate each .process-item individually when it scrolls into view
+      const items = gsap.utils.toArray<HTMLElement>(".process-item");
+      items.forEach((el) => {
+        gsap.from(el, {
+          y: 60,
+          opacity: 0,
+          duration: 0.8,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: el,
+            start: "top 85%",
+            toggleActions: "play none none reverse",
+            markers: false,
+          },
+        });
+      });
+    }, processRef); // scope to processRef
+
+    return () => {
+      // revert removes animations/ScrollTriggers created within the context
+      ctx.revert();
+    };
   }, []);
+
+  // Small inner component so each numbered section can own its ref and pass it to ImageTrail
+  function NumberedSection({
+    item,
+    idx,
+  }: {
+    item: { num: string; title: string; desc: string };
+    idx: number;
+  }) {
+    const sectionRef = useRef<HTMLDivElement | null>(null);
+
+    return (
+      <div
+        ref={sectionRef}
+        className="process-item grid grid-cols-1 md:grid-cols-2 gap-10 items-center border-t border-gray-300 pt-12 relative"
+      >
+        
+        <div className="absolute -top-6 right-6 md:right-12 pointer-events-none">
+          <ImageTrail containerRef={sectionRef}>
+            <Image
+              src="/img1.jpg"
+              alt={`Trail ${idx}-1`}
+              width={60}
+              height={60}
+              className="rounded-full"
+            />
+            <Image
+              src="/img2.jpg"
+              alt={`Trail ${idx}-2`}
+              width={60}
+              height={60}
+              className="rounded-full"
+            />
+            <Image
+              src="/img3.jpg"
+              alt={`Trail ${idx}-3`}
+              width={60}
+              height={60}
+              className="rounded-full"
+            />
+          </ImageTrail>
+        </div>
+
+        <h2 className="text-[25vw] md:text-[15vw] font-bold text-gray-200 leading-none">
+          {item.num}
+        </h2>
+        <div>
+          <h3 className="text-2xl font-semibold mb-4">{item.title}</h3>
+          <p className="text-gray-500 text-lg">{item.desc}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -77,7 +143,7 @@ export default function AboutUs() {
       </svg>
 
       <div className="relative z-10">
-        {/* ---------------- Existing Intro + Sections ---------------- */}
+        {/* ---------------- Hero Section ---------------- */}
         <section className="relative px-6 lg:px-20 mt-12">
           <div className="flex flex-col lg:flex-row items-center justify-between">
             <div className="relative">
@@ -113,13 +179,13 @@ export default function AboutUs() {
             </div>
           </div>
 
-          {/* Section 1 */}
+          {/* Intro Sections */}
           <div className="process-item flex flex-col lg:flex-row items-start lg:items-center justify-between mt-20 space-y-8 lg:space-y-0 font-circular-web">
             <p className="text-sm text-gray-400">
               Born in India, <br /> built for the world
             </p>
             <div className="h-px w-full lg:w-1/3 bg-gray-600"></div>
-            <p className="text-xl lg:text-xl max-w-xl">
+            <p className="text-xl max-w-xl">
               Zengy.go started with a vision rooted in India’s rich artistry but
               built for a global audience. Our collections combine traditional
               craftsmanship with modern edge—designed to move seamlessly from
@@ -127,9 +193,8 @@ export default function AboutUs() {
             </p>
           </div>
 
-          {/* Section 2 */}
           <div className="process-item flex flex-col lg:flex-row items-start lg:items-center justify-between mt-20 space-y-8 lg:space-y-0 font-circular-web">
-            <p className="text-xl lg:text-xl max-w-xl">
+            <p className="text-xl max-w-xl">
               Every Zengy.go piece carries the spirit of culture while looking
               forward to the future. We reinvent timeless influences with
               progressive design, creating clothing that speaks to today while
@@ -141,13 +206,12 @@ export default function AboutUs() {
             </p>
           </div>
 
-          {/* Section 3 */}
           <div className="process-item flex flex-col lg:flex-row items-start lg:items-center justify-between mt-20 space-y-8 lg:space-y-0 font-circular-web">
             <p className="text-sm text-gray-400">
               From local streets, <br /> to global runways
             </p>
             <div className="h-px w-full lg:w-1/3 bg-gray-600"></div>
-            <p className="text-xl lg:text-xl max-w-xl">
+            <p className="text-xl max-w-xl">
               What begins on the street finds its place on the runway. Zengy.go
               is a bridge between raw street energy and high-fashion
               refinement—crafted for those who demand authenticity no matter
@@ -155,7 +219,6 @@ export default function AboutUs() {
             </p>
           </div>
 
-          {/* Description */}
           <div className="process-item grid md:grid-cols-2 gap-20 mt-16 text-gray-500">
             <p className="text-lg leading-relaxed">
               Every stitch carries attitude. Every piece tells a story of bold
@@ -169,42 +232,10 @@ export default function AboutUs() {
           </div>
         </section>
 
-        {/* ---------------- New Numbered Sections ---------------- */}
+        {/* ---------------- Numbered Sections (1–4) ---------------- */}
         <section className="relative px-6 lg:px-20 mt-32 space-y-20">
-          {[
-            {
-              num: "01",
-              title: "BRAND DESIGNER",
-              desc: "Crafting timeless identities with bold detail.",
-            },
-            {
-              num: "02",
-              title: "MARKETING",
-              desc: "Strategic campaigns that push boundaries.",
-            },
-            {
-              num: "03",
-              title: "VR DESIGNER",
-              desc: "Immersive designs bridging the digital and real.",
-            },
-            {
-              num: "04",
-              title: "WEB DEVELOP",
-              desc: "Building sleek, scalable, and modern web solutions.",
-            },
-          ].map((item, i) => (
-            <div
-              key={i}
-              className="process-item grid grid-cols-1 md:grid-cols-2 gap-10 items-center border-t border-gray-300 pt-12"
-            >
-              <h2 className="text-[25vw] md:text-[15vw] font-bold text-gray-200 leading-none">
-                {item.num}
-              </h2>
-              <div>
-                <h3 className="text-2xl font-semibold mb-4">{item.title}</h3>
-                <p className="text-gray-500 text-lg">{item.desc}</p>
-              </div>
-            </div>
+          {sections.map((item, i) => (
+            <NumberedSection key={i} item={item} idx={i} />
           ))}
         </section>
 
@@ -212,7 +243,6 @@ export default function AboutUs() {
         <section className="relative px-6 lg:px-20 py-5 mt-32 flex flex-col items-center justify-center text-center">
           <h2 className="text-5xl md:text-7xl font-bold relative inline-block">
             <span className="relative z-10">CONTACT US</span>
-            {/* Green ellipse underline */}
             <svg
               className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-[120%] h-16"
               viewBox="0 0 600 100"
