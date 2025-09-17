@@ -5,6 +5,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
 import { ImageTrail } from "@/components/ui/image-trail";
+import { TextGradientScroll } from "@/components/ui/text-gradient-scroll";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -12,7 +13,6 @@ export default function AboutUs() {
   const processRef = useRef<HTMLDivElement | null>(null);
   const pathRef = useRef<SVGPathElement | null>(null);
 
-  // numbered sections data
   const sections = [
     { num: "01", title: "BRAND DESIGNER", desc: "Crafting timeless identities with bold detail." },
     { num: "02", title: "MARKETING", desc: "Strategic campaigns that push boundaries." },
@@ -21,31 +21,24 @@ export default function AboutUs() {
   ];
 
   useEffect(() => {
-    // gsap.context scopes selectors & ensures cleanup (good for React Strict Mode)
     const ctx = gsap.context(() => {
       const path = pathRef.current;
       const container = processRef.current;
       if (!path || !container) return;
 
-      // SVG line draw setup
       const length = path.getTotalLength();
       gsap.set(path, { strokeDasharray: length, strokeDashoffset: length });
-
-      // Draw the path while the ABOUT container is in view.
-      // Using start:"top bottom" ensures it won't already be fully drawn on initial load.
       gsap.to(path, {
         strokeDashoffset: 0,
         ease: "none",
         scrollTrigger: {
           trigger: container,
-          start: "top bottom",   // start when top of container hits bottom of viewport
-          end: "bottom top",     // end when bottom of container hits top of viewport
+          start: "top bottom",
+          end: "bottom top",
           scrub: true,
-          invalidateOnRefresh: true,
         },
       });
 
-      // Animate each .process-item individually when it scrolls into view
       const items = gsap.utils.toArray<HTMLElement>(".process-item");
       items.forEach((el) => {
         gsap.from(el, {
@@ -57,19 +50,35 @@ export default function AboutUs() {
             trigger: el,
             start: "top 85%",
             toggleActions: "play none none reverse",
-            markers: false,
           },
         });
       });
-    }, processRef); // scope to processRef
 
-    return () => {
-      // revert removes animations/ScrollTriggers created within the context
-      ctx.revert();
-    };
+      const numbers = gsap.utils.toArray<HTMLElement>(".shuffle-number");
+      numbers.forEach((num) => {
+        gsap.fromTo(
+          num,
+          { y: 100, opacity: 0, rotateX: -90, scale: 0.8 },
+          {
+            y: 0,
+            opacity: 1,
+            rotateX: 0,
+            scale: 1,
+            duration: 1,
+            ease: "back.out(2)",
+            scrollTrigger: {
+              trigger: num,
+              start: "top 80%",
+              toggleActions: "play none none reverse",
+            },
+          }
+        );
+      });
+    }, processRef);
+
+    return () => ctx.revert();
   }, []);
 
-  // Small inner component so each numbered section can own its ref and pass it to ImageTrail
   function NumberedSection({
     item,
     idx,
@@ -84,7 +93,6 @@ export default function AboutUs() {
         ref={sectionRef}
         className="process-item grid grid-cols-1 md:grid-cols-2 gap-10 items-center border-t border-gray-300 pt-12 relative"
       >
-        
         <div className="absolute -top-6 right-6 md:right-12 pointer-events-none">
           <ImageTrail containerRef={sectionRef}>
             <Image
@@ -111,9 +119,10 @@ export default function AboutUs() {
           </ImageTrail>
         </div>
 
-        <h2 className="text-[25vw] md:text-[15vw] font-bold text-gray-200 leading-none">
+        <h2 className="shuffle-number text-[25vw] md:text-[15vw] font-bold text-gray-200 leading-none">
           {item.num}
         </h2>
+
         <div>
           <h3 className="text-2xl font-semibold mb-4">{item.title}</h3>
           <p className="text-gray-500 text-lg">{item.desc}</p>
@@ -127,7 +136,6 @@ export default function AboutUs() {
       ref={processRef}
       className="bg-white text-black min-h-screen font-sans relative overflow-hidden"
     >
-      {/* Background SVG Line */}
       <svg
         className="bg-line absolute inset-0 w-full h-full z-0 pointer-events-none"
         viewBox="0 0 400 2000"
@@ -143,7 +151,6 @@ export default function AboutUs() {
       </svg>
 
       <div className="relative z-10">
-        {/* ---------------- Hero Section ---------------- */}
         <section className="relative px-6 lg:px-20 mt-12">
           <div className="flex flex-col lg:flex-row items-center justify-between">
             <div className="relative">
@@ -179,27 +186,26 @@ export default function AboutUs() {
             </div>
           </div>
 
-          {/* Intro Sections */}
           <div className="process-item flex flex-col lg:flex-row items-start lg:items-center justify-between mt-20 space-y-8 lg:space-y-0 font-circular-web">
             <p className="text-sm text-gray-400">
               Born in India, <br /> built for the world
             </p>
             <div className="h-px w-full lg:w-1/3 bg-gray-600"></div>
-            <p className="text-xl max-w-xl">
-              Zengy.go started with a vision rooted in India’s rich artistry but
-              built for a global audience. Our collections combine traditional
-              craftsmanship with modern edge—designed to move seamlessly from
-              local streets to international stages.
-            </p>
+            <TextGradientScroll
+              text="Zengy.go started with a vision rooted in India’s rich artistry but built for a global audience. Our collections combine traditional craftsmanship with modern edge—designed to move seamlessly from local streets to international stages."
+              type="letter"
+              textOpacity="soft"
+              className="text-xl max-w-xl"
+            />
           </div>
 
           <div className="process-item flex flex-col lg:flex-row items-start lg:items-center justify-between mt-20 space-y-8 lg:space-y-0 font-circular-web">
-            <p className="text-xl max-w-xl">
-              Every Zengy.go piece carries the spirit of culture while looking
-              forward to the future. We reinvent timeless influences with
-              progressive design, creating clothing that speaks to today while
-              shaping the style of tomorrow.
-            </p>
+            <TextGradientScroll
+              text="Every Zengy.go piece carries the spirit of culture while looking forward to the future. We reinvent timeless influences with progressive design, creating clothing that speaks to today while shaping the style of tomorrow."
+              type="letter"
+              textOpacity="soft"
+              className="text-xl max-w-xl"
+            />
             <div className="h-px w-full lg:w-1/4 bg-gray-600"></div>
             <p className="text-sm text-gray-400">
               Rooted in culture, <br /> crafted for tomorrow
@@ -211,35 +217,36 @@ export default function AboutUs() {
               From local streets, <br /> to global runways
             </p>
             <div className="h-px w-full lg:w-1/3 bg-gray-600"></div>
-            <p className="text-xl max-w-xl">
-              What begins on the street finds its place on the runway. Zengy.go
-              is a bridge between raw street energy and high-fashion
-              refinement—crafted for those who demand authenticity no matter
-              where they go.
-            </p>
+            <TextGradientScroll
+              text="What begins on the street finds its place on the runway. Zengy.go is a bridge between raw street energy and high-fashion refinement—crafted for those who demand authenticity no matter where they go."
+              type="letter"
+              textOpacity="soft"
+              className="text-xl max-w-xl"
+            />
           </div>
 
           <div className="process-item grid md:grid-cols-2 gap-20 mt-16 text-gray-500">
-            <p className="text-lg leading-relaxed">
-              Every stitch carries attitude. Every piece tells a story of bold
-              individuality. We don’t follow trends—we shape them for those who
-              dare to be different.
-            </p>
-            <p className="text-lg leading-relaxed">
-              Zengy.go is more than clothing; it’s confidence you can wear every
-              day.
-            </p>
+            <TextGradientScroll
+              text="Every stitch carries attitude. Every piece tells a story of bold individuality. We don’t follow trends—we shape them for those who dare to be different."
+              type="letter"
+              textOpacity="soft"
+              className="text-lg leading-relaxed"
+            />
+            <TextGradientScroll
+              text="Zengy.go is more than clothing; it’s confidence you can wear every day."
+              type="letter"
+              textOpacity="soft"
+              className="text-lg leading-relaxed"
+            />
           </div>
         </section>
 
-        {/* ---------------- Numbered Sections (1–4) ---------------- */}
         <section className="relative px-6 lg:px-20 mt-32 space-y-20">
           {sections.map((item, i) => (
             <NumberedSection key={i} item={item} idx={i} />
           ))}
         </section>
 
-        {/* ---------------- Contact Section ---------------- */}
         <section className="relative px-6 lg:px-20 py-5 mt-32 flex flex-col items-center justify-center text-center">
           <h2 className="text-5xl md:text-7xl font-bold relative inline-block">
             <span className="relative z-10">CONTACT US</span>

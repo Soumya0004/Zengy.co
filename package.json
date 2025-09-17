@@ -17,7 +17,7 @@
     "class-variance-authority": "^0.7.1",
     "cloudinary": "^2.7.0",
     "clsx": "^2.1.1",
-    "framer-motion": "^12.23.12",
+    "framer-motion": "^12.23.13",
     "gsap": "^3.13.0",
     "jsonwebtoken": "^9.0.2",
     "jwt-decode": "^4.0.0",
