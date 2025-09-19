@@ -5,7 +5,6 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
 import { ImageTrail } from "@/components/ui/image-trail";
-import { TextGradientScroll } from "@/components/ui/text-gradient-scroll";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -13,6 +12,7 @@ export default function AboutUs() {
   const processRef = useRef<HTMLDivElement | null>(null);
   const pathRef = useRef<SVGPathElement | null>(null);
 
+  // numbered sections data
   const sections = [
     { num: "01", title: "BRAND DESIGNER", desc: "Crafting timeless identities with bold detail." },
     { num: "02", title: "MARKETING", desc: "Strategic campaigns that push boundaries." },
@@ -26,6 +26,7 @@ export default function AboutUs() {
       const container = processRef.current;
       if (!path || !container) return;
 
+      // SVG line draw
       const length = path.getTotalLength();
       gsap.set(path, { strokeDasharray: length, strokeDashoffset: length });
       gsap.to(path, {
@@ -39,6 +40,7 @@ export default function AboutUs() {
         },
       });
 
+      // Fade-up animation for process-item
       const items = gsap.utils.toArray<HTMLElement>(".process-item");
       items.forEach((el) => {
         gsap.from(el, {
@@ -54,6 +56,7 @@ export default function AboutUs() {
         });
       });
 
+      // 🔥 Shuffle animation for numbered sections
       const numbers = gsap.utils.toArray<HTMLElement>(".shuffle-number");
       numbers.forEach((num) => {
         gsap.fromTo(
@@ -93,6 +96,7 @@ export default function AboutUs() {
         ref={sectionRef}
         className="process-item grid grid-cols-1 md:grid-cols-2 gap-10 items-center border-t border-gray-300 pt-12 relative"
       >
+        {/* Floating image trail */}
         <div className="absolute -top-6 right-6 md:right-12 pointer-events-none">
           <ImageTrail containerRef={sectionRef}>
             <Image
@@ -119,6 +123,7 @@ export default function AboutUs() {
           </ImageTrail>
         </div>
 
+        {/* Number with shuffle animation */}
         <h2 className="shuffle-number text-[25vw] md:text-[15vw] font-bold text-gray-200 leading-none">
           {item.num}
         </h2>
@@ -136,6 +141,7 @@ export default function AboutUs() {
       ref={processRef}
       className="bg-white text-black min-h-screen font-sans relative overflow-hidden"
     >
+      {/* Background SVG Line */}
       <svg
         className="bg-line absolute inset-0 w-full h-full z-0 pointer-events-none"
         viewBox="0 0 400 2000"
@@ -151,6 +157,7 @@ export default function AboutUs() {
       </svg>
 
       <div className="relative z-10">
+        {/* Hero Section */}
         <section className="relative px-6 lg:px-20 mt-12">
           <div className="flex flex-col lg:flex-row items-center justify-between">
             <div className="relative">
@@ -186,26 +193,27 @@ export default function AboutUs() {
             </div>
           </div>
 
+          {/* Intro Sections */}
           <div className="process-item flex flex-col lg:flex-row items-start lg:items-center justify-between mt-20 space-y-8 lg:space-y-0 font-circular-web">
             <p className="text-sm text-gray-400">
               Born in India, <br /> built for the world
             </p>
             <div className="h-px w-full lg:w-1/3 bg-gray-600"></div>
-            <TextGradientScroll
-              text="Zengy.go started with a vision rooted in India’s rich artistry but built for a global audience. Our collections combine traditional craftsmanship with modern edge—designed to move seamlessly from local streets to international stages."
-              type="letter"
-              textOpacity="soft"
-              className="text-xl max-w-xl"
-            />
+            <p className="text-xl max-w-xl">
+              Zengy.go started with a vision rooted in India’s rich artistry but
+              built for a global audience. Our collections combine traditional
+              craftsmanship with modern edge—designed to move seamlessly from
+              local streets to international stages.
+            </p>
           </div>
 
           <div className="process-item flex flex-col lg:flex-row items-start lg:items-center justify-between mt-20 space-y-8 lg:space-y-0 font-circular-web">
-            <TextGradientScroll
-              text="Every Zengy.go piece carries the spirit of culture while looking forward to the future. We reinvent timeless influences with progressive design, creating clothing that speaks to today while shaping the style of tomorrow."
-              type="letter"
-              textOpacity="soft"
-              className="text-xl max-w-xl"
-            />
+            <p className="text-xl max-w-xl">
+              Every Zengy.go piece carries the spirit of culture while looking
+              forward to the future. We reinvent timeless influences with
+              progressive design, creating clothing that speaks to today while
+              shaping the style of tomorrow.
+            </p>
             <div className="h-px w-full lg:w-1/4 bg-gray-600"></div>
             <p className="text-sm text-gray-400">
               Rooted in culture, <br /> crafted for tomorrow
@@ -217,36 +225,35 @@ export default function AboutUs() {
               From local streets, <br /> to global runways
             </p>
             <div className="h-px w-full lg:w-1/3 bg-gray-600"></div>
-            <TextGradientScroll
-              text="What begins on the street finds its place on the runway. Zengy.go is a bridge between raw street energy and high-fashion refinement—crafted for those who demand authenticity no matter where they go."
-              type="letter"
-              textOpacity="soft"
-              className="text-xl max-w-xl"
-            />
+            <p className="text-xl max-w-xl">
+              What begins on the street finds its place on the runway. Zengy.go
+              is a bridge between raw street energy and high-fashion
+              refinement—crafted for those who demand authenticity no matter
+              where they go.
+            </p>
           </div>
 
           <div className="process-item grid md:grid-cols-2 gap-20 mt-16 text-gray-500">
-            <TextGradientScroll
-              text="Every stitch carries attitude. Every piece tells a story of bold individuality. We don’t follow trends—we shape them for those who dare to be different."
-              type="letter"
-              textOpacity="soft"
-              className="text-lg leading-relaxed"
-            />
-            <TextGradientScroll
-              text="Zengy.go is more than clothing; it’s confidence you can wear every day."
-              type="letter"
-              textOpacity="soft"
-              className="text-lg leading-relaxed"
-            />
+            <p className="text-lg leading-relaxed">
+              Every stitch carries attitude. Every piece tells a story of bold
+              individuality. We don’t follow trends—we shape them for those who
+              dare to be different.
+            </p>
+            <p className="text-lg leading-relaxed">
+              Zengy.go is more than clothing; it’s confidence you can wear every
+              day.
+            </p>
           </div>
         </section>
 
+        {/* Numbered Sections */}
         <section className="relative px-6 lg:px-20 mt-32 space-y-20">
           {sections.map((item, i) => (
             <NumberedSection key={i} item={item} idx={i} />
           ))}
         </section>
 
+        {/* Contact Section */}
         <section className="relative px-6 lg:px-20 py-5 mt-32 flex flex-col items-center justify-center text-center">
           <h2 className="text-5xl md:text-7xl font-bold relative inline-block">
             <span className="relative z-10">CONTACT US</span>

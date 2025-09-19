@@ -109,13 +109,13 @@ const Promotion: React.FC = () => {
             <div ref={leftImg1Ref}>
               <ImgClipBox
                 clipClass="contact-clip-path-1"
-                aspectClass="h-36 sm:h-56 lg:h-72"
+                aspectClass="h-36 sm:h-56 lg:h-72 "
                 src="/img11.webp"
               />
             </div>
             <div ref={leftImg2Ref}>
               <ImgClipBox
-                clipClass="contact-clip-path-2 translate-y-6 sm:translate-y-10"
+                clipClass="contact-clip-path-1 translate-y-6 sm:translate-y-10"
                 aspectClass="h-36 sm:h-56 lg:h-72"
                 src="/img9.webp"
               />

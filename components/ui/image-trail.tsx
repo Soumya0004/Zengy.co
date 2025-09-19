@@ -16,7 +16,7 @@ type TrailAnimationSequence = TrailSegment[];
 
 interface ImageTrailProps {
   children: React.ReactNode;
-  containerRef?: React.RefObject<HTMLElement>; // optional - if not provided, trail appears anywhere
+  containerRef?: React.RefObject<HTMLElement | null>; // ✅ allow null
   newOnTop?: boolean;
   rotationRange?: number; // degrees
   animationSequence?: TrailAnimationSequence;
@@ -55,7 +55,7 @@ export const ImageTrail = ({
     lastMove: 0,
   });
 
-  // pointer handlers - update global mouseRef
+  // pointer handlers
   useEffect(() => {
     const onPointerMove = (e: PointerEvent) => {
       mouseRef.current.x = e.clientX;
@@ -80,8 +80,7 @@ export const ImageTrail = ({
 
   const addToTrail = useCallback(
     (clientX: number, clientY: number) => {
-      // If containerRef provided, ensure cursor inside container rect
-      if (containerRef && containerRef.current) {
+      if (containerRef?.current) {
         const rect = containerRef.current.getBoundingClientRect();
         if (
           clientX < rect.left ||
@@ -89,7 +88,7 @@ export const ImageTrail = ({
           clientY < rect.top ||
           clientY > rect.bottom
         ) {
-          return; // outside -> don't spawn
+          return;
         }
       }
 
@@ -110,13 +109,10 @@ export const ImageTrail = ({
     [animationSequence, childrenArray, containerRef, newOnTop, rotationRange]
   );
 
-  // Use framer-motion RAF tick to sample pointer position and spawn items at `interval`
   useAnimationFrame((time) => {
     const m = mouseRef.current;
-    if (!m.lastMove) return; // no pointer movement yet
-    // throttle by interval
+    if (!m.lastMove) return;
     if (time - lastAddedRef.current < interval) return;
-    // require recent movement (avoid spawning if last move was long ago)
     if (performance.now() - m.lastMove > 120) return;
     lastAddedRef.current = time;
     addToTrail(m.x, m.y);
@@ -127,7 +123,6 @@ export const ImageTrail = ({
   }, []);
 
   return (
-    // the wrapper itself does not capture pointer events (so it won't block UI)
     <div aria-hidden className="pointer-events-none">
       {trail.map((item) => (
         <TrailSprite key={item.id} item={item} onComplete={removeFromTrail} />
@@ -143,27 +138,22 @@ interface TrailSpriteProps {
 
 const TrailSprite: React.FC<TrailSpriteProps> = ({ item, onComplete }) => {
   const controls = useAnimation();
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      // run each segment sequentially
       for (const segment of item.animationSequence) {
         if (cancelled) return;
         const [props, transition] = segment;
-        // merge transition into props for controls.start
-        // controls.start resolves when that animation completes
         await controls.start({ ...props, transition });
       }
       if (!cancelled) onComplete(item.id);
     })();
-
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [controls, item, onComplete]);
 
-  // place using 'fixed' coordinates (page coordinates) and center with translate
   const style: React.CSSProperties = {
     position: "fixed",
     left: item.x,
@@ -180,4 +170,3 @@ const TrailSprite: React.FC<TrailSpriteProps> = ({ item, onComplete }) => {
     </motion.div>
   );
 };
-

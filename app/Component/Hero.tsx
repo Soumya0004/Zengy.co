@@ -4,6 +4,8 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
 import React, { useEffect, useRef } from "react";
+import Shuffle from "@/components/Shuffle";
+import ShinyText from "@/components/ShinyText";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -50,10 +52,9 @@ const Hero = () => {
   // === Scroll Animations ===
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Text Fade + Slide In
+      // Text fade in (Shuffle handles animation but we add slight fade too)
       if (textRef.current) {
         gsap.from(textRef.current, {
-          y: 100,
           opacity: 0,
           duration: 1,
           ease: "power3.out",
@@ -101,14 +102,14 @@ const Hero = () => {
     }, containerRef);
 
     return () => {
-      ctx.revert(); 
+      ctx.revert();
     };
   }, []);
 
   return (
     <main
       ref={containerRef}
-      className="grid grid-cols-1 md:grid-cols-[1.1fr_0.9fr] items-center bg-white text-zinc-800 
+      className="grid grid-cols-1 md:grid-cols-[1.1fr_0.9fr] items-center text-zinc-800 
       px-4 sm:px-8 md:px-12 lg:px-28 pt-8 sm:pt-12 md:py-20 lg:pt-10 min-h-screen"
     >
       {/* Left Content */}
@@ -116,15 +117,15 @@ const Hero = () => {
         ref={textRef}
         className="flex flex-col justify-center space-y-4 sm:space-y-6 items-center md:items-start text-center md:text-left lg:pl-10"
       >
-        <h1
-          className="special-font font-zentry font-bold   
-          text-3xl sm:text-5xl md:text-5xl lg:text-7xl -tracking-tight"
-        >
-          <b>F</b>as<b>h</b>ion T<b>ha</b>t <br />
-          <span className="block md:ml-7">
-            <b>M</b>o<b>v</b>es Wi<b>th</b> Y<b>o</b>u
-          </span>
-        </h1>
+        
+<Shuffle tag="h1" className=" font-zentry special-font ">
+  <b>F</b>as<b>h</b>ion T<b>ha</b>t <br />
+  <span className="block md:ml-7">
+    <b>M</b>o<b>v</b>es Wi<b>th</b> Y<b>o</b>u
+  </span>
+</Shuffle>
+
+
 
         <p className="text-sm sm:text-base md:text-md lg:text-lg text-zinc-800 max-w-xl font-circular-web md:ml-7">
           At Zengy.go, we create fashion that moves with you — comfortable,
@@ -134,12 +135,12 @@ const Hero = () => {
 
         {/* Desktop & Tablet Buttons */}
         <div className="hidden md:flex gap-4 pt-4 md:ml-7 ">
-          <button className="bg-zinc-800 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-900 transition">
-            Buy Product
-          </button>
-          <button className="border border-black text-zinc-800 px-6 py-3 rounded-xl font-semibold hover:bg-gray-100 transition">
-            Explore Product
-          </button>
+          <button className="bg-zinc-800 px-6 py-3 rounded-xl font-semibold hover:bg-gray-900 transition w-full sm:w-auto">
+    <ShinyText text="Buy Product" disabled={false} speed={3} />
+  </button>
+  <button className="border border-black text-zinc-800 px-6 py-3 rounded-xl font-bold hover:bg-gray-100 transition w-full sm:w-auto">
+    <ShinyText text="Explore Product" disabled={true} speed={3} />
+  </button>
         </div>
       </div>
 
@@ -165,12 +166,13 @@ const Hero = () => {
 
         {/* Mobile Buttons */}
         <div className="flex md:hidden flex-col sm:flex-row gap-4 mt-6 w-full justify-center">
-          <button className="bg-zinc-800 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-900 transition w-full sm:w-auto">
-            Buy Product
-          </button>
-          <button className="border border-black text-zinc-800 px-6 py-3 rounded-xl font-semibold hover:bg-gray-100 transition w-full sm:w-auto">
-            Explore Product
-          </button>
+          <button className="bg-zinc-800 px-6 py-3 rounded-xl font-semibold hover:bg-gray-900 transition w-full sm:w-auto">
+    <ShinyText text="Buy Product" disabled={false} speed={3} />
+  </button>
+  <button className="border border-black text-zinc-800 px-6 py-3 rounded-xl font-semibold hover:bg-gray-100 transition w-full sm:w-auto">
+    <ShinyText text="Explore Product" disabled={false} speed={3} /> 
+
+  </button>
         </div>
       </div>
     </main>
