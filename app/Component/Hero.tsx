@@ -6,6 +6,7 @@ import Image from "next/image";
 import React, { useEffect, useRef } from "react";
 import Shuffle from "@/components/Shuffle";
 import ShinyText from "@/components/ShinyText";
+import Magnet from "@/components/Magnet";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -135,12 +136,20 @@ const Hero = () => {
 
         {/* Desktop & Tablet Buttons */}
         <div className="hidden md:flex gap-4 pt-4 md:ml-7 ">
-          <button className="bg-zinc-800 px-6 py-3 rounded-xl font-semibold hover:bg-gray-900 transition w-full sm:w-auto">
+
+<Magnet padding={50} disabled={false} magnetStrength={10}>
+  <button className="bg-zinc-800 px-6 py-3 rounded-xl font-semibold hover:bg-gray-900 transition w-full sm:w-auto  gap-5">
     <ShinyText text="Buy Product" disabled={false} speed={3} />
   </button>
-  <button className="border border-black text-zinc-800 px-6 py-3 rounded-xl font-bold hover:bg-gray-100 transition w-full sm:w-auto">
+</Magnet>
+
+
+<Magnet padding={50} disabled={false} magnetStrength={10}>
+<button className="border border-black text-zinc-800 px-6 py-3 rounded-xl font-bold hover:bg-gray-100 transition w-full sm:w-auto">
     <ShinyText text="Explore Product" disabled={true} speed={3} />
-  </button>
+  </button></Magnet>
+
+  
         </div>
       </div>
 
@@ -175,6 +184,8 @@ const Hero = () => {
   </button>
         </div>
       </div>
+
+      
     </main>
   );
 };
