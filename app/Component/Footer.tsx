@@ -25,14 +25,14 @@ const Footer = () => {
 
           {/* Information Section */}
           <div>
-            <h2 className="text-lg font-semibold text-white mb-4">
+            <h2 className="text-lg font-semibold text-white mb-4 ">
               Information
             </h2>
             <div className="flex flex-col space-y-2 text-sm">
               <Link href="/privacy-policy" className="hover:text-white">
                 Privacy Policy
               </Link>
-              <Link href="/about-us" className="hover:text-white">
+              <Link href="/about " className="hover:text-white">
                 About Us
               </Link>
               <Link href="/contact-us" className="hover:text-white">

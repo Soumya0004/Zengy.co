@@ -402,7 +402,8 @@ const Shuffle: React.FC<ShuffleProps> = ({
   );
 
   const baseTw =
-    "inline-block whitespace-normal break-words will-change-transform uppercase text-[4rem] leading-none font-zentry";
+  "inline-block break-words will-change-transform uppercase text-[3rem] md:text-5xl lg:text-8xl tracking-tight leading-none font-zentry";
+
   const commonStyle: React.CSSProperties = {
     textAlign,
     ...style,

@@ -119,7 +119,7 @@ const Hero = () => {
         className="flex flex-col justify-center space-y-4 sm:space-y-6 items-center md:items-start text-center md:text-left lg:pl-10"
       >
         
-<Shuffle tag="h1" className=" font-zentry special-font ">
+<Shuffle tag="h1" className=" font-zentry special-font  text-7xl  ">
   <b>F</b>as<b>h</b>ion T<b>ha</b>t <br />
   <span className="block md:ml-7">
     <b>M</b>o<b>v</b>es Wi<b>th</b> Y<b>o</b>u
@@ -146,7 +146,7 @@ const Hero = () => {
 
 <Magnet padding={50} disabled={false} magnetStrength={10}>
 <button className="border border-black text-zinc-800 px-6 py-3 rounded-xl font-bold hover:bg-gray-100 transition w-full sm:w-auto">
-    <ShinyText text="Explore Product" disabled={true} speed={3} />
+Explore Product
   </button></Magnet>
 
   
@@ -179,8 +179,7 @@ const Hero = () => {
     <ShinyText text="Buy Product" disabled={false} speed={3} />
   </button>
   <button className="border border-black text-zinc-800 px-6 py-3 rounded-xl font-semibold hover:bg-gray-100 transition w-full sm:w-auto">
-    <ShinyText text="Explore Product" disabled={false} speed={3} /> 
-
+Explore Product
   </button>
         </div>
       </div>

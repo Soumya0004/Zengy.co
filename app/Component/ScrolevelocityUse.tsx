@@ -5,7 +5,7 @@ import React from 'react'
 
 const ScrollVelocityUse = () => {
   return (
-    <div><ScrollVelocity
+    <div className='py-10'><ScrollVelocity
   texts={['have your great style ', 'show your unique personality ']} 
   velocity={100} 
   className="custom-scroll-text"

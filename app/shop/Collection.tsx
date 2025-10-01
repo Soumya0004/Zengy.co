@@ -6,6 +6,9 @@ import Card from "../Component/Card";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Loding from "../Component/Loding";
+import Link from "next/link";
+import ShinyText from "@/components/ShinyText";
+import Magnet from "@/components/Magnet";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -73,7 +76,7 @@ const Collection = () => {
   return (
     <div
       ref={containerRef}
-      className="min-h-full px-4 sm:px-8 md:px-12 lg:px-20 py-10"
+      className="min-h-full px-4 sm:px-8 md:px-12 lg:px-20 py-10 "
     >
       {/* Header */}
       <div className="flex flex-col md:flex-row md:justify-between gap-4 md:gap-0">
@@ -90,6 +93,16 @@ const Collection = () => {
       <div >
               <Card collections={collections}  />
 
+      </div>
+      {/* Explore More Link */}
+
+      <div className="flex justify-center">
+        <Magnet padding={50} disabled={false} magnetStrength={10}>
+
+        <Link href="/shop" className="mt-4 text-center  text-sm md:text-md  lg:text-lg  text-black   px-5 py-1   hover:shadow-lg text-shadow-lg rounded-lg font-medium transition-colors duration-300">
+       <ShinyText text="Explore more" disabled={false} speed={3} />
+</Link>
+       </Magnet>
       </div>
     </div>
   );

@@ -61,7 +61,7 @@ const Explore = () => {
   }, []);
 
   return (
-    <div ref={containerRef} className="px-6 md:px-12 py-16">
+    <div ref={containerRef} className="px-6 md:px-12 py-20">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         <div
           ref={(el) => addToRefs(el, 0)}
