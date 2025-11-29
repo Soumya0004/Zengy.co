@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import cloudinary from "@/lib/cloudinary";
 import { dbConnect } from "@/lib/mongodb";
-import Collections from "@/models/Collections";
+import Collections from "@/lib/models/Collections";
 
 interface Params {
   params: { id: string };

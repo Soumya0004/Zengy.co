@@ -6,6 +6,7 @@ import gsap from "gsap";
 import axios from "axios";
 import { ShoppingBag, Trash2 } from "lucide-react";
 import Loding from "../Component/Loding";
+import RazorpayButton from "@/components/RazorpayButton";
 
 interface CartProduct {
   _id: string;
@@ -41,7 +42,7 @@ export default function CartPage() {
         if (res.data.success) {
           setCart(res.data.cart);
         } else {
-          setCart({ _id: "", products: [], status: "pending" });
+          setCart({ _id: "", products: [], status: "Pending" }); 
         }
       } catch (error) {
         console.error("Error fetching cart:", error);
@@ -65,39 +66,51 @@ export default function CartPage() {
 
   // --- REMOVE ITEM ---
   const handleRemove = async (itemId: string) => {
-  try {
-    setRemoving(itemId);
-    const res = await axios.post("/api/cart/itemRemove", {
-      orderId: cart?._id,
-      productId: itemId,
-    });
+    try {
+      setRemoving(itemId);
+      const res = await axios.post("/api/cart/itemRemove", {
+        orderId: cart?._id,
+        productId: itemId,
+      });
 
-    if (res.data.success) {
-      setCart(res.data.order);
+      if (res.data.success) {
+        setCart(res.data.order);
+      }
+    } catch (error) {
+      console.error("Error removing item:", error);
+    } finally {
+      setRemoving(null);
     }
-  } catch (error) {
-    console.error("Error removing item:", error);
-  } finally {
-    setRemoving(null);
-  }
-};
+  };
 
 
   if (status === "loading" || loading) return <Loding />;
   if (status === "unauthenticated")
     return <p className="p-6 text-gray-500">Please log in to view your cart.</p>;
- if (!cart || cart.products.length === 0)
-  return (
-    <div className="flex items-center justify-center h-screen">
-      <p className="text-zinc-700  font-zentry text-6xl special-font"><b>y</b>o<b>u</b>r b<b>ag</b> is e<b>mpt</b>y</p>
-    </div>
-  );
+  if (!cart || cart.products.length === 0)
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-zinc-700 font-zentry text-6xl special-font">
+          <b>y</b>o<b>u</b>r b<b>ag</b> is e<b>mpt</b>y
+        </p>
+      </div>
+    );
 
   const subtotal = cart.products.reduce(
     (acc, item) => acc + item.collection.price * item.quantity,
     0
   );
 
+  // Prepare the products array expected by the backend
+  const productsForPayment = cart.products.map(item => ({
+    _id: item._id, 
+    collection: item.collection._id, // Product's actual Mongo ID
+    size: item.size,
+    quantity: item.quantity,
+    price: item.collection.price, 
+    name: item.collection.title,
+  }));
+  
   return (
     <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-8" ref={cartRef}>
       <div className="md:col-span-2 space-y-4">
@@ -124,7 +137,7 @@ export default function CartPage() {
               <button
                 onClick={() => handleRemove(item._id)}
                 disabled={removing === item._id}
-                className="text-red-500 hover:text-red-700 disabled:opacity-50"
+                className="text-red-500 hover:text-red-700 disabled:opacity-50 cursor-pointer"
               >
                 <Trash2 size={20} />
               </button>
@@ -151,10 +164,15 @@ export default function CartPage() {
           <span>Total</span>
           <span>₹{subtotal.toFixed(2)}</span>
         </div>
-        <button className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition">
-          Proceed to Checkout
-        </button>
-        <button className="w-full mt-2 text-gray-600 hover:underline">
+        
+        {/* Pass correct props to RazorpayButton */}
+        <RazorpayButton 
+          amount={subtotal} 
+          cartId={cart._id} 
+          products={productsForPayment}
+        />
+
+        <button className="w-full mt-2 text-gray-600 hover:underline cursor-pointer">
           Continue Shopping
         </button>
       </div>

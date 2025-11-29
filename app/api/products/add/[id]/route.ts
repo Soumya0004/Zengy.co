@@ -1,5 +1,5 @@
 import { dbConnect } from "@/lib/mongodb";
-import Collections from "@/models/Collections";
+import Collections from "@/lib/models/Collections";
 import { NextResponse } from "next/server";
 
 // POST /api/products

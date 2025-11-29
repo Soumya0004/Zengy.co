@@ -3,7 +3,7 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { dbConnect } from "@/lib/mongodb";
-import User from "@/models/User";
+import User from "@/lib/models/User";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
@@ -19,11 +19,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
       async authorize(credentials) {
         await dbConnect();
-        if (!credentials?.email || !credentials?.password) throw new Error("Missing email or password");
+        if (!credentials?.email || !credentials?.password)
+          throw new Error("Missing email or password");
+
         const user = await User.findOne({ email: credentials.email }).lean();
         if (!user || !user.password) throw new Error("Invalid credentials");
+
         const isValid = await bcrypt.compare(credentials.password, user.password);
         if (!isValid) throw new Error("Invalid credentials");
+
         return {
           id: user._id.toString(),
           email: user.email,
@@ -46,7 +50,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return token;
     },
     async session({ session, token }) {
-      if (token.sub) session.user.id = token.sub;
+      if (token.sub) session.user.id = token.sub; // ✅ important
       if (token.loginType) session.user.loginType = token.loginType;
       return session;
     },
@@ -58,7 +62,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           await User.create({
             name: user.name,
             email: user.email,
-            avatar: user.image || "https://cdn-icons-png.flaticon.com/128/3177/3177440.png",
+            avatar:
+              user.image ||
+              "https://cdn-icons-png.flaticon.com/128/3177/3177440.png",
             cart: [],
             favourites: [],
             orders: [],

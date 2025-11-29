@@ -7,6 +7,7 @@ import React, { useEffect, useRef } from "react";
 import Shuffle from "@/components/Shuffle";
 import ShinyText from "@/components/ShinyText";
 import Magnet from "@/components/Magnet";
+import Link from "next/link";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -53,7 +54,6 @@ const Hero = () => {
   // === Scroll Animations ===
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Text fade in (Shuffle handles animation but we add slight fade too)
       if (textRef.current) {
         gsap.from(textRef.current, {
           opacity: 0,
@@ -67,7 +67,6 @@ const Hero = () => {
         });
       }
 
-      // Image Scale + Fade In
       if (frameRef.current) {
         gsap.from(frameRef.current, {
           scale: 0.9,
@@ -82,7 +81,6 @@ const Hero = () => {
         });
       }
 
-      // Page Transition Animation
       if (containerRef.current) {
         gsap.fromTo(
           containerRef.current,
@@ -102,62 +100,59 @@ const Hero = () => {
       }
     }, containerRef);
 
-    return () => {
-      ctx.revert();
-    };
+    return () => ctx.revert();
   }, []);
 
   return (
     <main
       ref={containerRef}
-      className="grid grid-cols-1 md:grid-cols-[1.1fr_0.9fr] items-center text-zinc-800 
-      px-4 sm:px-8 md:px-12 lg:px-28 pt-8 sm:pt-12 md:py-20 lg:pt-10 min-h-screen"
+      className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] items-center text-zinc-800
+      px-5 sm:px-8 md:px-12 lg:px-20 xl:px-28
+      pt-12 sm:pt-16 md:pt-20 lg:pt-0 min-h-screen gap-10"
     >
       {/* Left Content */}
       <div
         ref={textRef}
-        className="flex flex-col justify-center space-y-4 sm:space-y-6 items-center md:items-start text-center md:text-left lg:pl-10"
+        className="flex flex-col justify-center space-y-4 sm:space-y-6 
+        items-center text-center lg:items-start lg:text-left"
       >
-        
-<Shuffle tag="h1" className=" font-zentry special-font  text-7xl  ">
-  <b>F</b>as<b>h</b>ion T<b>ha</b>t <br />
-  <span className="block md:ml-7">
-    <b>M</b>o<b>v</b>es Wi<b>th</b> Y<b>o</b>u
-  </span>
-</Shuffle>
+        <Shuffle
+          tag="h1"
+          className="font-zentry special-font text-5xl sm:text-6xl md:text-7xl lg:text-8xl lg:-leading-tight"
+        >
+          <b>F</b>as<b>h</b>ion T<b>ha</b>t <br />
+          <span className="block md:ml-0 lg:ml-7">
+            <b>M</b>o<b>v</b>es Wi<b>th</b> Y<b>o</b>u
+          </span>
+        </Shuffle>
 
-
-
-        <p className="text-sm sm:text-base md:text-md lg:text-lg text-zinc-800 max-w-xl font-circular-web md:ml-7">
+        <p className="text-base sm:text-lg md:text-xl text-zinc-700 max-w-xl font-circular-web md:mx-auto lg:ml-7">
           At Zengy.go, we create fashion that moves with you — comfortable,
           stylish, and bold clothing designed for everyday energy and
           confidence.
         </p>
 
-        {/* Desktop & Tablet Buttons */}
-        <div className="hidden md:flex gap-4 pt-4 md:ml-7 ">
+        {/* Buttons (Tablet & Desktop) */}
+        <div className="hidden sm:flex flex-wrap gap-4 pt-6 justify-center lg:justify-start lg:ml-7">
+          <Magnet padding={50} disabled={false} magnetStrength={10}>
+            <button className="bg-zinc-800 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-900 transition">
+              <Link href="./shop"><ShinyText text="Buy Product" disabled={false} speed={3} /></Link>
+            </button>
+          </Magnet>
 
-<Magnet padding={50} disabled={false} magnetStrength={10}>
-  <button className="bg-zinc-800 px-6 py-3 rounded-xl font-semibold hover:bg-gray-900 transition w-full sm:w-auto  gap-5">
-    <ShinyText text="Buy Product" disabled={false} speed={3} />
-  </button>
-</Magnet>
-
-
-<Magnet padding={50} disabled={false} magnetStrength={10}>
-<button className="border border-black text-zinc-800 px-6 py-3 rounded-xl font-bold hover:bg-gray-100 transition w-full sm:w-auto">
-Explore Product
-  </button></Magnet>
-
-  
+          <Magnet padding={50} disabled={false} magnetStrength={10}>
+            <button className="border border-black text-zinc-800 px-6 py-3 rounded-xl font-bold hover:bg-gray-100 transition">
+              Explore Product
+            </button>
+          </Magnet>
         </div>
       </div>
 
       {/* Right Image */}
-      <div className="flex flex-col items-center md:items-start w-full">
+      <div className="flex flex-col items-center lg:items-start w-full">
         <div
           ref={frameRef}
-          className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl rounded overflow-hidden"
+          className="w-full max-w-xs sm:max-w-md md:max-w-xl lg:max-w-lg rounded-xl overflow-hidden lg:mb-10"
           onMouseLeave={handleMouseLeave}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseLeave}
@@ -169,22 +164,22 @@ Explore Product
             width={900}
             height={700}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover w-full h-auto rounded"
+            className="object-cover w-full h-auto   "
           />
         </div>
 
         {/* Mobile Buttons */}
-        <div className="flex md:hidden flex-col sm:flex-row gap-4 mt-6 w-full justify-center">
-          <button className="bg-zinc-800 px-6 py-3 rounded-xl font-semibold hover:bg-gray-900 transition w-full sm:w-auto">
-    <ShinyText text="Buy Product" disabled={false} speed={3} />
-  </button>
-  <button className="border border-black text-zinc-800 px-6 py-3 rounded-xl font-semibold hover:bg-gray-100 transition w-full sm:w-auto">
-Explore Product
-  </button>
+        <div className="flex sm:hidden flex-col sm:flex-row gap-4 mt-6 w-full justify-center">
+          <button className="bg-zinc-800 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-900 transition w-full sm:w-auto">
+            <Link href="./shop">
+              <ShinyText text="Buy Product" disabled={false} speed={3} />
+            </Link>
+          </button>
+          <button className="border border-black text-zinc-800 px-6 py-3 rounded-xl font-semibold hover:bg-gray-100 transition w-full sm:w-auto">
+            Explore Product
+          </button>
         </div>
       </div>
-
-      
     </main>
   );
 };

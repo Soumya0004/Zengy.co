@@ -260,7 +260,7 @@ const Page = () => {
                 className={`flex-1 px-6 py-3 rounded-xl transition ${
                   canAdd
                     ? "bg-blue-600 text-white hover:bg-blue-700"
-                    : "bg-gray-300 text-gray-600 cursor-not-allowed"
+                    : "bg-white text-gray-600 cursor-not-allowed"
                 }`}
               >
                 {adding ? "Adding..." : "Add to Cart"}

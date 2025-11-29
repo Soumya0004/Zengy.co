@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/mongodb";
-import Order from "@/models/Order";
-import Collections from "@/models/Collections"; 
+import Cart from "@/lib/models/Cart";
+import Collections from "@/lib/models/Collections";
 import mongoose from "mongoose";
 
 export async function POST(req: Request) {
@@ -10,7 +10,6 @@ export async function POST(req: Request) {
 
     const { userId, productId, size, quantity, price, name } = await req.json();
 
-    // ✅ Validate required fields
     if (!userId || !productId || !quantity) {
       return NextResponse.json(
         { success: false, message: "Missing required fields" },
@@ -21,19 +20,11 @@ export async function POST(req: Request) {
     const qty = Number(quantity);
     if (isNaN(qty) || qty <= 0) {
       return NextResponse.json(
-        { success: false, message: "Quantity must be a positive number" },
+        { success: false, message: "Quantity must be > 0" },
         { status: 400 }
       );
     }
 
-    if (!mongoose.Types.ObjectId.isValid(productId)) {
-      return NextResponse.json(
-        { success: false, message: "Invalid productId" },
-        { status: 400 }
-      );
-    }
-
-    // ✅ Ensure product exists and stock is available
     const collection = await Collections.findById(productId);
     if (!collection) {
       return NextResponse.json(
@@ -42,77 +33,73 @@ export async function POST(req: Request) {
       );
     }
 
-    if (collection.sizes?.length > 0) {
+    // Validate stock
+    if (collection.sizes?.length) {
       const sizeStock = collection.sizes.find((s) => s.size === size);
+
       if (!sizeStock) {
         return NextResponse.json(
           { success: false, message: "Invalid size selected" },
           { status: 400 }
         );
       }
+
       if (sizeStock.stock < qty) {
         return NextResponse.json(
-          { success: false, message: "Not enough stock for this size" },
+          { success: false, message: "Not enough stock for selected size" },
           { status: 400 }
         );
       }
-    } else {
-      return NextResponse.json(
-        { success: false, message: "This product requires sizes" },
-        { status: 400 }
+    }
+
+    // ALWAYS OBJECTID (THE FIX)
+    const mongoUserId = new mongoose.Types.ObjectId(userId);
+
+    // Fetch user's cart
+    let cart = await Cart.findOne({ user: mongoUserId });
+
+    if (!cart) {
+      cart = new Cart({
+        user: mongoUserId,
+        products: [],
+      });
+    }
+
+    const existingItem = cart.products.find((item: any) => {
+      const itemId = item.collection.toString();
+      return (
+        itemId === productId.toString() &&
+        item.size === size
       );
-    }
-
-    // ✅ Convert userId
-    let mongoUserId: mongoose.Types.ObjectId | string = userId;
-    if (mongoose.Types.ObjectId.isValid(userId)) {
-      mongoUserId = new mongoose.Types.ObjectId(userId);
-    }
-
-    // ✅ Find pending cart
-    let order = await Order.findOne({ user: mongoUserId, status: "Pending" });
-    if (!order) {
-      order = new Order({ user: mongoUserId, products: [], status: "Pending" });
-    }
-
-    // ✅ Check if product+size already exists
-    const existingItem = order.products.find((item: any) => {
-      const itemId = (
-        item.collection instanceof mongoose.Types.ObjectId
-          ? item.collection
-          : item.collection?._id
-      )?.toString();
-      return itemId === productId.toString() && (size ? item.size === size : true);
     });
 
     if (existingItem) {
       existingItem.quantity += qty;
     } else {
-      order.products.push({
+      cart.products.push({
         collection: new mongoose.Types.ObjectId(productId),
-        size: size || null,
+        size,
         quantity: qty,
         price,
         name,
-        _id: new mongoose.Types.ObjectId(), 
       });
     }
 
-    // ✅ Recalculate total price
-    order.totalPrice = order.products.reduce(
-      (sum: number, item: any) => sum + (item.price || 0) * item.quantity,
+    const totalPrice = cart.products.reduce(
+      (sum: number, item: any) => sum + (item.price || 0) * (item.quantity || 0),
       0
     );
 
-    await order.save();
+    cart.set({ totalPrice });
+    await cart.save();
 
     return NextResponse.json({
       success: true,
       message: "Product added to cart",
-      cart: order,
+      cart,
     });
   } catch (error) {
-    console.error("Error adding to cart:", error);
+    console.error("❌ Error adding to cart:", error);
     return NextResponse.json(
       { success: false, message: "Internal Server Error" },
       { status: 500 }

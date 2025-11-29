@@ -19,6 +19,7 @@ export interface IOrder extends Document {
     | "Delivered"
     | "Canceled";
   totalPrice?: number;
+  paymentId?: string; // added field
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,7 +36,7 @@ const OrderProductSchema = new Schema<IOrderProduct>(
     price: { type: Number },
     name: { type: String },
   },
-  { _id: true } // Ensures each product in the array gets its own unique _id
+  { _id: true }
 );
 
 const OrderSchema = new Schema<IOrder>(
@@ -54,6 +55,7 @@ const OrderSchema = new Schema<IOrder>(
       default: "Pending",
     },
     totalPrice: { type: Number, default: 0 },
+    paymentId: { type: String }, // added field
   },
   { timestamps: true }
 );

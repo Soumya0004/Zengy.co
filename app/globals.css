@@ -111,7 +111,7 @@
 /* ===== Base Styles ===== */
 body {
   font-family: var(--font-circular-web);
-  background: #ffffff;
+  background: rgb(252, 251, 251);
   color: #27272a;
 }
 
@@ -341,9 +341,10 @@ body {
 .shiny-text {
   background: linear-gradient(
     90deg,
-    #000 10%,
-    #fff 90%,
-    #999 50%
+     #000 0%,
+    #fff 40%,
+    #999 80%,
+    #000 100%
   );
   background-size: 200% auto;
   -webkit-background-clip: text;

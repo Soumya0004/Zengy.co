@@ -84,13 +84,13 @@ const Promotion: React.FC = () => {
         opacity: 0,
         duration: 1,
         delay: 0.2,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: "top 80%",  
-          end: "bottom top",
-          toggleActions: "play reverse play reverse",
-        },
+        ease: "power3.in",
+        // scrollTrigger: {
+        //   trigger: containerRef.current,
+        //   // start: "top 80%",  
+        //   end: "bottom top",
+        //   // toggleActions: "play reverse play reverse",
+        // },
       });
     }
   }, containerRef);

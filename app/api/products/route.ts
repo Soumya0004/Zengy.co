@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import cloudinary from "@/lib/cloudinary";
-import Collections from "@/models/Collections";
+import Collections from "@/lib/models/Collections";
 import { dbConnect } from "@/lib/mongodb";
 
 //  POST = Add product

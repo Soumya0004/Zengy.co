@@ -11,13 +11,15 @@ const Footer = () => {
         <div className="grid grid-cols-1  md:grid-cols-3 gap-10 text-center md:text-left">
           {/* Logo Section */}
           <div>
-            <Image
-              src="/logo-white.svg"
-              alt="Logo"
-              width={300}
-              height={100}
-              className="mx-auto md:mx-0 "
-            />
+           <div className="relative w-40 h-auto">
+  <Image
+    src="/logo-white.svg"
+    alt="Logo"
+    fill
+    style={{ objectFit: "contain" }}
+  />
+</div>
+       
             <p className="mt-4 text-sm text-gray-400 max-w-xs mx-auto md:mx-0">
               Building your tomorrow with innovation & vision.
             </p>
