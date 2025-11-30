@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import Loding from "../Component/Loding";
 
 interface UserInfo {
   _id: string;
@@ -47,12 +48,7 @@ export default function ProfilePage() {
     };
   }, [router]);
 
-  if (loading)
-    return (
-      <p className="text-center mt-10 text-gray-600 font-medium">
-        Loading profile...
-      </p>
-    );
+  if (loading) return <Loding />;
 
   if (!user)
     return (
@@ -66,7 +62,7 @@ export default function ProfilePage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Image
-          src={user.avatar && user.avatar.trim() !== "" ? user.avatar : "/default-avatar.png"}
+          src={user.avatar && user.avatar.trim() !== "" ? user.avatar : "/boy.png"}
           alt={user.name}
           width={90}
           height={90}
@@ -87,12 +83,7 @@ export default function ProfilePage() {
           </p>
         </div> */}
 
-        <div className="p-4 bg-gray-50 rounded-xl">
-          <p>
-            <strong>Role:</strong>{" "}
-            <span className="capitalize">{user.role}</span>
-          </p>
-        </div>
+        
 
         <div className="p-4 bg-gray-50 rounded-xl">
           <p>

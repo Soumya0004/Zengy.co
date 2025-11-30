@@ -10,6 +10,10 @@ import SignUpCard from "./SignUpCard";
 import LoginCard from "./LoginCard";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import ProfileDropdown from "@/components/ProfileDropdown";
+import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -23,6 +27,8 @@ const Nav = () => {
 
   const fullNavRef = useRef<HTMLDivElement>(null);
   const floatingNavRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+const pathname = usePathname();
 
   useEffect(() => {
     setMounted(true);
@@ -123,12 +129,33 @@ const Nav = () => {
               <div className="hidden md:flex items-center gap-5">
                 {loggedIn ? (
                   <>
-                    <Link href="/Cart">
+                 {/* PROFILE DROPDOWN WRAPPER */}
+{loggedIn &&pathname !== "/profile" &&( <div className="relative group">
+  {/* ICON (click → go to /profile) */}
+  <button
+    onClick={() => router.push("/profile")}
+    className="p-1 cursor-pointer"
+  >
+    <UserIcon size={20} />
+  </button>
+
+  {/* HOVER DROPDOWN */}
+  <div
+    className="
+      absolute right-0 mt-3 bg-white text-black border rounded-xl shadow-lg p-4
+      opacity-0 invisible group-hover:opacity-100 group-hover:visible 
+      transition-all duration-300 z-50
+    "
+  >
+    <ProfileDropdown />
+  </div>
+</div>)}
+
+
+                    <Link href="/cart">
                       <ShoppingCart size={20} />
                     </Link>
-                    <Link href="/profile">
-                      <UserIcon size={20} />
-                    </Link>
+                    
                     <button
                       onClick={handleLogout}
                       className="text-sm text-red-500 inline-flex items-center gap-2 uppercase"
@@ -174,12 +201,13 @@ const Nav = () => {
             <div className="pt-2 border-t mt-2 flex items-center justify-between">
               {loggedIn ? (
                 <div className="flex items-center gap-4">
-                  <Link href="/cart" onClick={() => setOpen(false)}>
-                    <ShoppingCart size={18} />
-                  </Link>
                   <Link href="/profile" onClick={() => setOpen(false)}>
                     <UserIcon size={18} />
                   </Link>
+                  <Link href="/cart" onClick={() => setOpen(false)}>
+                    <ShoppingCart size={18} />
+                  </Link>
+                  
                   <button
                     onClick={() => {
                       setOpen(false);
