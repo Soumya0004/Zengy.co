@@ -5,6 +5,7 @@ import Explore from '../Component/Explore'
 import Collection from '../shop/Collection'
 import Promotion from '../Component/Promotion'
 import ScrollVelocityUse from '../Component/ScrolevelocityUse'
+import ChatbotWidget from '@/components/ChatbotWidget'
 
 const page = () => {
   return (
@@ -14,6 +15,8 @@ const page = () => {
       <Explore/>
       <Collection/>
       <Promotion/>
+            <ChatbotWidget />
+    
     </div>
   )
 }

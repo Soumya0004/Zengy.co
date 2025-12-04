@@ -152,7 +152,7 @@ const pathname = usePathname();
 </div>)}
 
 
-                    <Link href="/cart">
+                    <Link href="/Cart">
                       <ShoppingCart size={20} />
                     </Link>
                     
