@@ -9,8 +9,15 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { StarIcon } from "lucide-react";
 import Loding from "@/app/Component/Loding";
+import dynamic from "next/dynamic";
 
 gsap.registerPlugin(ScrollTrigger);
+
+// ✅ Lazy-load Features Section (Fix hydration + GSAP issues)
+const FeaturesSection = dynamic(() => import("./FeaturesSection"), {
+  ssr: false,
+  loading: () => <Loding />,
+});
 
 interface Product {
   _id: string;
@@ -38,7 +45,6 @@ const Page = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLDivElement>(null);
   const detailsRef = useRef<HTMLDivElement>(null);
-  const featuresRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => setHydrated(true), []);
 
@@ -89,27 +95,8 @@ const Page = () => {
         yoyo: true,
         repeat: -1,
       });
-
-      if (featuresRef.current) {
-        gsap.fromTo(
-          featuresRef.current.children,
-          { y: 50, opacity: 0 },
-          {
-            y: 0,
-            opacity: 1,
-            duration: 0.6,
-            stagger: 0.1,
-            ease: "power2.out",
-            scrollTrigger: {
-              trigger: featuresRef.current,
-              start: "top 80%",
-              end: "bottom 20%",
-              toggleActions: "play none none reverse",
-            },
-          }
-        );
-      }
     });
+
     return () => ctx.revert();
   }, [hydrated, loading, product]);
 
@@ -185,6 +172,7 @@ const Page = () => {
           </div>
 
           <div ref={detailsRef} className="space-y-6">
+            {/* category + rating */}
             <div className="flex items-center gap-4">
               {product.category && (
                 <span className="px-3 py-1 bg-gray-200 rounded-full text-sm font-medium">
@@ -199,13 +187,17 @@ const Page = () => {
               )}
             </div>
 
+            {/* title */}
             <h1 className="text-4xl lg:text-5xl font-bold leading-tight text-gray-900">
               {product.title}
             </h1>
+
+            {/* description */}
             <p className="text-gray-600 text-lg leading-relaxed">
               {product.description}
             </p>
 
+            {/* price */}
             <div className="flex items-center gap-4">
               <span className="text-4xl font-bold text-blue-600">
                 ₹{product.price}
@@ -217,6 +209,7 @@ const Page = () => {
               )}
             </div>
 
+            {/* sizes */}
             {hasSizes && (
               <div>
                 <h3 className="font-medium">Sizes</h3>
@@ -240,6 +233,7 @@ const Page = () => {
               </div>
             )}
 
+            {/* stock */}
             <p
               className={`font-medium ${
                 inStock ? "text-green-600" : "text-red-600"
@@ -252,6 +246,7 @@ const Page = () => {
                 : "Out of Stock"}
             </p>
 
+            {/* Add to Cart */}
             <div className="flex gap-4 pt-4">
               <button
                 type="button"
@@ -265,6 +260,7 @@ const Page = () => {
               >
                 {adding ? "Adding..." : "Add to Cart"}
               </button>
+
               <button className="flex-1 border border-gray-300 px-6 py-3 rounded-xl hover:bg-gray-100 transition">
                 Buy Now
               </button>
@@ -272,28 +268,9 @@ const Page = () => {
           </div>
         </div>
 
+        {/* ⭐ LAZY LOADED FEATURES SECTION */}
         {product.features && (
-          <div className="mt-20">
-            <h2 className="text-3xl font-bold text-center mb-12">
-              Key Features
-            </h2>
-            <div
-              ref={featuresRef}
-              className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
-            >
-              {product.features.map((feature, index) => (
-                <div
-                  key={index}
-                  className="p-6 rounded-xl bg-gray-50 shadow hover:shadow-lg transition cursor-pointer"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-blue-600 rounded-full" />
-                    <span className="font-medium text-gray-800">{feature}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <FeaturesSection features={product.features} />
         )}
       </div>
     </div>

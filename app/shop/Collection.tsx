@@ -99,8 +99,13 @@ const Collection = () => {
       <div className="flex justify-center">
         <Magnet padding={50} disabled={false} magnetStrength={10}>
 
-        <Link href="/shop" className="mt-4 text-center  text-sm md:text-md  lg:text-lg  text-black   px-5 py-1   hover:shadow-lg text-shadow-lg rounded-lg font-medium transition-colors duration-300">
-       <ShinyText text="Explore more" disabled={false} speed={3} />
+<Link
+  href="/shop"
+  className="mt-4 text-center text-sm md:text-md lg:text-lg text-black px-3 py-1 rounded-lg font-medium duration-300 group relative"
+>
+  <ShinyText text="Explore more" disabled={false} speed={3} />
+  {/* Custom Underline */}
+  <span className="absolute bottom-0 left-1/2 w-0 h-[2px] bg-zinc-900 transition-all duration-300 group-hover:w-full group-hover:left-0"></span>
 </Link>
        </Magnet>
       </div>

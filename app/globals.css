@@ -340,10 +340,9 @@ body {
  /* global.css */
 .shiny-text {
   background: linear-gradient(
-    90deg,
+    60deg,
      #000 0%,
-    #fff 40%,
-    #999 80%,
+    #c5c3c3 60%,
     #000 100%
   );
   background-size: 200% auto;
@@ -367,4 +366,12 @@ body {
   100% {
     background-position: -200% center;
   }
+}
+
+.bg-underline {
+  background-image: linear-gradient(120deg, #000, #c5c3c3, #000);
+  background-size: 200% auto;
+  background-repeat: no-repeat;
+  background-position: 0% 100%;
+  transition: background-position 0.3s ease;
 }

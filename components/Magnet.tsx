@@ -13,7 +13,7 @@ interface MagnetProps extends HTMLAttributes<HTMLDivElement> {
 
 const Magnet: React.FC<MagnetProps> = ({
   children,
-  padding = 100,
+  padding = 10,
   disabled = false,
   magnetStrength = 2,
   activeTransition = 'transform 0.3s ease-out',

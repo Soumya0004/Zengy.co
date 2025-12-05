@@ -142,7 +142,7 @@ const Promotion: React.FC = () => {
               <b>v</b>al
             </p>
             <Button
-              className="mt-6 sm:mt-8 cursor-pointer bg-blue-50 text-black hover:text-white px-5 sm:px-6 py-3 sm:py-3 rounded-xl text-sm sm:text-base"
+              className="mt-6 sm:mt-8 cursor-pointer bg-blue-50 text-black hover:text-white px-4 sm:px-4 py-2 sm:py-1 rounded-xl text-sm sm:text-base"
               id="contact-us"
             >
               Explore Now
