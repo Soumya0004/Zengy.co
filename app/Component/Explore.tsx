@@ -136,17 +136,17 @@ const Explore = () => {
             )}
 
             <Image
-              src="/img8.jpg"
-              alt="Image 3"
-              width={500}
-              height={240}
-              onLoadingComplete={() =>
-                setImageLoaded((prev) => [true, prev[1]])
-              }
-              className={`object-cover w-full h-[250px] md:h-[270px] transition-transform duration-300 group-hover:scale-105 ${
-                imageLoaded[0] ? "opacity-100" : "opacity-0"
-              }`}
-            />
+  src="/img8.jpg"
+  alt="Image 3"
+  width={500}
+  height={240}
+  onLoad={() =>
+    setImageLoaded((prev) => [true, prev[1]])
+  }
+  className={`object-cover w-full h-[250px] md:h-[270px] transition-transform duration-300 group-hover:scale-105 ${
+    imageLoaded[0] ? "opacity-100" : "opacity-0"
+  }`}
+/>
 
             <div className="absolute top-4 left-4 text-zinc-800">
               <p className="text-md uppercase font-zentry -tracking-tight">
@@ -168,17 +168,18 @@ const Explore = () => {
             )}
 
             <Image
-              src="/img4.jpg"
-              alt="Image 4"
-              width={500}
-              height={240}
-              onLoadingComplete={() =>
-                setImageLoaded((prev) => [prev[0], true])
-              }
-              className={`object-cover w-full h-[230px] md:h-[270px] transition-transform duration-300 group-hover:scale-105 ${
-                imageLoaded[1] ? "opacity-100" : "opacity-0"
-              }`}
-            />
+  src="/img4.jpg"
+  alt="Image 4"
+  width={500}
+  height={240}
+  onLoad={() =>
+    setImageLoaded((prev) => [prev[0], true])
+  }
+  className={`object-cover w-full h-[230px] md:h-[270px] transition-transform duration-300 group-hover:scale-105 ${
+    imageLoaded[1] ? "opacity-100" : "opacity-0"
+  }`}
+/>
+
 
             <div className="absolute bottom-4 right-6 text-[#8cd585] left-4">
               <p className="text-md uppercase font-zentry -tracking-tight">

@@ -204,7 +204,7 @@ const pathname = usePathname();
                   <Link href="/profile" onClick={() => setOpen(false)}>
                     <UserIcon size={18} />
                   </Link>
-                  <Link href="/cart" onClick={() => setOpen(false)}>
+                  <Link href="/Cart" onClick={() => setOpen(false)}>
                     <ShoppingCart size={18} />
                   </Link>
                   
