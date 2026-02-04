@@ -12,7 +12,7 @@ export interface ICollection extends Document {
   price: number;
   sizes: ISizeStock[];
   rating?: number;
-  category: string;
+  category: string; // renamed from "collection" to avoid reserved key
   availability?: string; // virtual
 
   getStock: (size: string) => number;
@@ -25,7 +25,7 @@ const SizeStockSchema = new Schema<ISizeStock>(
     size: { type: String, required: true, trim: true },
     stock: { type: Number, default: 0, min: 0 },
   },
-  { _id: true } // 👈 enable _id (default, so you could even omit this)
+  { _id: true } // default behavior
 );
 
 const CollectionSchema = new Schema<ICollection>(
@@ -35,12 +35,13 @@ const CollectionSchema = new Schema<ICollection>(
     price: { type: Number, required: true },
     sizes: { type: [SizeStockSchema], required: true },
     rating: { type: Number, default: 0, min: 0, max: 5 },
-    category: { type: String, required: true },
+    category: { type: String, required: true }, // ✅ safe
   },
   {
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
+    suppressReservedKeysWarning: true, // ✅ permanently disables reserved key warning
   }
 );
 
@@ -60,7 +61,7 @@ CollectionSchema.methods.availableSizes = function (this: ICollection): string[]
 };
 
 // --- MODEL EXPORT ---
-const Collections =
+const Collections: Model<ICollection> =
   (mongoose.models.Collections as Model<ICollection>) ||
   mongoose.model<ICollection>("Collections", CollectionSchema);
 

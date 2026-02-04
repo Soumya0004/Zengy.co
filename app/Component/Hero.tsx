@@ -7,7 +7,9 @@ import dynamic from "next/dynamic";
 
 // Lazy-load heavy UI components
 const Shuffle = dynamic(() => import("@/components/Shuffle"), { ssr: false });
-const ShinyText = dynamic(() => import("@/components/ShinyText"), { ssr: false });
+const ShinyText = dynamic(() => import("@/components/ShinyText"), {
+  ssr: false,
+});
 const Magnet = dynamic(() => import("@/components/Magnet"), { ssr: false });
 
 const Hero = () => {
@@ -15,7 +17,6 @@ const Hero = () => {
   const textRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLElement>(null);
 
-  
   useEffect(() => {
     let ctx: any;
 
@@ -28,7 +29,7 @@ const Hero = () => {
 
       gsap.registerPlugin(ScrollTrigger);
 
-      // GSAP CONTEXT 
+      // GSAP CONTEXT
       ctx = gsap.context(() => {
         // Text fade-in
         if (textRef.current) {
@@ -74,7 +75,7 @@ const Hero = () => {
                 scrub: true,
               },
               ease: "power2.inOut",
-            }
+            },
           );
         }
       }, containerRef); // context scope
@@ -85,7 +86,6 @@ const Hero = () => {
     return () => ctx && ctx.revert();
   }, []);
 
-  
   const handleMouseLeave = () => {
     const element = frameRef.current;
     if (!element) return;
@@ -124,7 +124,6 @@ const Hero = () => {
     });
   };
 
-  
   return (
     <main
       ref={containerRef}
@@ -132,7 +131,6 @@ const Hero = () => {
       px-5 sm:px-8 md:px-12 lg:px-20 xl:px-28
       pt-12 sm:pt-16 md:pt-20 lg:pt-0 min-h-screen gap-10"
     >
-
       <div
         ref={textRef}
         className="flex flex-col justify-center space-y-4 sm:space-y-6 
@@ -150,21 +148,23 @@ const Hero = () => {
 
         <p className="text-base sm:text-lg md:text-xl text-zinc-700 max-w-xl font-circular-web md:mx-auto lg:ml-7">
           At Zengy.go, we create fashion that moves with you — comfortable,
-          stylish, and bold clothing designed for everyday energy and confidence.
+          stylish, and bold clothing designed for everyday energy and
+          confidence.
         </p>
 
         {/* DESKTOP BUTTONS */}
+        {/* DESKTOP BUTTONS */}
         <div className="hidden sm:flex flex-wrap gap-4 pt-6 justify-center lg:justify-start lg:ml-7">
           <Magnet padding={10} magnetStrength={10}>
-            <button className="bg-zinc-800 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-900 hover:shadow-md transition">
-              <Link href="./shop">
+            <Link href="./shop">
+              <button className="bg-zinc-800 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-900 hover:shadow-md transition">
                 <ShinyText text="Buy Product" speed={3} />
-              </Link>
-            </button>
+              </button>
+            </Link>
           </Magnet>
 
           <Magnet padding={10} magnetStrength={10}>
-            <button className="border border-black text-zinc-800 px-6 py-3 rounded-xl font-bold hover:bg-gray-100 hover:shadow-md transition ">
+            <button className="border border-black text-zinc-800 px-6 py-3 rounded-xl font-bold hover:bg-gray-100 hover:shadow-md transition">
               Explore Product
             </button>
           </Magnet>
@@ -188,15 +188,15 @@ const Hero = () => {
             sizes="100vw"
             className="object-cover w-full h-auto"
           />
-        </div>
+        </div> 
 
         {/* MOBILE BUTTONS */}
         <div className="flex sm:hidden flex-col gap-4 mt-6 w-full justify-center">
-          <button className="bg-zinc-800 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-900 transition w-full">
-            <Link href="./shop">
+          <Link href="./shop">
+            <button className="bg-zinc-800 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-900 transition w-full">
               <ShinyText text="Buy Product" speed={3} />
-            </Link>
-          </button>
+            </button>
+          </Link>
 
           <button className="border border-black text-zinc-800 px-6 py-3 rounded-xl font-semibold hover:bg-gray-100 transition w-full">
             Explore Product

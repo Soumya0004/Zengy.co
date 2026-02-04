@@ -2,22 +2,21 @@
 
 import axios from "axios";
 import Image from "next/image";
-import { useParams } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { StarIcon } from "lucide-react";
 import Loding from "@/app/Component/Loding";
-import dynamic from "next/dynamic";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// ✅ Lazy-load Features Section (Fix hydration + GSAP issues)
-const FeaturesSection = dynamic(() => import("./FeaturesSection"), {
-  ssr: false,
-  loading: () => <Loding />,
-});
+/* ================= TYPES ================= */
+
+interface SizeStock {
+  size: string;
+  stock: number;
+}
 
 interface Product {
   _id: string;
@@ -30,251 +29,329 @@ interface Product {
   features?: string[];
   originalPrice?: number;
   stock?: number;
-  sizes?: { size: string; stock: number }[];
+  sizes?: SizeStock[];
 }
 
-const Page = () => {
-  const { id } = useParams();
+/* ================= PAGE ================= */
+
+export default function Page() {
+  const router = useRouter();
+  const params = useParams();
+  const productId = params?.id as string;
+
   const { data: session } = useSession();
+
   const [product, setProduct] = useState<Product | null>(null);
+  const [similar, setSimilar] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
+  const [buying, setBuying] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLDivElement>(null);
   const detailsRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => setHydrated(true), []);
+  /* ================= FETCH PRODUCT ================= */
 
   useEffect(() => {
-    if (!id) return;
+    if (!productId) return;
+
     const fetchProduct = async () => {
       try {
-        const res = await axios.get(`/api/products/${id}`);
+        setLoading(true);
+
+        const res = await axios.get(`/api/products/${productId}`, {
+          headers: { "Cache-Control": "no-store" },
+        });
+
         setProduct(res.data);
-      } catch (error) {
-        console.error(error);
+      } catch (err) {
+        console.error(err);
       } finally {
         setLoading(false);
       }
     };
+
     fetchProduct();
-  }, [id]);
+  }, [productId]);
+
+  /* ================= FETCH SIMILAR ================= */
 
   useEffect(() => {
-    if (!hydrated || loading || !product) return;
+    if (!productId) return;
 
-    let ctx = gsap.context(() => {
-      gsap.set(containerRef.current, { opacity: 0 });
-      gsap.set(imgRef.current, { scale: 0.8, opacity: 0 });
-      gsap.set(detailsRef.current?.children || [], { y: 30, opacity: 0 });
+    const fetchSimilar = async () => {
+      try {
+        const res = await axios.get(`/api/products/${productId}/similar`, {
+          headers: { "Cache-Control": "no-store" },
+        });
 
-      const tl = gsap.timeline();
-      tl.to(containerRef.current, {
-        opacity: 1,
+        setSimilar(res.data || []);
+      } catch (err) {
+        console.error("Similar products error:", err);
+      }
+    };
+
+    fetchSimilar();
+  }, [productId]);
+
+  /* ================= GSAP ================= */
+
+  useEffect(() => {
+    if (!product || loading) return;
+
+    const ctx = gsap.context(() => {
+      gsap.from(containerRef.current, { opacity: 0, duration: 0.5 });
+
+      gsap.from(imgRef.current, {
+        scale: 0.9,
+        opacity: 0,
         duration: 0.6,
-        ease: "power2.out",
-      })
-        .to(
-          imgRef.current,
-          { scale: 1, opacity: 1, duration: 0.8, ease: "back.out(1.7)" },
-          "-=0.4"
-        )
-        .to(
-          detailsRef.current?.children || [],
-          { y: 0, opacity: 1, duration: 0.6, stagger: 0.1, ease: "power2.out" },
-          "-=0.6"
-        );
+      });
 
-      gsap.to(imgRef.current, {
-        y: -10,
-        duration: 2,
-        ease: "sine.inOut",
-        yoyo: true,
-        repeat: -1,
+      gsap.from(detailsRef.current?.children || [], {
+        y: 30,
+        opacity: 0,
+        stagger: 0.1,
       });
     });
 
     return () => ctx.revert();
-  }, [hydrated, loading, product]);
+  }, [loading, product]);
 
-  const handleAddToCart = async () => {
+  /* ================= STOCK ================= */
+
+  const totalStock = useMemo(() => {
+    return (
+      product?.sizes?.reduce((sum, s) => sum + s.stock, 0) ??
+      product?.stock ??
+      0
+    );
+  }, [product]);
+
+  const selectedStock = useMemo(() => {
+    return (
+      product?.sizes?.find((s) => s.size === selectedSize)?.stock ??
+      totalStock
+    );
+  }, [product, selectedSize, totalStock]);
+
+  const inStock = totalStock > 0;
+
+  /* ================= VALIDATION ================= */
+
+  const validatePurchase = () => {
     if (!session?.user?.id) {
       alert("Please login first");
-      return;
-    }
-    if (!product) return;
-    if (product.sizes && product.sizes.length > 0 && !selectedSize) {
-      alert("Please select a size");
-      return;
+      return false;
     }
 
-    setAdding(true);
+    if (!product) return false;
+
+    if (product.sizes?.length && !selectedSize) {
+      alert("Please select a size");
+      return false;
+    }
+
+    if (selectedStock <= 0) {
+      alert("Out of stock");
+      return false;
+    }
+
+    return true;
+  };
+
+  /* ================= ADD TO CART ================= */
+
+  const handleAddToCart = async () => {
+    if (!validatePurchase()) return;
+
     try {
-      const res = await axios.post("/api/cart/add", {
-        userId: session.user.id,
-        productId: product._id,
+      setAdding(true);
+
+      await axios.post("/api/cart/add", {
+        userId: session?.user?.id,
+        productId: product?._id,
         size: selectedSize,
         quantity: 1,
-        price: product.price,
-        name: product.title,
       });
+
       alert("Added to cart!");
-      console.log(res.data);
-    } catch (err) {
-      console.error(err);
-      alert("Something went wrong. Try again.");
     } finally {
       setAdding(false);
     }
   };
 
-  if (loading) return <Loding />;
-  if (!product) return <p className="p-6">Product not found</p>;
+  /* ================= BUY NOW ================= */
 
-  const totalStock =
-    product.sizes?.reduce((s, p) => s + (p.stock || 0), 0) ||
-    product.stock ||
-    0;
-  const inStock = totalStock > 0;
-  const selectedSizeStock = selectedSize
-    ? product.sizes?.find((s) => s.size === selectedSize)?.stock
-    : undefined;
-  const hasSizes = (product.sizes && product.sizes.length > 0) ?? false;
+  const handleBuyNow = async () => {
+    if (!validatePurchase()) return;
+
+    try {
+      setBuying(true);
+
+      await axios.post("/api/cart/add", {
+        userId: session?.user?.id,
+        productId: product?._id,
+        size: selectedSize,
+        quantity: 1,
+      });
+
+      router.push("/cart");
+    } finally {
+      setBuying(false);
+    }
+  };
+
+  /* ================= UI ================= */
+
+  if (loading) return <Loding />;
+  if (!product) return null;
+
   const canAdd =
     inStock &&
-    (hasSizes ? !!selectedSize && (selectedSizeStock ?? 0) > 0 : true);
+    (!product.sizes || (selectedSize && selectedStock > 0));
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-white">
-      <div className="container mx-auto px-6 py-12 lg:py-20">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          <div ref={imgRef} className="relative">
-            <div className="aspect-square rounded-3xl bg-gray-100 p-6 shadow-lg">
-              <div className="relative w-full h-full rounded-2xl overflow-hidden">
-                {product.img && (
-                  <Image
-                    src={product.img}
-                    alt={product.title}
-                    fill
-                    className="object-cover"
-                  />
-                )}
-              </div>
+    <div ref={containerRef} className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-6 py-14">
+
+        {/* ================= MAIN GRID ================= */}
+        <div className="grid lg:grid-cols-2 gap-14 items-start">
+
+          {/* ================= LEFT IMAGE ================= */}
+          <div ref={imgRef} className="space-y-4">
+
+            <div className="bg-white rounded-3xl shadow-sm p-10 flex items-center justify-center">
+              <Image
+                src={product.img || "/placeholder.png"}
+                alt={product.title}
+                width={700}
+                height={700}
+                priority
+                className="max-h-[500px] object-cover rounded-2xl"
+              />
             </div>
-            {!inStock && (
-              <div className="absolute top-4 right-4 bg-red-600 text-white px-3 py-1 text-sm rounded-lg shadow">
-                Out of Stock
-              </div>
-            )}
           </div>
 
+          {/* ================= RIGHT DETAILS ================= */}
           <div ref={detailsRef} className="space-y-6">
-            {/* category + rating */}
-            <div className="flex items-center gap-4">
-              {product.category && (
-                <span className="px-3 py-1 bg-gray-200 rounded-full text-sm font-medium">
-                  {product.category}
-                </span>
-              )}
-              {product.rating && (
-                <div className="flex items-center gap-1 text-yellow-500 font-medium">
-                  <StarIcon /> {product.rating}
-                  <span className="text-gray-500 text-sm">(128 reviews)</span>
-                </div>
-              )}
-            </div>
 
-            {/* title */}
-            <h1 className="text-4xl lg:text-5xl font-bold leading-tight text-gray-900">
+            {product.category && (
+              <span className="inline-block text-xs bg-gray-200 px-3 py-1 rounded-full">
+                {product.category}
+              </span>
+            )}
+
+            <h1 className="text-4xl font-semibold">
               {product.title}
             </h1>
 
-            {/* description */}
-            <p className="text-gray-600 text-lg leading-relaxed">
-              {product.description}
-            </p>
+            <span className="text-3xl font-bold">
+              ₹{product.price}
+            </span>
 
-            {/* price */}
-            <div className="flex items-center gap-4">
-              <span className="text-4xl font-bold text-blue-600">
-                ₹{product.price}
-              </span>
-              {product.originalPrice && (
-                <span className="text-xl text-gray-400 line-through">
-                  ₹{product.originalPrice}
-                </span>
-              )}
-            </div>
-
-            {/* sizes */}
-            {hasSizes && (
+            {/* Sizes */}
+            {(product.sizes?.length ?? 0) > 0 && (
               <div>
-                <h3 className="font-medium">Sizes</h3>
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {product.sizes!.map((s) => (
+                <p className="mb-2 font-medium">Select Size</p>
+
+                <div className="flex gap-3 flex-wrap">
+                  {product.sizes?.map((s) => (
                     <button
                       key={s.size}
-                      onClick={() => setSelectedSize(s.size)}
                       disabled={s.stock <= 0}
-                      className={`px-3 py-2 rounded-lg border transition flex items-center gap-2 ${
+                      onClick={() => setSelectedSize(s.size)}
+                      className={`px-5 py-2 rounded-full border ${
                         selectedSize === s.size
-                          ? "bg-blue-600 text-white border-blue-600"
-                          : "bg-white text-gray-800 border-gray-200 hover:bg-gray-50"
-                      } ${s.stock <= 0 ? "opacity-50 cursor-not-allowed" : ""}`}
+                          ? "bg-black text-white"
+                          : ""
+                      }`}
                     >
-                      <span className="font-medium">{s.size}</span>
-                      <span className="text-sm text-gray-500">({s.stock})</span>
+                      {s.size}
                     </button>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* stock */}
-            <p
-              className={`font-medium ${
-                inStock ? "text-green-600" : "text-red-600"
-              }`}
-            >
-              {selectedSize
-                ? `${selectedSize} — ${selectedSizeStock ?? 0} available`
-                : inStock
-                ? `In Stock (${totalStock})`
-                : "Out of Stock"}
+            <p className={inStock ? "text-green-600" : "text-red-500"}>
+              {selectedStock} available
             </p>
 
-            {/* Add to Cart */}
-            <div className="flex gap-4 pt-4">
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                disabled={adding || !canAdd}
-                className={`flex-1 px-6 py-3 rounded-xl transition ${
-                  canAdd
-                    ? "bg-blue-600 text-white hover:bg-blue-700"
-                    : "bg-white text-gray-600 cursor-not-allowed"
-                }`}
-              >
-                {adding ? "Adding..." : "Add to Cart"}
-              </button>
+            <button
+              onClick={handleAddToCart}
+              disabled={!canAdd || adding}
+              className="w-full bg-black text-white py-4 rounded-full"
+            >
+              {adding ? "Adding..." : "Add to Cart"}
+            </button>
 
-              <button className="flex-1 border border-gray-300 px-6 py-3 rounded-xl hover:bg-gray-100 transition">
-                Buy Now
-              </button>
-            </div>
+            <button
+              onClick={handleBuyNow}
+              disabled={!canAdd || buying}
+              className="w-full border py-4 rounded-full"
+            >
+              {buying ? "Processing..." : "Buy Now"}
+            </button>
+
+            {/* Description */}
+            {product.description && (
+              <div className="bg-white rounded-2xl p-5 shadow-sm">
+                <h3 className="font-semibold mb-2">Description & Fit</h3>
+                <p className="text-gray-600 text-sm">
+                  {product.description}
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* ⭐ LAZY LOADED FEATURES SECTION */}
-        {product.features && (
-          <FeaturesSection features={product.features} />
+        {/* ================= SIMILAR PRODUCTS ================= */}
+        {similar.length > 0 && (
+          <div className="mt-20">
+            <h2 className="font-zentry special-font text-4xl sm:text-5xl lg:text-6xl mb-10">
+              S<b>im</b><b>il</b><b>ar</b> Pr<b>o</b>duc<b>t</b>s
+            </h2>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+              {similar.map((item) => (
+                <div
+                  key={item._id}
+                  onClick={() => {
+                    router.push(`/product/${item._id}`);
+                    window.scrollTo({ top: 0 });
+                  }}
+                  className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-md cursor-pointer transition"
+                >
+                  <Image
+                    src={item.img || "/placeholder.png"}
+                    alt={item.title}
+                    width={250}
+                    height={250}
+                    className="rounded-xl object-cover"
+                  />
+
+                  <p className="text-sm text-gray-500 mt-2">
+                    {item.category}
+                  </p>
+
+                  <p className="font-medium truncate">
+                    {item.title}
+                  </p>
+
+                  <p className="font-semibold mt-1">
+                    ₹{item.price}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
+
       </div>
     </div>
   );
-};
-
-export default Page;
+}

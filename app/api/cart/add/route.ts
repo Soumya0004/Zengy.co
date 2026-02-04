@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     }
 
     const qty = Number(quantity);
-    if (isNaN(qty) || qty <= 0) {
+    if (qty <= 0) {
       return NextResponse.json(
         { success: false, message: "Quantity must be > 0" },
         { status: 400 }
@@ -33,29 +33,16 @@ export async function POST(req: Request) {
       );
     }
 
-    // Validate stock
-    if (collection.sizes?.length) {
-      const sizeStock = collection.sizes.find((s) => s.size === size);
-
-      if (!sizeStock) {
-        return NextResponse.json(
-          { success: false, message: "Invalid size selected" },
-          { status: 400 }
-        );
-      }
-
-      if (sizeStock.stock < qty) {
-        return NextResponse.json(
-          { success: false, message: "Not enough stock for selected size" },
-          { status: 400 }
-        );
-      }
+    const sizeStock = collection.sizes.find((s) => s.size === size);
+    if (!sizeStock) {
+      return NextResponse.json(
+        { success: false, message: "Invalid size selected" },
+        { status: 400 }
+      );
     }
 
-    // ALWAYS OBJECTID (THE FIX)
     const mongoUserId = new mongoose.Types.ObjectId(userId);
 
-    // Fetch user's cart
     let cart = await Cart.findOne({ user: mongoUserId });
 
     if (!cart) {
@@ -65,17 +52,32 @@ export async function POST(req: Request) {
       });
     }
 
-    const existingItem = cart.products.find((item: any) => {
-      const itemId = item.collection.toString();
-      return (
-        itemId === productId.toString() &&
+    const existingItem = cart.products.find(
+      (item: any) =>
+        item.collection.toString() === productId.toString() &&
         item.size === size
-      );
-    });
+    );
 
+    // 🔥 prevent cart > stock
     if (existingItem) {
-      existingItem.quantity += qty;
+      const newQty = existingItem.quantity + qty;
+
+      if (newQty > sizeStock.stock) {
+        return NextResponse.json(
+          { success: false, message: "Exceeds available stock" },
+          { status: 400 }
+        );
+      }
+
+      existingItem.quantity = newQty;
     } else {
+      if (qty > sizeStock.stock) {
+        return NextResponse.json(
+          { success: false, message: "Not enough stock" },
+          { status: 400 }
+        );
+      }
+
       cart.products.push({
         collection: new mongoose.Types.ObjectId(productId),
         size,
@@ -86,7 +88,7 @@ export async function POST(req: Request) {
     }
 
     const totalPrice = cart.products.reduce(
-      (sum: number, item: any) => sum + (item.price || 0) * (item.quantity || 0),
+      (sum: number, item: any) => sum + item.price * item.quantity,
       0
     );
 
@@ -100,6 +102,7 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error("❌ Error adding to cart:", error);
+
     return NextResponse.json(
       { success: false, message: "Internal Server Error" },
       { status: 500 }

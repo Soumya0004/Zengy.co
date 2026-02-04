@@ -33,8 +33,11 @@ export async function POST(req: Request) {
 
       if (!file || !title || !price || !category || !sizes?.length) {
         return NextResponse.json(
-          { error: "All fields are required (img, title, price, category, sizes)" },
-          { status: 400 }
+          {
+            error:
+              "All fields are required (img, title, price, category, sizes)",
+          },
+          { status: 400 },
         );
       }
 
@@ -48,7 +51,7 @@ export async function POST(req: Request) {
           (error, result) => {
             if (error) reject(error);
             else resolve(result);
-          }
+          },
         );
         stream.end(buffer);
       });
@@ -67,8 +70,11 @@ export async function POST(req: Request) {
 
       if (!img || !title || !price || !category || !sizes?.length) {
         return NextResponse.json(
-          { error: "All fields are required (img, title, price, category, sizes)" },
-          { status: 400 }
+          {
+            error:
+              "All fields are required (img, title, price, category, sizes)",
+          },
+          { status: 400 },
         );
       }
     }
@@ -83,7 +89,10 @@ export async function POST(req: Request) {
       sizes,
     });
 
-    return NextResponse.json({ success: true, product: newProduct }, { status: 201 });
+    return NextResponse.json(
+      { success: true, product: newProduct },
+      { status: 201 },
+    );
   } catch (error: any) {
     console.error("Add product error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });

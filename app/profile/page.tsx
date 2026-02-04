@@ -101,7 +101,7 @@ export default function ProfilePage() {
       {/* Navigation buttons */}
       <div className="mt-6 flex gap-4">
         <button
-          onClick={() => router.push("/profile/orderHistory")}
+          onClick={() => router.push("/profile/  ")}
           className="px-5 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition"
         >
           View Order History

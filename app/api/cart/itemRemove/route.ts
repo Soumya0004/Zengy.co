@@ -1,45 +1,50 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/mongodb";
-import Order from "@/lib/models/Order";
+import Cart from "@/lib/models/Cart"; // ✅ USE CART
 import mongoose from "mongoose";
 
 export async function POST(req: Request) {
   try {
     await dbConnect();
 
-    const { orderId, productId } = await req.json();
+    const { cartId, productId } = await req.json();
 
     if (
-      !mongoose.Types.ObjectId.isValid(orderId) ||
+      !mongoose.Types.ObjectId.isValid(cartId) ||
       !mongoose.Types.ObjectId.isValid(productId)
     ) {
       return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
     }
 
-    // 🔥 Remove the product
-    let updatedOrder = await Order.findByIdAndUpdate(
-      orderId,
-      { $pull: { products: { _id: productId } } },
+    // ✅ REMOVE from CART (not order)
+    let updatedCart = await Cart.findByIdAndUpdate(
+      cartId,
+      {
+        $pull: {
+          products: { _id: productId }, // subdocument id
+        },
+      },
       { new: true }
     ).populate("products.collection");
 
-    if (!updatedOrder) {
-      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    if (!updatedCart) {
+      return NextResponse.json({ error: "Cart not found" }, { status: 404 });
     }
 
-    // Recalculate total
-    updatedOrder.totalPrice = updatedOrder.products.reduce(
+    // ✅ Recalculate total price
+    (updatedCart as any).totalPrice = updatedCart.products.reduce(
       (sum, item) => sum + (item.price || 0) * item.quantity,
       0
     );
-    await updatedOrder.save();
 
-    return NextResponse.json(
-      { success: true, order: updatedOrder },
-      { status: 200 }
-    );
+    await updatedCart.save();
+
+    return NextResponse.json({
+      success: true,
+      cart: updatedCart,
+    });
   } catch (error) {
-    console.error("❌ Error removing product:", error);
+    console.error("❌ Error removing cart product:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

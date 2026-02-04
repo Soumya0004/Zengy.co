@@ -5,19 +5,23 @@ import { useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
 import gsap from "gsap";
 import axios from "axios";
-import { ShoppingBag, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import Loding from "../Component/Loding";
 
 // ⚡ Lazy Load RazorpayButton
 const RazorpayButton = dynamic(() => import("@/components/RazorpayButton"), {
-  loading: () => <p className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-900 text-center">Loading Payment...</p>,
+  loading: () => (
+    <p className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-900 text-center">
+      Loading Payment...
+    </p>
+  ),
   ssr: false,
 });
 
 interface CartProduct {
-  _id: string;
+  _id: string; // cart item ID
   collection: {
-    _id: string;
+    _id: string; // actual product ID
     title: string;
     price: number;
     img: string;
@@ -39,6 +43,7 @@ export default function CartPage() {
   const [removing, setRemoving] = useState<string | null>(null);
   const cartRef = useRef<HTMLDivElement>(null);
 
+  // Fetch Cart
   useEffect(() => {
     const fetchCart = async () => {
       if (status !== "authenticated") return;
@@ -55,10 +60,10 @@ export default function CartPage() {
         setLoading(false);
       }
     };
-
     fetchCart();
   }, [status]);
 
+  // GSAP Animation
   useEffect(() => {
     if (cartRef.current && cart?.products?.length) {
       gsap.fromTo(
@@ -73,12 +78,12 @@ export default function CartPage() {
     try {
       setRemoving(itemId);
       const res = await axios.post("/api/cart/itemRemove", {
-        orderId: cart?._id,
+        cartId: cart?._id,
         productId: itemId,
       });
 
       if (res.data.success) {
-        setCart(res.data.order);
+        setCart(res.data.cart);
       }
     } catch (error) {
       console.error("Error removing item:", error);
@@ -105,9 +110,9 @@ export default function CartPage() {
     0
   );
 
+  // 🔹 FIXED: Send correct productId to backend
   const productsForPayment = cart.products.map((item) => ({
-    _id: item._id,
-    collection: item.collection._id,
+    productId: item.collection._id, // ✅ actual product ID for stock update
     size: item.size,
     quantity: item.quantity,
     price: item.collection.price,
@@ -177,8 +182,12 @@ export default function CartPage() {
           <span>₹{subtotal.toFixed(2)}</span>
         </div>
 
-        {/* Lazy Loaded Button */}
-        <RazorpayButton amount={subtotal} cartId={cart._id} products={productsForPayment} />
+        {/* 🔹 FIXED: RazorpayButton receives correct products */}
+        <RazorpayButton
+          amount={subtotal}
+          cartId={cart._id}
+          products={productsForPayment}
+        />
 
         <button className="w-full mt-2 text-gray-600 hover:underline cursor-pointer">
           Continue Shopping
