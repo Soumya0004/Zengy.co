@@ -184,7 +184,7 @@ const Hero = () => {
             alt="Fashion model wearing Zengy.go clothing"
             width={900}
             height={700}
-            loading="lazy"
+                        loading="lazy"
             sizes="100vw"
             className="object-cover w-full h-auto"
           />

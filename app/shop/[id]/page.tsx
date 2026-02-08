@@ -7,6 +7,7 @@ import { useEffect, useState, useRef, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { Heart } from "lucide-react";
 import Loding from "@/app/Component/Loding";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -49,6 +50,10 @@ export default function Page() {
   const [adding, setAdding] = useState(false);
   const [buying, setBuying] = useState(false);
 
+  // ❤️ Wishlist
+  const [wishlisted, setWishlisted] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLDivElement>(null);
   const detailsRef = useRef<HTMLDivElement>(null);
@@ -61,11 +66,9 @@ export default function Page() {
     const fetchProduct = async () => {
       try {
         setLoading(true);
-
         const res = await axios.get(`/api/products/${productId}`, {
           headers: { "Cache-Control": "no-store" },
         });
-
         setProduct(res.data);
       } catch (err) {
         console.error(err);
@@ -84,10 +87,10 @@ export default function Page() {
 
     const fetchSimilar = async () => {
       try {
-        const res = await axios.get(`/api/products/${productId}/similar`, {
-          headers: { "Cache-Control": "no-store" },
-        });
-
+        const res = await axios.get(
+          `/api/products/${productId}/similar`,
+          { headers: { "Cache-Control": "no-store" } }
+        );
         setSimilar(res.data || []);
       } catch (err) {
         console.error("Similar products error:", err);
@@ -97,6 +100,30 @@ export default function Page() {
     fetchSimilar();
   }, [productId]);
 
+  /* ================= CHECK WISHLIST ================= */
+
+  useEffect(() => {
+    if (!session?.user?.id || !product?._id) return;
+
+    const checkWishlist = async () => {
+      try {
+        const res = await axios.get(
+          `/api/wishlist/get?userId=${session.user.id}`
+        );
+
+        const exists = res.data.some(
+          (item: any) => item.productId === product._id
+        );
+
+        setWishlisted(exists);
+      } catch (err) {
+        console.error("Wishlist check failed", err);
+      }
+    };
+
+    checkWishlist();
+  }, [session?.user?.id, product?._id]);
+
   /* ================= GSAP ================= */
 
   useEffect(() => {
@@ -104,13 +131,7 @@ export default function Page() {
 
     const ctx = gsap.context(() => {
       gsap.from(containerRef.current, { opacity: 0, duration: 0.5 });
-
-      gsap.from(imgRef.current, {
-        scale: 0.9,
-        opacity: 0,
-        duration: 0.6,
-      });
-
+      gsap.from(imgRef.current, { scale: 0.9, opacity: 0, duration: 0.6 });
       gsap.from(detailsRef.current?.children || [], {
         y: 30,
         opacity: 0,
@@ -170,14 +191,12 @@ export default function Page() {
 
     try {
       setAdding(true);
-
       await axios.post("/api/cart/add", {
         userId: session?.user?.id,
         productId: product?._id,
         size: selectedSize,
         quantity: 1,
       });
-
       alert("Added to cart!");
     } finally {
       setAdding(false);
@@ -191,17 +210,48 @@ export default function Page() {
 
     try {
       setBuying(true);
-
       await axios.post("/api/cart/add", {
         userId: session?.user?.id,
         productId: product?._id,
         size: selectedSize,
         quantity: 1,
       });
-
       router.push("/cart");
     } finally {
       setBuying(false);
+    }
+  };
+
+  /* ================= TOGGLE WISHLIST ================= */
+
+  const toggleWishlist = async () => {
+    if (!session?.user?.id) {
+      alert("Please login to use wishlist");
+      return;
+    }
+
+    try {
+      setWishlistLoading(true);
+
+      if (wishlisted) {
+        await axios.delete("/api/wishlist/remove", {
+          data: {
+            userId: session.user.id,
+            productId: product?._id,
+          },
+        });
+        setWishlisted(false);
+      } else {
+        await axios.post("/api/wishlist/add", {
+          userId: session.user.id,
+          productId: product?._id,
+        });
+        setWishlisted(true);
+      }
+    } catch (err) {
+      console.error("Wishlist error:", err);
+    } finally {
+      setWishlistLoading(false);
     }
   };
 
@@ -218,53 +268,60 @@ export default function Page() {
     <div ref={containerRef} className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-6 py-14">
 
-        {/* ================= MAIN GRID ================= */}
         <div className="grid lg:grid-cols-2 gap-14 items-start">
 
-          {/* ================= LEFT IMAGE ================= */}
-          <div ref={imgRef} className="space-y-4">
-
-            <div className="bg-white rounded-3xl shadow-sm p-10 flex items-center justify-center">
+          {/* IMAGE */}
+          <div ref={imgRef}>
+            <div className="bg-white rounded-3xl shadow-sm p-10 flex justify-center">
               <Image
                 src={product.img || "/placeholder.png"}
                 alt={product.title}
                 width={700}
                 height={700}
                 priority
-                className="max-h-[500px] object-cover rounded-2xl"
+                className="rounded-2xl object-cover max-h-[500px]"
               />
             </div>
           </div>
 
-          {/* ================= RIGHT DETAILS ================= */}
+          {/* DETAILS */}
           <div ref={detailsRef} className="space-y-6">
 
-            {product.category && (
-              <span className="inline-block text-xs bg-gray-200 px-3 py-1 rounded-full">
-                {product.category}
-              </span>
-            )}
+            <div className="flex items-center justify-between">
+              <h1 className="text-4xl font-semibold">
+                {product.title}
+              </h1>
 
-            <h1 className="text-4xl font-semibold">
-              {product.title}
-            </h1>
+              <button
+                onClick={toggleWishlist}
+                disabled={wishlistLoading}
+                className="p-3 rounded-full border hover:scale-110 transition cursor-pointer"
+              >
+                <Heart
+                  size={28}
+                  className={
+                    wishlisted
+                      ? "fill-red-500 text-red-500"
+                      : "text-gray-500"
+                  }
+                />
+              </button>
+            </div>
 
             <span className="text-3xl font-bold">
               ₹{product.price}
             </span>
 
-            {/* Sizes */}
             {(product.sizes?.length ?? 0) > 0 && (
               <div>
                 <p className="mb-2 font-medium">Select Size</p>
-
                 <div className="flex gap-3 flex-wrap">
                   {product.sizes?.map((s) => (
                     <button
                       key={s.size}
                       disabled={s.stock <= 0}
                       onClick={() => setSelectedSize(s.size)}
-                      className={`px-5 py-2 rounded-full border ${
+                      className={`px-5 py-2 rounded-full cursor-pointer border ${
                         selectedSize === s.size
                           ? "bg-black text-white"
                           : ""
@@ -284,7 +341,7 @@ export default function Page() {
             <button
               onClick={handleAddToCart}
               disabled={!canAdd || adding}
-              className="w-full bg-black text-white py-4 rounded-full"
+              className="w-full bg-black text-white py-4 rounded-full cursor-pointer"
             >
               {adding ? "Adding..." : "Add to Cart"}
             </button>
@@ -292,65 +349,25 @@ export default function Page() {
             <button
               onClick={handleBuyNow}
               disabled={!canAdd || buying}
-              className="w-full border py-4 rounded-full"
+              className="w-full border py-4 rounded-full cursor-pointer"
             >
               {buying ? "Processing..." : "Buy Now"}
             </button>
 
-            {/* Description */}
             {product.description && (
               <div className="bg-white rounded-2xl p-5 shadow-sm">
-                <h3 className="font-semibold mb-2">Description & Fit</h3>
+                <h3 className="font-semibold mb-2">
+                  Description & Fit
+                </h3>
                 <p className="text-gray-600 text-sm">
                   {product.description}
                 </p>
               </div>
             )}
+            
+
           </div>
         </div>
-
-        {/* ================= SIMILAR PRODUCTS ================= */}
-        {similar.length > 0 && (
-          <div className="mt-20">
-            <h2 className="font-zentry special-font text-4xl sm:text-5xl lg:text-6xl mb-10">
-              S<b>im</b><b>il</b><b>ar</b> Pr<b>o</b>duc<b>t</b>s
-            </h2>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-              {similar.map((item) => (
-                <div
-                  key={item._id}
-                  onClick={() => {
-                    router.push(`/product/${item._id}`);
-                    window.scrollTo({ top: 0 });
-                  }}
-                  className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-md cursor-pointer transition"
-                >
-                  <Image
-                    src={item.img || "/placeholder.png"}
-                    alt={item.title}
-                    width={250}
-                    height={250}
-                    className="rounded-xl object-cover"
-                  />
-
-                  <p className="text-sm text-gray-500 mt-2">
-                    {item.category}
-                  </p>
-
-                  <p className="font-medium truncate">
-                    {item.title}
-                  </p>
-
-                  <p className="font-semibold mt-1">
-                    ₹{item.price}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
       </div>
     </div>
   );

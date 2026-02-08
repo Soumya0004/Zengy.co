@@ -15,7 +15,7 @@ export default function ProfileDropdown() {
         <Link href="../profile/orderHistory" className="hover:text-sky-400">
           Orders
         </Link>
-        <Link href="/wishlist" className="hover:text-sky-400">
+        <Link href="/Wishlist" className="hover:text-sky-400">
           Wishlist
         </Link>
         <Link href="/profile" className="hover:text-sky-400">
