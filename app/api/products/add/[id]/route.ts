@@ -2,42 +2,52 @@ import { dbConnect } from "@/lib/mongodb";
 import Collections from "@/lib/models/Collections";
 import { NextResponse } from "next/server";
 
-// POST /api/products
 export async function POST(req: Request) {
   try {
     await dbConnect();
 
     const body = await req.json();
-    const { img, title, price, stock, rating, category } = body;
 
-    if (!img || !title || !price || stock === undefined || !category) {
+    const {
+      img,
+      title,
+      price,
+      category,
+      rating = 0,
+      sizes,
+      stock,
+    } = body;
+
+    if (!img || !title || typeof price !== "number" || !category) {
       return NextResponse.json(
-        { error: "All required fields (img, title, price, stock, category) must be provided" },
+        { error: "img, title, price, category required" },
         { status: 400 }
       );
     }
 
-    const newProduct = new Collections({
+    /* ⭐ NORMALIZATION (PERMANENT FIX) */
+
+    let normalizedSizes;
+
+    if (Array.isArray(sizes) && sizes.length > 0) {
+      normalizedSizes = sizes;
+    } else {
+      // simple product
+      normalizedSizes = [{ size: "default", stock: stock || 0 }];
+    }
+
+    const product = await Collections.create({
       img,
       title,
       price,
-      stock,
-      rating: rating || 0,
       category,
-      availability: Number(stock) > 0 ? "in stock" : "out of stock", 
+      rating,
+      sizes: normalizedSizes,
     });
 
-    await newProduct.save();
-
-    return NextResponse.json(
-      { message: "Product added successfully", product: newProduct },
-      { status: 201 }
-    );
+    return NextResponse.json(product, { status: 201 });
   } catch (err) {
-    console.error("❌ Error adding product:", err);
-    return NextResponse.json(
-      { error: "Failed to add product" },
-      { status: 500 }
-    );
+    console.error(err);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

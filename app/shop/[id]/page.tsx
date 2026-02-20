@@ -29,8 +29,7 @@ interface Product {
   rating?: number;
   features?: string[];
   originalPrice?: number;
-  stock?: number;
-  sizes?: SizeStock[];
+  sizes: SizeStock[];
 }
 
 /* ================= PAGE ================= */
@@ -50,13 +49,21 @@ export default function Page() {
   const [adding, setAdding] = useState(false);
   const [buying, setBuying] = useState(false);
 
-  // ❤️ Wishlist
   const [wishlisted, setWishlisted] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLDivElement>(null);
   const detailsRef = useRef<HTMLDivElement>(null);
+
+  /* ================= RESET ON NAVIGATION ================= */
+
+  useEffect(() => {
+    setSelectedSize(null);
+    setAdding(false);
+    setBuying(false);
+    setWishlisted(false);
+  }, [productId]);
 
   /* ================= FETCH PRODUCT ================= */
 
@@ -71,7 +78,7 @@ export default function Page() {
         });
         setProduct(res.data);
       } catch (err) {
-        console.error(err);
+        console.error("Product fetch error:", err);
       } finally {
         setLoading(false);
       }
@@ -87,10 +94,7 @@ export default function Page() {
 
     const fetchSimilar = async () => {
       try {
-        const res = await axios.get(
-          `/api/products/${productId}/similar`,
-          { headers: { "Cache-Control": "no-store" } }
-        );
+        const res = await axios.get(`/api/products/${productId}/similar`);
         setSimilar(res.data || []);
       } catch (err) {
         console.error("Similar products error:", err);
@@ -100,29 +104,36 @@ export default function Page() {
     fetchSimilar();
   }, [productId]);
 
-  /* ================= CHECK WISHLIST ================= */
+  /* ================= AUTO SELECT DEFAULT SIZE ================= */
 
   useEffect(() => {
-    if (!session?.user?.id || !product?._id) return;
+    if (!product?.sizes) return;
 
-    const checkWishlist = async () => {
-      try {
-        const res = await axios.get(
-          `/api/wishlist/get?userId=${session.user.id}`
-        );
+    // Simple product → auto select
+    if (product.sizes.length === 1) {
+      setSelectedSize(product.sizes[0].size);
+    }
+  }, [product]);
 
-        const exists = res.data.some(
-          (item: any) => item.productId === product._id
-        );
+  /* ================= STOCK LOGIC (FIXED) ================= */
 
-        setWishlisted(exists);
-      } catch (err) {
-        console.error("Wishlist check failed", err);
-      }
-    };
+  const totalStock = useMemo(() => {
+    return product?.sizes?.reduce((sum, s) => sum + s.stock, 0) || 0;
+  }, [product]);
 
-    checkWishlist();
-  }, [session?.user?.id, product?._id]);
+  const selectedStock = useMemo(() => {
+    return (
+      product?.sizes?.find((s) => s.size === selectedSize)?.stock || 0
+    );
+  }, [product, selectedSize]);
+
+  const inStock = totalStock > 0;
+
+  const hasVariants = (product?.sizes?.length ?? 0) > 1;
+
+  const canAdd =
+    inStock &&
+    (!hasVariants || (selectedSize !== null && selectedStock > 0));
 
   /* ================= GSAP ================= */
 
@@ -130,36 +141,31 @@ export default function Page() {
     if (!product || loading) return;
 
     const ctx = gsap.context(() => {
-      gsap.from(containerRef.current, { opacity: 0, duration: 0.5 });
-      gsap.from(imgRef.current, { scale: 0.9, opacity: 0, duration: 0.6 });
-      gsap.from(detailsRef.current?.children || [], {
-        y: 30,
+      gsap.from(containerRef.current, {
         opacity: 0,
-        stagger: 0.1,
+        duration: 0.5,
       });
-    });
+
+      if (imgRef.current) {
+        gsap.from(imgRef.current, {
+          scale: 0.95,
+          opacity: 0,
+          duration: 0.6,
+        });
+      }
+
+      if (detailsRef.current?.children) {
+        gsap.from(detailsRef.current.children, {
+          y: 20,
+          opacity: 0,
+          stagger: 0.1,
+          duration: 0.4,
+        });
+      }
+    }, containerRef);
 
     return () => ctx.revert();
-  }, [loading, product]);
-
-  /* ================= STOCK ================= */
-
-  const totalStock = useMemo(() => {
-    return (
-      product?.sizes?.reduce((sum, s) => sum + s.stock, 0) ??
-      product?.stock ??
-      0
-    );
-  }, [product]);
-
-  const selectedStock = useMemo(() => {
-    return (
-      product?.sizes?.find((s) => s.size === selectedSize)?.stock ??
-      totalStock
-    );
-  }, [product, selectedSize, totalStock]);
-
-  const inStock = totalStock > 0;
+  }, [product, loading]);
 
   /* ================= VALIDATION ================= */
 
@@ -171,7 +177,7 @@ export default function Page() {
 
     if (!product) return false;
 
-    if (product.sizes?.length && !selectedSize) {
+    if (product.sizes.length > 1 && !selectedSize) {
       alert("Please select a size");
       return false;
     }
@@ -184,7 +190,7 @@ export default function Page() {
     return true;
   };
 
-  /* ================= ADD TO CART ================= */
+  /* ================= HANDLERS ================= */
 
   const handleAddToCart = async () => {
     if (!validatePurchase()) return;
@@ -197,13 +203,14 @@ export default function Page() {
         size: selectedSize,
         quantity: 1,
       });
-      alert("Added to cart!");
+      alert("Added to cart");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to add to cart");
     } finally {
       setAdding(false);
     }
   };
-
-  /* ================= BUY NOW ================= */
 
   const handleBuyNow = async () => {
     if (!validatePurchase()) return;
@@ -217,115 +224,61 @@ export default function Page() {
         quantity: 1,
       });
       router.push("/cart");
+    } catch (err) {
+      console.error(err);
     } finally {
       setBuying(false);
-    }
-  };
-
-  /* ================= TOGGLE WISHLIST ================= */
-
-  const toggleWishlist = async () => {
-    if (!session?.user?.id) {
-      alert("Please login to use wishlist");
-      return;
-    }
-
-    try {
-      setWishlistLoading(true);
-
-      if (wishlisted) {
-        await axios.delete("/api/wishlist/remove", {
-          data: {
-            userId: session.user.id,
-            productId: product?._id,
-          },
-        });
-        setWishlisted(false);
-      } else {
-        await axios.post("/api/wishlist/add", {
-          userId: session.user.id,
-          productId: product?._id,
-        });
-        setWishlisted(true);
-      }
-    } catch (err) {
-      console.error("Wishlist error:", err);
-    } finally {
-      setWishlistLoading(false);
     }
   };
 
   /* ================= UI ================= */
 
   if (loading) return <Loding />;
-  if (!product) return null;
-
-  const canAdd =
-    inStock &&
-    (!product.sizes || (selectedSize && selectedStock > 0));
+  if (!product)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Product not found
+      </div>
+    );
 
   return (
     <div ref={containerRef} className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-6 py-14">
-
         <div className="grid lg:grid-cols-2 gap-14 items-start">
-
           {/* IMAGE */}
           <div ref={imgRef}>
-            <div className="bg-white rounded-3xl shadow-sm p-10 flex justify-center">
+            <div className="bg-white rounded-3xl px-10 flex justify-center items-center">
               <Image
                 src={product.img || "/placeholder.png"}
                 alt={product.title}
-                width={700}
-                height={700}
-                priority
-                className="rounded-2xl object-cover max-h-[500px]"
+                width={600}
+                height={300}
+                className="rounded-2xl object-cover h-[30rem] w-full"
               />
             </div>
           </div>
 
           {/* DETAILS */}
           <div ref={detailsRef} className="space-y-6">
+            <h1 className="text-4xl font-semibold">{product.title}</h1>
 
-            <div className="flex items-center justify-between">
-              <h1 className="text-4xl font-semibold">
-                {product.title}
-              </h1>
+            <p className="text-3xl font-bold">₹{product.price}</p>
 
-              <button
-                onClick={toggleWishlist}
-                disabled={wishlistLoading}
-                className="p-3 rounded-full border hover:scale-110 transition cursor-pointer"
-              >
-                <Heart
-                  size={28}
-                  className={
-                    wishlisted
-                      ? "fill-red-500 text-red-500"
-                      : "text-gray-500"
-                  }
-                />
-              </button>
-            </div>
-
-            <span className="text-3xl font-bold">
-              ₹{product.price}
-            </span>
-
-            {(product.sizes?.length ?? 0) > 0 && (
+            {/* SIZE SELECT */}
+            {hasVariants && (
               <div>
-                <p className="mb-2 font-medium">Select Size</p>
+                <p className="font-medium mb-2">Select Size</p>
                 <div className="flex gap-3 flex-wrap">
-                  {product.sizes?.map((s) => (
+                  {product.sizes.map((s) => (
                     <button
                       key={s.size}
                       disabled={s.stock <= 0}
                       onClick={() => setSelectedSize(s.size)}
-                      className={`px-5 py-2 rounded-full cursor-pointer border ${
+                      className={`px-5 py-2 rounded-full border transition ${
                         selectedSize === s.size
                           ? "bg-black text-white"
-                          : ""
-                      }`}
+                          : "bg-white hover:border-black"
+                      } disabled:opacity-50`}
                     >
                       {s.size}
                     </button>
@@ -334,14 +287,18 @@ export default function Page() {
               </div>
             )}
 
-            <p className={inStock ? "text-green-600" : "text-red-500"}>
+            <p
+              className={`font-medium ${
+                inStock ? "text-green-600" : "text-red-500"
+              }`}
+            >
               {selectedStock} available
             </p>
 
             <button
               onClick={handleAddToCart}
               disabled={!canAdd || adding}
-              className="w-full bg-black text-white py-4 rounded-full cursor-pointer"
+              className="w-full bg-black text-white py-4 rounded-full"
             >
               {adding ? "Adding..." : "Add to Cart"}
             </button>
@@ -349,25 +306,41 @@ export default function Page() {
             <button
               onClick={handleBuyNow}
               disabled={!canAdd || buying}
-              className="w-full border py-4 rounded-full cursor-pointer"
+              className="w-full border py-4 rounded-full"
             >
               {buying ? "Processing..." : "Buy Now"}
             </button>
 
-            {product.description && (
-              <div className="bg-white rounded-2xl p-5 shadow-sm">
-                <h3 className="font-semibold mb-2">
-                  Description & Fit
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  {product.description}
-                </p>
-              </div>
-            )}
-            
-
           </div>
         </div>
+
+        {/* SIMILAR PRODUCTS */}
+        {similar.length > 0 && (
+          <div className="mt-16">
+            <h2 className="text-2xl font-semibold mb-6">Similar Products</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {similar.map((prod) => (
+                <div key={prod._id} className="bg-white rounded-xl p-4 hover:shadow-lg transition">
+                  <Image
+                    src={prod.img || "/placeholder.png"}
+                    alt={prod.title}
+                    width={200}
+                    height={200}
+                    className="rounded-lg object-cover w-full h-48"
+                  />
+                  <h3 className="font-medium mt-2 text-sm">{prod.title}</h3>
+                  <p className="text-lg font-bold">₹{prod.price}</p>
+                  <button
+                    onClick={() => router.push(`/shop/${prod._id}`)}
+                    className="mt-2 w-full bg-gray-100 py-2 rounded hover:bg-gray-200 transition"
+                  >
+                    View Product
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

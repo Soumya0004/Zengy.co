@@ -1,7 +1,8 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 
-// --- INTERFACES ---
-export interface ISizeStock extends Document {
+/* ================= INTERFACES ================= */
+
+export interface ISizeStock {
   size: string;
   stock: number;
 }
@@ -10,59 +11,63 @@ export interface ICollection extends Document {
   img: string;
   title: string;
   price: number;
-  sizes: ISizeStock[];
+  category: string;
   rating?: number;
-  category: string; // renamed from "collection" to avoid reserved key
-  availability?: string; // virtual
 
-  getStock: (size: string) => number;
-  availableSizes: () => string[];
+  sizes: ISizeStock[];
+
+  availability?: string;
+
+  getStock(size: string): number;
+  availableSizes(): string[];
 }
 
-// --- SCHEMAS ---
-const SizeStockSchema = new Schema<ISizeStock>(
-  {
-    size: { type: String, required: true, trim: true },
-    stock: { type: Number, default: 0, min: 0 },
-  },
-  { _id: true } // default behavior
-);
+/* ================= SCHEMA ================= */
+
+const SizeStockSchema = new Schema<ISizeStock>({
+  size: { type: String, required: true, trim: true },
+  stock: { type: Number, default: 0, min: 0 },
+});
 
 const CollectionSchema = new Schema<ICollection>(
   {
     img: { type: String, required: true },
     title: { type: String, required: true, trim: true },
     price: { type: Number, required: true },
-    sizes: { type: [SizeStockSchema], required: true },
+    category: { type: String, required: true },
     rating: { type: Number, default: 0, min: 0, max: 5 },
-    category: { type: String, required: true }, // ✅ safe
+
+    // ⭐ ALWAYS USED
+    sizes: { type: [SizeStockSchema], required: true },
   },
   {
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-    suppressReservedKeysWarning: true, // ✅ permanently disables reserved key warning
   }
 );
 
-// --- VIRTUALS ---
+/* ================= VIRTUAL ================= */
+
 CollectionSchema.virtual("availability").get(function (this: ICollection) {
   return this.sizes.some((s) => s.stock > 0) ? "In Stock" : "Out of Stock";
 });
 
-// --- INSTANCE METHODS ---
-CollectionSchema.methods.getStock = function (this: ICollection, size: string): number {
-  const sizeInfo = this.sizes.find((s) => s.size === size);
-  return sizeInfo ? sizeInfo.stock : 0;
+/* ================= METHODS ================= */
+
+CollectionSchema.methods.getStock = function (size: string) {
+  const found = this.sizes.find((s: ISizeStock) => s.size === size);
+  return found ? found.stock : 0;
 };
 
-CollectionSchema.methods.availableSizes = function (this: ICollection): string[] {
-  return this.sizes.filter((s) => s.stock > 0).map((s) => s.size);
+CollectionSchema.methods.availableSizes = function () {
+  return this.sizes.filter((s: { stock: number; }) => s.stock > 0).map((s: { size: any; }) => s.size);
 };
 
-// --- MODEL EXPORT ---
+/* ================= MODEL ================= */
+
 const Collections: Model<ICollection> =
-  (mongoose.models.Collections as Model<ICollection>) ||
+  mongoose.models.Collections ||
   mongoose.model<ICollection>("Collections", CollectionSchema);
 
 export default Collections;

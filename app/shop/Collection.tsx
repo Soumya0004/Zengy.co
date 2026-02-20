@@ -5,51 +5,53 @@ import axios from "axios";
 import dynamic from "next/dynamic";
 import Loding from "../Component/Loding";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 
-// ⚡ Lazy Load Heavy Components
-const Card = dynamic(() => import("../Component/Card"), {
-  loading: () => <p className="text-center py-10">Loading products...</p>,
-  ssr: false,
-});
-
-const Magnet = dynamic(() => import("@/components/Magnet"), {
-  ssr: false,
-});
-
-const ShinyText = dynamic(() => import("@/components/ShinyText"), {
-  ssr: false,
-});
-
-// ⚡ Lazy Load GSAP Modules
-const loadGSAP = async () => {
-  const gsapModule = await import("gsap");
-  const ScrollTriggerModule = await import("gsap/ScrollTrigger");
-
-  gsapModule.default.registerPlugin(ScrollTriggerModule.ScrollTrigger);
-  return gsapModule.default;
-};
-
+/* ---------- TYPES ---------- */
 interface Collection {
   _id: string;
   title: string;
   description?: string;
   price: number | string;
-  img: string;
+  img?: string;
   category?: string;
   rating?: number;
 }
 
+/* ---------- Lazy Load Components ---------- */
+const Card = dynamic<any>(() => import("../Component/Card"), {
+  loading: () => (
+    <div className="h-[300px] bg-gray-100 rounded-2xl animate-pulse" />
+  ),
+  ssr: false,
+});
+
+const Magnet = dynamic(() => import("@/components/Magnet"), { ssr: false });
+const ShinyText = dynamic(() => import("@/components/ShinyText"), { ssr: false });
+
+/* ---------- GSAP Loader ---------- */
+const loadGSAP = async () => {
+  const gsapModule = await import("gsap");
+  const ScrollTriggerModule = await import("gsap/ScrollTrigger");
+  gsapModule.default.registerPlugin(ScrollTriggerModule.ScrollTrigger);
+  return gsapModule.default;
+};
+
 const Collection = () => {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);
+  const [wishlist, setWishlist] = useState<string[]>([]);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const { data: session } = useSession();
 
-  // Fetch Products
+  /* ---------- FETCH ---------- */
   useEffect(() => {
     const fetchRecentProducts = async () => {
       try {
         const res = await axios.get("/api/products/recent");
-        const products = Array.isArray(res.data) ? res.data : res.data.products;
+        const products = Array.isArray(res.data)
+          ? res.data
+          : res.data?.products;
 
         setCollections(products || []);
       } catch (err) {
@@ -63,11 +65,46 @@ const Collection = () => {
     fetchRecentProducts();
   }, []);
 
-  // GSAP Animations (Lazy Loaded)
   useEffect(() => {
-    const animate = async () => {
-      if (!containerRef.current) return;
+    const fetchWishlist = async () => {
+      if (!session?.user?.id) return;
+      try {
+        const res = await axios.get(`/api/wishlist/get?userId=${session.user.id}`);
+        setWishlist(res.data.map((item: any) => item.productId));
+      } catch (err) {
+        console.error("Failed to fetch wishlist:", err);
+      }
+    };
 
+    fetchWishlist();
+  }, [session]);
+
+  const toggleWishlist = async (productId: string) => {
+    if (!session?.user?.id) return;
+    const isInWishlist = wishlist.includes(productId);
+    try {
+      if (isInWishlist) {
+        await axios.delete("/api/wishlist/remove", {
+          data: { userId: session.user.id, productId },
+        });
+        setWishlist(wishlist.filter(id => id !== productId));
+      } else {
+        await axios.post("/api/wishlist/add", {
+          userId: session.user.id,
+          productId,
+        });
+        setWishlist([...wishlist, productId]);
+      }
+    } catch (err) {
+      console.error("Failed to toggle wishlist:", err);
+    }
+  };
+
+  /* ---------- GSAP ---------- */
+  useEffect(() => {
+    if (!containerRef.current || loading) return;
+
+    const animate = async () => {
       const gsap = await loadGSAP();
       gsap.fromTo(
         containerRef.current,
@@ -77,7 +114,7 @@ const Collection = () => {
     };
 
     animate();
-  }, []);
+  }, [loading]);
 
   if (loading) return <Loding />;
 
@@ -97,10 +134,19 @@ const Collection = () => {
       </div>
 
       {/* Cards */}
-      <Card collections={collections} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-10">
+        {collections.map((item) => (
+          <Card
+            key={item._id}
+            product={item}
+            isInWishlist={wishlist.includes(item._id)}
+            onToggleWishlist={session?.user ? toggleWishlist : undefined}
+          />
+        ))}
+      </div>
 
       {/* Explore More */}
-      <div className="flex justify-center">
+      <div className="flex justify-center mt-10">
         <Magnet padding={50} disabled={false} magnetStrength={10}>
           <Link
             href="/shop"
