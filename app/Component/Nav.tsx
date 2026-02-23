@@ -14,8 +14,64 @@ import ProfileDropdown from "@/components/ProfileDropdown";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 
-
 gsap.registerPlugin(ScrollTrigger);
+
+// --- NEW COMPONENT FOR THE SLIDING LIQUID EFFECT ---
+const SlidingNavLinks = ({ links }: { links: { label: string; href: string }[] }) => {
+  const [hoverStyle, setHoverStyle] = useState({ left: 0, top: 0, width: 0, height: 0, opacity: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseEnter = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!containerRef.current) return;
+    const target = e.currentTarget;
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+
+    setHoverStyle({
+      left: targetRect.left - containerRect.left,
+      top: targetRect.top - containerRect.top,
+      width: targetRect.width,
+      height: targetRect.height,
+      opacity: 1,
+    });
+  };
+
+  const handleMouseLeave = () => {
+    setHoverStyle((prev) => ({ ...prev, opacity: 0 }));
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative flex items-center gap-2"
+      onMouseLeave={handleMouseLeave}
+    >
+      {/* The Sliding Liquid Pill Background */}
+      <div
+        className="absolute rounded-full bg-white/10 backdrop-blur-md border border-white/20 shadow-[inset_0_2px_4px_rgba(255,255,255,0.4),inset_0_-2px_4px_rgba(0,0,0,0.4),0_4px_8px_rgba(0,0,0,0.3)] transition-all duration-300 ease-out pointer-events-none"
+        style={{
+          left: `${hoverStyle.left}px`,
+          top: `${hoverStyle.top}px`,
+          width: `${hoverStyle.width}px`,
+          height: `${hoverStyle.height}px`,
+          opacity: hoverStyle.opacity,
+        }}
+      />
+
+      {/* Actual Text Links */}
+      {links.map((link) => (
+        <Link
+          key={link.href}
+          href={link.href}
+          onMouseEnter={handleMouseEnter}
+          className="relative z-10 uppercase text-sm px-5 py-2 text-white whitespace-nowrap transition-transform duration-300 hover:-translate-y-0.5"
+        >
+          {link.label}
+        </Link>
+      ))}
+    </div>
+  );
+};
 
 const Nav = () => {
   const { status } = useSession();
@@ -28,7 +84,7 @@ const Nav = () => {
   const fullNavRef = useRef<HTMLDivElement>(null);
   const floatingNavRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-const pathname = usePathname();
+  const pathname = usePathname();
 
   useEffect(() => {
     setMounted(true);
@@ -114,48 +170,36 @@ const pathname = usePathname();
                 <Image src="/logo-white.svg" alt="Logo" width={160} height={48} />
               </Link>
             </div>
-            <div className="hidden md:flex items-center gap-8 flex-1 justify-center">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="uppercase text-sm hover:text-sky-400"
-                >
-                  {link.label}
-                </Link>
-              ))}
+            <div className="hidden md:flex items-center gap-4 flex-1 justify-center">
+              {/* SLIDING NAV INJECTED HERE */}
+              <SlidingNavLinks links={navLinks} />
             </div>
-            <div className="flex items-center gap-4 flex-1 justify-end">
+            <div className="flex items-center gap-2 flex-1 justify-end">
               <div className="hidden md:flex items-center gap-5">
                 {loggedIn ? (
                   <>
-                 {/* PROFILE DROPDOWN WRAPPER */}
-{loggedIn &&pathname !== "/profile" &&( <div className="relative group">
-  {/* ICON (click → go to /profile) */}
-  <button
-    onClick={() => router.push("/profile")}
-    className="p-1 cursor-pointer"
-  >
-    <UserIcon size={20} />
-  </button>
+                    {/* PROFILE DROPDOWN WRAPPER */}
+                    {pathname !== "/profile" && (
+                      <div className="relative group">
+                        {/* ICON (click → go to /profile) */}
+                        <button
+                          onClick={() => router.push("/profile")}
+                          className="p-1 cursor-pointer"
+                        >
+                          <UserIcon size={20} />
+                        </button>
 
-  {/* HOVER DROPDOWN */}
-  <div
-    className="
-      absolute right-0 mt-3 bg-white text-black border rounded-xl shadow-lg p-4
-      opacity-0 invisible group-hover:opacity-100 group-hover:visible 
-      transition-all duration-300 z-50
-    "
-  >
-    <ProfileDropdown />
-  </div>
-</div>)}
-
+                        {/* HOVER DROPDOWN */}
+                        <div className="absolute right-0 mt-3 bg-white text-black border rounded-xl shadow-lg p-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                          <ProfileDropdown />
+                        </div>
+                      </div>
+                    )}
 
                     <Link href="/Cart">
                       <ShoppingCart size={20} />
                     </Link>
-                    
+
                     <button
                       onClick={handleLogout}
                       className="text-sm text-red-500 inline-flex items-center gap-2 uppercase"
@@ -207,7 +251,7 @@ const pathname = usePathname();
                   <Link href="/Cart" onClick={() => setOpen(false)}>
                     <ShoppingCart size={18} />
                   </Link>
-                  
+
                   <button
                     onClick={() => {
                       setOpen(false);
@@ -237,19 +281,12 @@ const pathname = usePathname();
       {/* Floating Nav for All Screens */}
       <div
         ref={floatingNavRef}
-        className=" fixed top-4 left-1/2 -translate-x-1/2 bg-zinc-900/90 backdrop-blur-md text-white rounded-2xl px-6 py-3 shadow-lg z-50 hidden md:flex items-center justify-between w-auto"
+        className="fixed top-4 left-1/2 -translate-x-1/2 bg-zinc-900/90 backdrop-blur-md text-white rounded-2xl px-6 py-3 shadow-lg z-50 hidden md:flex items-center justify-between w-auto"
       >
         {/* Desktop: Show links */}
-        <div className="hidden md:flex items-center gap-6">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="uppercase text-sm hover:text-sky-400"
-            >
-              {link.label}
-            </Link>
-          ))}
+        <div className="hidden md:flex items-center gap-4">
+          {/* SLIDING NAV INJECTED HERE TOO */}
+          <SlidingNavLinks links={navLinks} />
         </div>
 
         {/* Mobile: Show Menu Icon */}
