@@ -18,11 +18,11 @@ import { usePathname } from "next/navigation";
 gsap.registerPlugin(ScrollTrigger);
 
 const Nav = () => {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const [open, setOpen] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
-  const [manualUser, setManualUser] = useState<any>(null);
+  const [manualUser, setManualUser] = useState<unknown>(null);
   const [mounted, setMounted] = useState(false);
 
   const fullNavRef = useRef<HTMLDivElement>(null);

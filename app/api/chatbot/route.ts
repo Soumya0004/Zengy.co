@@ -48,7 +48,7 @@ Rules:
     let reply = "";
 
     // Newer Responses API often has `output[0].content[0].text`
-    const output = (response as any).output;
+    const output = (response as { output: unknown }).output;
     if (Array.isArray(output) && output.length > 0) {
       const first = output[0];
       if (Array.isArray(first.content) && first.content.length > 0) {

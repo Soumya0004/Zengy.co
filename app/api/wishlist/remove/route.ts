@@ -17,9 +17,9 @@ export async function DELETE(req: Request) {
     await Wishlist.findOneAndDelete({ userId, productId });
 
     return NextResponse.json({ message: "Removed from wishlist" });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message },
+      { error: (error as Error).message },
       { status: 500 }
     );
   }

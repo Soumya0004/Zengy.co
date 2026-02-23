@@ -59,8 +59,8 @@ export default function SignUpCard({ onSwitch }: { onSwitch: () => void }) {
       setTimeout(() => {
         onSwitch(); // switch to login form
       }, 1500);
-    } catch (err: any) {
-      setMessage(err.response?.data?.error || "Signup failed");
+    } catch (err: unknown) {
+      setMessage(((err as { response?: { data?: { error?: string } } }).response?.data?.error) || "Signup failed");
     } finally {
       setLoading(false);
     }

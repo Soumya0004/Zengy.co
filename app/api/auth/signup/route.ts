@@ -43,8 +43,8 @@ export async function POST(req: Request) {
       },
       { status: 201 }
     );
-  } catch (err: any) {
-    console.error("Signup Error:", err.message || err);
+  } catch (err: unknown) {
+    console.error("Signup Error:", (err as Error).message || err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

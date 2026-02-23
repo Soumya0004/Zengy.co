@@ -4,14 +4,14 @@ import Collections from "@/lib/models/Collections";
 import { dbConnect } from "@/lib/mongodb";
 
 interface Params {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export async function DELETE(req: Request, { params }: Params) {
   try {
     await dbConnect();
 
-    const { id } = params;
+    const { id } = await params;
     const product = await Collections.findById(id);
 
     if (!product) {
@@ -27,7 +27,7 @@ export async function DELETE(req: Request, { params }: Params) {
     await product.deleteOne();
 
     return NextResponse.json({ success: true, message: "Product deleted" }, { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(" Delete product error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }

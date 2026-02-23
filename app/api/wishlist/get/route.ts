@@ -18,9 +18,9 @@ export async function GET(req: Request) {
     const wishlist = await Wishlist.find({ userId });
 
     return NextResponse.json(wishlist);
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message },
+      { error: (error as Error).message },
       { status: 500 }
     );
   }

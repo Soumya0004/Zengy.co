@@ -7,7 +7,6 @@ import { useEffect, useState, useRef, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Heart } from "lucide-react";
 import Loding from "@/app/Component/Loding";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -49,9 +48,6 @@ export default function Page() {
   const [adding, setAdding] = useState(false);
   const [buying, setBuying] = useState(false);
 
-  const [wishlisted, setWishlisted] = useState(false);
-  const [wishlistLoading, setWishlistLoading] = useState(false);
-
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLDivElement>(null);
   const detailsRef = useRef<HTMLDivElement>(null);
@@ -62,7 +58,6 @@ export default function Page() {
     setSelectedSize(null);
     setAdding(false);
     setBuying(false);
-    setWishlisted(false);
   }, [productId]);
 
   /* ================= FETCH PRODUCT ================= */
@@ -223,7 +218,7 @@ export default function Page() {
         size: selectedSize,
         quantity: 1,
       });
-      router.push("/cart");
+      router.push("/Cart");
     } catch (err) {
       console.error(err);
     } finally {
@@ -262,9 +257,15 @@ export default function Page() {
           <div ref={detailsRef} className="space-y-6">
             <h1 className="text-4xl font-semibold">{product.title}</h1>
 
+            {product.rating && (
+              <p className="text-sm text-gray-500 mt-1">Rating: {product.rating}/5</p>
+            )}
+
             <p className="text-3xl font-bold">₹{product.price}</p>
 
-            {/* SIZE SELECT */}
+            {product.description && (
+              <p className="text-gray-600 mt-2">{product.description}</p>
+            )}
             {hasVariants && (
               <div>
                 <p className="font-medium mb-2">Select Size</p>

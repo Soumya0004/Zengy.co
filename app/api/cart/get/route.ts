@@ -25,10 +25,10 @@ export async function GET() {
       success: true,
       cart: cart || { products: [], _id: null },
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Cart GET error:", err);
     return NextResponse.json(
-      { success: false, message: err.message },
+      { success: false, message: (err as Error).message },
       { status: 500 }
     );
   }

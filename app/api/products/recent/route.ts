@@ -12,7 +12,7 @@ export async function GET() {
       .limit(4);
 
     return NextResponse.json({ success: true, products }, { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Recent products error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/mongodb";
-import Cart from "@/lib/models/Cart"; // ✅ USE CART
+import Cart from "@/lib/models/Cart";
 import mongoose from "mongoose";
 
 export async function POST(req: Request) {
@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     }
 
     // ✅ REMOVE from CART (not order)
-    let updatedCart = await Cart.findByIdAndUpdate(
+    const updatedCart = await Cart.findByIdAndUpdate(
       cartId,
       {
         $pull: {
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     }
 
     // ✅ Recalculate total price
-    (updatedCart as any).totalPrice = updatedCart.products.reduce(
+    updatedCart.totalPrice = updatedCart.products.reduce(
       (sum, item) => sum + (item.price || 0) * item.quantity,
       0
     );

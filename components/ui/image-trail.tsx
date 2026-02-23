@@ -11,7 +11,7 @@ import React, {
 import { motion, useAnimation, useAnimationFrame } from "framer-motion";
 import { v4 as uuidv4 } from "uuid";
 
-type TrailSegment = [Record<string, any>, Record<string, any> | undefined];
+type TrailSegment = [Record<string, unknown>, Record<string, unknown> | undefined];
 type TrailAnimationSequence = TrailSegment[];
 
 interface ImageTrailProps {

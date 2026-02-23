@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import mongoose from "mongoose";
 import { dbConnect } from "@/lib/mongodb";
-import Order from "@/lib/models/Order";
+import Order, { IOrder } from "@/lib/models/Order";
 import Cart from "@/lib/models/Cart";
 import Collections from "@/lib/models/Collections";
 
@@ -42,11 +42,11 @@ export async function POST(req: Request) {
     // 2️⃣ CALCULATE TOTAL PRICE
     // ============================
     const totalPrice = products.reduce(
-      (sum: number, item: any) => sum + item.price * item.quantity,
+      (sum: number, item: { price: number; quantity: number }) => sum + item.price * item.quantity,
       0
     );
 
-    let newOrder: any;
+    let newOrder: IOrder | undefined;
 
     // ============================
     // 3️⃣ START TRANSACTION
@@ -78,7 +78,7 @@ export async function POST(req: Request) {
       // -----------------------------
       // 🔹 CREATE ORDER
       // -----------------------------
-      newOrder = await Order.create(
+      [newOrder] = await Order.create(
         [
           {
             user: userId,
@@ -108,11 +108,11 @@ export async function POST(req: Request) {
       message: "Payment verified, stock updated, order created & cart cleared",
       order: newOrder,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("PAYMENT SUCCESS ERROR:", error);
 
     return NextResponse.json(
-      { success: false, message: error.message || "Order failed" },
+      { success: false, message: (error as Error).message || "Order failed" },
       { status: 500 }
     );
   } finally {

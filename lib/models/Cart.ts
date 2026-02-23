@@ -11,6 +11,7 @@ export interface ICartProduct {
 export interface ICart extends Document {
   user: mongoose.Types.ObjectId | string;
   products: ICartProduct[];
+  totalPrice?: number;
 }
 
 const CartProductSchema = new Schema<ICartProduct>(
@@ -28,6 +29,7 @@ const CartSchema = new Schema<ICart>(
   {
     user: { type: Schema.Types.ObjectId, ref: "User", required: true },
     products: [CartProductSchema],
+    totalPrice: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

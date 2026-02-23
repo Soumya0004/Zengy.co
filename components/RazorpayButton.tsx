@@ -8,7 +8,21 @@ import { useRouter } from "next/navigation";
 
 declare global {
   interface Window {
-    Razorpay: any;
+    Razorpay: new (options: {
+      key: string;
+      amount: number;
+      currency: string;
+      name: string;
+      description: string;
+      order_id: string;
+      handler: (response: {
+        razorpay_payment_id: string;
+        razorpay_order_id: string;
+        razorpay_signature: string;
+      }) => Promise<void>;
+    }) => {
+      open: () => void;
+    };
   }
 }
 
@@ -19,7 +33,7 @@ export default function RazorpayButton({
 }: {
   amount: number;
   cartId: string;
-  products: any[];
+  products: unknown[];
 }) {
   const [isReady, setIsReady] = useState(false);
   const { data: session } = useSession();
@@ -46,14 +60,18 @@ export default function RazorpayButton({
       const { order } = orderRes.data;
 
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY,
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY!,
         amount: order.amount,
         currency: "INR",
         name: "ZENGY.GO",
         description: "Order Payment",
         order_id: order.id,
 
-        handler: async function (response: any) {
+        handler: async function (response: {
+          razorpay_payment_id: string;
+          razorpay_order_id: string;
+          razorpay_signature: string;
+        }) {
           try {
             const verifyRes = await axios.post("/api/cart/paymentSuccess", {
               razorpay_payment_id: response.razorpay_payment_id,

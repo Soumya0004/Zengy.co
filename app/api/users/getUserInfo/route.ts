@@ -2,8 +2,7 @@ import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/mongodb";
 import User from "@/lib/models/User";
-import Order from "@/lib/models/Order";
-import Collections from "@/lib/models/Collections";
+import Order, { IOrder } from "@/lib/models/Order";
 
 export async function GET() {
   try {
@@ -44,27 +43,24 @@ export async function GET() {
     }
 
     // 4️⃣ Fetch user orders safely
-    let orders: any[] = [];
+    let orders: IOrder[] = [];
     try {
       const rawOrders = await Order.find({ user: userId })
+        .populate('products.productId', 'img title price sizes rating category')
         .sort({ createdAt: -1 })
         .lean();
 
-      // Only populate valid references
-      orders = await Promise.all(
-        rawOrders.map(async (order) => {
-          const products = await Promise.all(
-            order.products.map(async (p: any) => {
-              if (!p.collection) return p; // skip if no collection
-              const coll = await Collections.findById(p.collection)
-                .select("img title price sizes rating category")
-                .lean();
-              return { ...p, collection: coll || null };
-            })
-          );
-          return { ...order, products };
+      // Rename productId to collection for consistency
+      orders = rawOrders.map(order => ({
+        ...order,
+        products: order.products.map(p => {
+          const { productId, ...rest } = p;
+          return {
+            ...rest,
+            collection: productId
+          };
         })
-      );
+      })) as unknown as IOrder[];
     } catch (orderErr) {
       console.error("Error fetching orders:", orderErr);
       orders = []; // fallback to empty array
@@ -72,8 +68,8 @@ export async function GET() {
 
     // 5️⃣ Return combined user + orders
     return NextResponse.json({ ...user, orders }, { status: 200 });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Unexpected error:", err);
-    return NextResponse.json({ error: err.message || "Server error" }, { status: 500 });
+    return NextResponse.json({ error: (err as Error).message || "Server error" }, { status: 500 });
   }
 }

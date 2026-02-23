@@ -4,14 +4,14 @@ import { dbConnect } from "@/lib/mongodb";
 import Collections from "@/lib/models/Collections";
 
 interface Params {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export async function PUT(req: Request, { params }: Params) {
   try {
     await dbConnect();
 
-    const { id } = params;
+    const { id } = await params;
     const formData = await req.formData();
 
     const file = formData.get("img") as File | null;
@@ -19,6 +19,9 @@ export async function PUT(req: Request, { params }: Params) {
     const price = formData.get("price") as string | null;
     const category = formData.get("category") as string | null;
     const rating = formData.get("rating") as string | null;
+
+    // 👇 REQUIRED for stock update
+    const size = formData.get("size") as string | null;
     const stock = formData.get("stock") as string | null;
 
     const product = await Collections.findById(id);
@@ -26,45 +29,63 @@ export async function PUT(req: Request, { params }: Params) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    let imgUrl = product.img;
-
-    // ✅ Upload new image if provided
+    /* ---------- IMAGE UPLOAD ---------- */
     if (file && file.size > 0) {
-      const arrayBuffer = await file.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
+      const buffer = Buffer.from(await file.arrayBuffer());
 
-      const uploadResult = await new Promise<any>((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          { folder: "products" },
-          (error, result) => {
-            if (error) reject(error);
-            else resolve(result);
-          }
+      const uploadResult = await new Promise<{ secure_url: string }>(
+        (resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { folder: "products" },
+            (error, result) => {
+              if (error || !result) return reject(error);
+              resolve({ secure_url: result.secure_url });
+            }
+          );
+          stream.end(buffer);
+        }
+      );
+
+      product.img = uploadResult.secure_url;
+    }
+
+    /* ---------- BASIC FIELD UPDATES ---------- */
+    if (title !== null) product.title = title;
+    if (price !== null) product.price = Number(price);
+    if (category !== null) product.category = category;
+    if (rating !== null) product.rating = Number(rating);
+
+    /* ---------- ✅ SIZE STOCK UPDATE ---------- */
+    if (size !== null && stock !== null) {
+      const stockNumber = Number(stock);
+
+      const sizeEntry = product.sizes.find((s) => s.size === size);
+
+      if (!sizeEntry) {
+        return NextResponse.json(
+          { error: `Size ${size} not found` },
+          { status: 400 }
         );
-        stream.end(buffer);
-      });
+      }
 
-      imgUrl = uploadResult.secure_url;
+      sizeEntry.stock = stockNumber;
     }
-
-    // ✅ Update fields
-    if (title) product.title = title;
-    if (price) product.price = Number(price);
-    if (category) product.category = category;
-    if (rating) product.rating = Number(rating);
-
-    if (stock) {
-      product.stock = Number(stock);
-      product.availability = Number(stock) > 0 ? "in stock" : "out of stock"; // ✅ auto update
-    }
-
-    if (imgUrl) product.img = imgUrl;
 
     await product.save();
 
-    return NextResponse.json({ success: true, product }, { status: 200 });
-  } catch (error: any) {
+    return NextResponse.json(
+      {
+        success: true,
+        product,
+        availability: product.availability, // virtual
+      },
+      { status: 200 }
+    );
+  } catch (error) {
     console.error("❌ Update product error:", error);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Server error" },
+      { status: 500 }
+    );
   }
 }

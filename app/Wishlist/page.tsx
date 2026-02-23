@@ -139,7 +139,7 @@ export default function WishlistPage() {
               {/* Image */}
               <div
                 onClick={() =>
-                  router.push(`/product/${product._id}`)
+                  router.push(`/shop/${product._id}`)
                 }
                 className="cursor-pointer"
               >

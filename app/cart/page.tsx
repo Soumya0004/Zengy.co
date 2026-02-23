@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import gsap from "gsap";
 import axios from "axios";
 import { Trash2 } from "lucide-react";
+import Image from "next/image";
 import Loding from "../Component/Loding";
 
 // ⚡ Lazy Load RazorpayButton
@@ -37,7 +38,7 @@ interface Cart {
 }
 
 export default function CartPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(true);
   const [removing, setRemoving] = useState<string | null>(null);
@@ -141,9 +142,11 @@ export default function CartPage() {
             </div>
 
             <div className="flex items-center gap-4">
-              <img
+              <Image
                 src={item.collection?.img}
                 alt={item.collection?.title || "Product image"}
+                width={64}
+                height={64}
                 className="w-16 h-16 object-cover rounded-lg"
               />
 

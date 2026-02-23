@@ -18,8 +18,8 @@ interface UserInfo {
   avatar?: string;
   address?: string;
   role: string;
-  cart: any[];
-  orders: any[];
+  cart: unknown[];
+  orders: unknown[];
   loginType?: string;
 }
 
@@ -48,8 +48,8 @@ export default function ProfilePage() {
 
         if (!isMounted) return;
         setWishlist(wishlistRes.data || []);
-      } catch (err: any) {
-        if (err.response?.status === 401) {
+      } catch (err: unknown) {
+        if ((err as { response?: { status?: number } }).response?.status === 401) {
           router.push("/login");
         }
       } finally {
@@ -125,19 +125,11 @@ export default function ProfilePage() {
         </button>
 
         <button
-          onClick={() => router.push("/orders")}
+          onClick={() => router.push("/profile/orderHistory")}
           className="px-5 py-2 bg-blue-600 text-white rounded-xl 
           hover:bg-blue-700 transition cursor-pointer"
         >
           View Order History
-        </button>
-
-        <button
-          onClick={() => router.push("/profile/edit")}
-          className="px-5 py-2 bg-gray-800 text-white rounded-xl 
-          hover:bg-black transition cursor-pointer"
-        >
-          Edit Profile
         </button>
 
       </div>

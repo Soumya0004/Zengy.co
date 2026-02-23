@@ -2,23 +2,53 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import Loding from "./Loding";
 
-// Lazy-load heavy UI components
-const Shuffle = dynamic(() => import("@/components/Shuffle"), { ssr: false });
+/* ---------------- HYDRATION-SAFE DYNAMIC IMPORTS ---------------- */
+
+const Shuffle = dynamic(() => import("@/components/Shuffle"), {
+  ssr: false,
+  loading: () => (
+    <h1 className="font-zentry special-font text-5xl sm:text-6xl md:text-7xl lg:text-8xl lg:-leading-tight opacity-0">
+      <b>F</b>as<b>h</b>ion T<b>ha</b>t <br />
+      <span className="block md:ml-0 lg:ml-7">
+        <b>M</b>o<b>v</b>es Wi<b>th</b> Y<b>o</b>u
+      </span>
+    </h1>
+  ),
+});
+
 const ShinyText = dynamic(() => import("@/components/ShinyText"), {
   ssr: false,
+  loading: () => <span>Buy Product</span>,
 });
-const Magnet = dynamic(() => import("@/components/Magnet"), { ssr: false });
+
+const Magnet = dynamic(() => import("@/components/Magnet"), {
+  ssr: false,
+  loading: () => <Loding />,
+});
+
+/* ---------------- HERO ---------------- */
 
 const Hero = () => {
   const frameRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLElement>(null);
 
+  const [hydrated, setHydrated] = useState(false);
+
+  /* ---------- HYDRATION GATE ---------- */
   useEffect(() => {
-    let ctx: any;
+    setHydrated(true);
+  }, []);
+
+  /* ---------- GSAP (NON-BLOCKING) ---------- */
+  useEffect(() => {
+    if (!hydrated) return;
+
+    let ctx: ReturnType<typeof gsap.context> | undefined;
 
     const loadGsap = async () => {
       const gsapModule = await import("gsap");
@@ -29,9 +59,7 @@ const Hero = () => {
 
       gsap.registerPlugin(ScrollTrigger);
 
-      // GSAP CONTEXT
       ctx = gsap.context(() => {
-        // Text fade-in
         if (textRef.current) {
           gsap.from(textRef.current, {
             opacity: 0,
@@ -45,7 +73,6 @@ const Hero = () => {
           });
         }
 
-        // Image card animation
         if (frameRef.current) {
           gsap.from(frameRef.current, {
             opacity: 0,
@@ -59,70 +86,50 @@ const Hero = () => {
             },
           });
         }
-
-        // Whole Hero exit on scroll
-        if (containerRef.current) {
-          gsap.fromTo(
-            containerRef.current,
-            { opacity: 1, y: 0 },
-            {
-              opacity: 0,
-              y: -100,
-              scrollTrigger: {
-                trigger: containerRef.current,
-                start: "bottom bottom",
-                end: "bottom top",
-                scrub: true,
-              },
-              ease: "power2.inOut",
-            },
-          );
-        }
-      }, containerRef); // context scope
+      }, containerRef);
     };
 
-    loadGsap();
+    requestAnimationFrame(loadGsap);
 
-    return () => ctx && ctx.revert();
-  }, []);
+    return () => {
+      if (ctx) {
+        ctx.revert();
+      }
+    };
+  }, [hydrated]);
+
+  /* ---------- INTERACTION ---------- */
 
   const handleMouseLeave = () => {
-    const element = frameRef.current;
-    if (!element) return;
+    if (!frameRef.current) return;
 
     import("gsap").then(({ default: gsap }) => {
-      gsap.to(element, {
-        duration: 0.3,
+      gsap.to(frameRef.current, {
         rotateX: 0,
         rotateY: 0,
-        ease: "power1.inOut",
+        duration: 0.3,
       });
     });
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    const element = frameRef.current;
-    if (!element) return;
+    if (!frameRef.current) return;
 
-    const rect = element.getBoundingClientRect();
+    const rect = frameRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-
-    const rotateX = ((y - centerY) / centerY) * -10;
-    const rotateY = ((x - centerX) / centerX) * 10;
 
     import("gsap").then(({ default: gsap }) => {
-      gsap.to(element, {
+      gsap.to(frameRef.current, {
+        rotateX: ((y - rect.height / 2) / rect.height) * -10,
+        rotateY: ((x - rect.width / 2) / rect.width) * 10,
         duration: 0.3,
-        rotateX,
-        rotateY,
-        transformPerspective: 500,
         ease: "power1.inOut",
       });
     });
   };
+
+  /* ---------- RENDER ---------- */
 
   return (
     <main
@@ -136,42 +143,44 @@ const Hero = () => {
         className="flex flex-col justify-center space-y-4 sm:space-y-6 
         items-center text-center lg:items-start lg:text-left"
       >
-        <Shuffle
-          tag="h1"
-          className="font-zentry special-font text-5xl sm:text-6xl md:text-7xl lg:text-8xl lg:-leading-tight"
-        >
-          <b>F</b>as<b>h</b>ion T<b>ha</b>t <br />
-          <span className="block md:ml-0 lg:ml-7">
-            <b>M</b>o<b>v</b>es Wi<b>th</b> Y<b>o</b>u
-          </span>
-        </Shuffle>
+        {hydrated && (
+          <>
+            <Shuffle
+              tag="h1"
+              className="font-zentry special-font text-5xl sm:text-6xl md:text-7xl lg:text-8xl lg:-leading-tight"
+            >
+              <b>F</b>as<b>h</b>ion T<b>ha</b>t <br />
+              <span className="block md:ml-0 lg:ml-7">
+                <b>M</b>o<b>v</b>es Wi<b>th</b> Y<b>o</b>u
+              </span>
+            </Shuffle>
 
-        <p className="text-base sm:text-lg md:text-xl text-zinc-700 max-w-xl font-circular-web md:mx-auto lg:ml-7">
-          At Zengy.go, we create fashion that moves with you — comfortable,
-          stylish, and bold clothing designed for everyday energy and
-          confidence.
-        </p>
+            <p className="text-base sm:text-lg md:text-xl text-zinc-700 max-w-xl font-circular-web md:mx-auto lg:ml-7">
+              At Zengy.go, we create fashion that moves with you — comfortable,
+              stylish, and bold clothing designed for everyday energy and
+              confidence.
+            </p>
 
-        {/* DESKTOP BUTTONS */}
-        {/* DESKTOP BUTTONS */}
-        <div className="hidden sm:flex flex-wrap gap-4 pt-6 justify-center lg:justify-start lg:ml-7">
-          <Magnet padding={10} magnetStrength={10}>
-            <Link href="./shop">
-              <button className="bg-zinc-800 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-900 hover:shadow-md transition">
-                <ShinyText text="Buy Product" speed={3} />
-              </button>
-            </Link>
-          </Magnet>
+            <div className="hidden sm:flex flex-wrap gap-4 pt-6 justify-center lg:justify-start lg:ml-7">
+              <Magnet padding={10} magnetStrength={10}>
+                <Link href="./shop">
+                  <button className="bg-zinc-800 text-white px-6 py-3 rounded-xl font-semibold">
+                    <ShinyText text="Buy Product" speed={3} />
+                  </button>
+                </Link>
+              </Magnet>
 
-          <Magnet padding={10} magnetStrength={10}>
-            <button className="border border-black text-zinc-800 px-6 py-3 rounded-xl font-bold hover:bg-gray-100 hover:shadow-md transition">
-              Explore Product
-            </button>
-          </Magnet>
-        </div>
+              <Magnet padding={10} magnetStrength={10}>
+                <button className="border border-black px-6 py-3 rounded-xl font-bold">
+                  Explore Product
+                </button>
+              </Magnet>
+            </div>
+          </>
+        )}
       </div>
 
-      {/* RIGHT IMAGE */}
+      {/* RIGHT IMAGE (UNCHANGED SIZE) */}
       <div className="flex flex-col items-center lg:items-start w-full">
         <div
           ref={frameRef}
@@ -184,23 +193,10 @@ const Hero = () => {
             alt="Fashion model wearing Zengy.go clothing"
             width={900}
             height={700}
-                        loading="lazy"
             sizes="100vw"
+            priority
             className="object-cover w-full h-auto"
           />
-        </div> 
-
-        {/* MOBILE BUTTONS */}
-        <div className="flex sm:hidden flex-col gap-4 mt-6 w-full justify-center">
-          <Link href="./shop">
-            <button className="bg-zinc-800 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-900 transition w-full">
-              <ShinyText text="Buy Product" speed={3} />
-            </button>
-          </Link>
-
-          <button className="border border-black text-zinc-800 px-6 py-3 rounded-xl font-semibold hover:bg-gray-100 transition w-full">
-            Explore Product
-          </button>
         </div>
       </div>
     </main>

@@ -12,7 +12,9 @@ export interface ICollection extends Document {
   title: string;
   price: number;
   category: string;
+  discount?: number;
   rating?: number;
+  description?: string;
 
   sizes: ISizeStock[];
 
@@ -35,7 +37,9 @@ const CollectionSchema = new Schema<ICollection>(
     title: { type: String, required: true, trim: true },
     price: { type: Number, required: true },
     category: { type: String, required: true },
+    discount: { type: Number, default: 0, min: 0, max: 100 },
     rating: { type: Number, default: 0, min: 0, max: 5 },
+    description: { type: String, trim: true },
 
     // ⭐ ALWAYS USED
     sizes: { type: [SizeStockSchema], required: true },
@@ -61,7 +65,7 @@ CollectionSchema.methods.getStock = function (size: string) {
 };
 
 CollectionSchema.methods.availableSizes = function () {
-  return this.sizes.filter((s: { stock: number; }) => s.stock > 0).map((s: { size: any; }) => s.size);
+  return this.sizes.filter((s: { stock: number; }) => s.stock > 0).map((s: { size: string; }) => s.size);
 };
 
 /* ================= MODEL ================= */

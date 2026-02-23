@@ -16,6 +16,7 @@ export async function POST(req: Request) {
       rating = 0,
       sizes,
       stock,
+      description,
     } = body;
 
     if (!img || !title || typeof price !== "number" || !category) {
@@ -43,6 +44,8 @@ export async function POST(req: Request) {
       category,
       rating,
       sizes: normalizedSizes,
+      discount: body.discount || 0,
+      description,
     });
 
     return NextResponse.json(product, { status: 201 });

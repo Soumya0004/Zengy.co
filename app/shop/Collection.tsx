@@ -19,7 +19,7 @@ interface Collection {
 }
 
 /* ---------- Lazy Load Components ---------- */
-const Card = dynamic<any>(() => import("../Component/Card"), {
+const Card = dynamic(() => import("../Component/Card"), {
   loading: () => (
     <div className="h-[300px] bg-gray-100 rounded-2xl animate-pulse" />
   ),
@@ -70,7 +70,7 @@ const Collection = () => {
       if (!session?.user?.id) return;
       try {
         const res = await axios.get(`/api/wishlist/get?userId=${session.user.id}`);
-        setWishlist(res.data.map((item: any) => item.productId));
+        setWishlist(res.data.map((item: { productId: string }) => item.productId));
       } catch (err) {
         console.error("Failed to fetch wishlist:", err);
       }

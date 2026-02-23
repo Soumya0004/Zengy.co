@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/mongodb";
-import Cart from "@/lib/models/Cart";
+import Cart, { ICartProduct } from "@/lib/models/Cart";
 import Collections from "@/lib/models/Collections";
 import mongoose from "mongoose";
 
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
     }
 
     const existingItem = cart.products.find(
-      (item: any) =>
+      (item: ICartProduct) =>
         item.collection.toString() === productId.toString() &&
         item.size === size
     );
@@ -88,7 +88,7 @@ export async function POST(req: Request) {
     }
 
     const totalPrice = cart.products.reduce(
-      (sum: number, item: any) => sum + item.price * item.quantity,
+      (sum: number, item: ICartProduct) => sum + (item.price || 0) * item.quantity,
       0
     );
 

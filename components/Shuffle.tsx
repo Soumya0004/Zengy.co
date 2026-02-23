@@ -75,7 +75,8 @@ const Shuffle: React.FC<ShuffleProps> = ({
   triggerOnHover = true,
 }) => {
   const Component = (tag || "p") as ValidTag;
-  const ref = useRef<HTMLElement | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ref = useRef<any>(null);
 
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [ready, setReady] = useState(false);
@@ -219,7 +220,7 @@ const Shuffle: React.FC<ShuffleProps> = ({
           }
 
           gsap.set(inner, { x: startX, force3D: true });
-          if (colorFrom) (inner.style as any).color = colorFrom;
+          if (colorFrom) (inner.style as { color?: string }).color = colorFrom;
 
           inner.setAttribute("data-final-x", String(finalX));
           inner.setAttribute("data-start-x", String(startX));
@@ -412,7 +413,7 @@ const Shuffle: React.FC<ShuffleProps> = ({
   const classes = `${baseTw} ${ready ? "visible" : "invisible"} ${className}`.trim();
 
   return (
-    <Component ref={ref as React.Ref<any>} className={classes} style={commonStyle}>
+    <Component ref={ref} className={classes} style={commonStyle}>
       {children || text}
     </Component>
   );

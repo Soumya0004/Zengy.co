@@ -20,8 +20,8 @@ export async function POST(req: Request) {
       { message: "Added to wishlist" },
       { status: 201 }
     );
-  } catch (error: any) {
-    if (error.code === 11000) {
+  } catch (error: unknown) {
+    if ((error as { code?: number }).code === 11000) {
       return NextResponse.json(
         { message: "Already in wishlist" },
         { status: 409 }
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json(
-      { error: error.message },
+      { error: (error as Error).message },
       { status: 500 }
     );
   }
