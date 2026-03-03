@@ -135,13 +135,14 @@ const Hero = () => {
     <main
       ref={containerRef}
       className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] items-center text-zinc-800
-      px-5 sm:px-8 md:px-12 lg:px-20 xl:px-28
-      pt-12 sm:pt-16 md:pt-20 lg:pt-0 min-h-screen gap-10"
+    px-5 sm:px-8 md:px-12 lg:px-20 xl:px-28
+    pt-24 sm:pt-32 lg:pt-0 
+    min-h-screen gap-10 lg:gap-20"
     >
       <div
         ref={textRef}
         className="flex flex-col justify-center space-y-4 sm:space-y-6 
-        items-center text-center lg:items-start lg:text-left"
+        items-center text-center lg:items-start lg:text-left "
       >
         {hydrated && (
           <>

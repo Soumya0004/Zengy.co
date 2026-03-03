@@ -10,96 +10,86 @@ import SignUpCard from "./SignUpCard";
 import LoginCard from "./LoginCard";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import ProfileDropdown from "@/components/ProfileDropdown";
-import { useRouter } from "next/navigation";
-import { usePathname } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// --- NEW COMPONENT FOR THE SLIDING LIQUID EFFECT ---
-const SlidingNavLinks = ({ links }: { links: { label: string; href: string }[] }) => {
-  const [hoverStyle, setHoverStyle] = useState({ left: 0, top: 0, width: 0, height: 0, opacity: 0 });
-  const containerRef = useRef<HTMLDivElement>(null);
+/* ---------------- SLIDING / LIQUID NAV LINKS ---------------- */
 
-  const handleMouseEnter = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    if (!containerRef.current) return;
-    const target = e.currentTarget;
-    const containerRect = containerRef.current.getBoundingClientRect();
-    const targetRect = target.getBoundingClientRect();
+const SlidingNavLinks = ({
+  links,
+  activePath,
+}: {
+  links: { label: string; href: string }[];
+  activePath: string;
+}) => {
+  const [hover, setHover] = useState({
+    left: 0,
+    width: 0,
+    opacity: 0,
+  });
+  const ref = useRef<HTMLDivElement>(null);
 
-    setHoverStyle({
-      left: targetRect.left - containerRect.left,
-      top: targetRect.top - containerRect.top,
-      width: targetRect.width,
-      height: targetRect.height,
+  const onEnter = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!ref.current) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const parent = ref.current.getBoundingClientRect();
+    setHover({
+      left: rect.left - parent.left,
+      width: rect.width,
       opacity: 1,
     });
   };
 
-  const handleMouseLeave = () => {
-    setHoverStyle((prev) => ({ ...prev, opacity: 0 }));
-  };
-
   return (
     <div
-      ref={containerRef}
+      ref={ref}
+      onMouseLeave={() => setHover((p) => ({ ...p, opacity: 0 }))}
       className="relative flex items-center gap-2"
-      onMouseLeave={handleMouseLeave}
     >
-      {/* The Sliding Liquid Pill Background */}
-      <div
-        className="absolute rounded-full bg-white/10 backdrop-blur-md border border-white/20 shadow-[inset_0_2px_4px_rgba(255,255,255,0.4),inset_0_-2px_4px_rgba(0,0,0,0.4),0_4px_8px_rgba(0,0,0,0.3)] transition-all duration-300 ease-out pointer-events-none"
+      <span
+        className="absolute h-9 rounded-full bg-white/10 transition-all duration-300"
         style={{
-          left: `${hoverStyle.left}px`,
-          top: `${hoverStyle.top}px`,
-          width: `${hoverStyle.width}px`,
-          height: `${hoverStyle.height}px`,
-          opacity: hoverStyle.opacity,
+          left: hover.left,
+          width: hover.width,
+          opacity: hover. opacity,
         }}
       />
 
-      {/* Actual Text Links */}
-      {links.map((link) => (
-        <Link
-          key={link.href}
-          href={link.href}
-          onMouseEnter={handleMouseEnter}
-          className="relative z-10 uppercase text-sm px-5 py-2 text-white whitespace-nowrap transition-transform duration-300 hover:-translate-y-0.5"
-        >
-          {link.label}
-        </Link>
-      ))}
+      {links.map((l) => {
+        const active = activePath === l.href;
+        return (
+          <Link 
+            key={l.href}
+            href={l.href}
+            onMouseEnter={onEnter}
+            className={`relative z-10 px-5 py-2 uppercase text-sm transition-all
+              ${active ? "text-sky-400" : "text-white"}`}
+          >
+            {l.label}
+          </Link>
+        );
+      })}
     </div>
   );
 };
 
-const Nav = () => {
-  const { status } = useSession();
-  const [open, setOpen] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [isLogin, setIsLogin] = useState(true);
-  const [manualUser, setManualUser] = useState<unknown>(null);
-  const [mounted, setMounted] = useState(false);
+/* ---------------- MAIN NAV ---------------- */
 
-  const fullNavRef = useRef<HTMLDivElement>(null);
-  const floatingNavRef = useRef<HTMLDivElement>(null);
+export default function Nav() {
+  const { status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
 
-  useEffect(() => {
-    setMounted(true);
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) setManualUser(JSON.parse(storedUser));
-  }, []);
+  const [mounted, setMounted] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isLogin, setIsLogin] = useState(true);
+  const [hideMobile, setHideMobile] = useState(false);
 
-  const loggedIn = status === "authenticated" || !!manualUser;
-
-  const handleLogout = () => {
-    if (status === "authenticated") nextSignOut();
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setManualUser(null);
-  };
+  const navInnerRef = useRef<HTMLDivElement>(null);
+  const logoRef = useRef<HTMLDivElement>(null);
+  const authRef = useRef<HTMLDivElement>(null);
 
   const navLinks = [
     { label: "Home", href: "/" },
@@ -108,200 +98,136 @@ const Nav = () => {
     { label: "About Us", href: "/about" },
   ];
 
+  const loggedIn = status === "authenticated";
+
+  /* ---------------- MOUNT ---------------- */
+  useEffect(() => setMounted(true), []);
+
+  /* ---------------- DESKTOP GSAP ---------------- */
   useEffect(() => {
-    if (!mounted) return;
-    if (!fullNavRef.current || !floatingNavRef.current) return;
+    if (!mounted || window.innerWidth < 768) return;
 
-    gsap.set(floatingNavRef.current, {
-      y: -80,
-      opacity: 0,
-      scaleX: 0.3,
-      scaleY: 0.6,
-    });
-
-    ScrollTrigger.create({
-      trigger: document.body,
-      start: "top -120",
-      onEnter: () => {
-        gsap.to(fullNavRef.current, {
-          y: -120,
-          opacity: 0,
-          duration: 0.5,
-          ease: "power3.inOut",
-        });
-        gsap.to(floatingNavRef.current, {
-          y: 0,
-          opacity: 1,
-          scaleX: 1,
-          scaleY: 1,
-          duration: 0.6,
-          ease: "elastic.out(1, 0.6)",
-        });
-      },
-      onLeaveBack: () => {
-        gsap.to(fullNavRef.current, {
-          y: 0,
-          opacity: 1,
-          duration: 0.5,
-          ease: "power3.inOut",
-        });
-        gsap.to(floatingNavRef.current, {
-          y: -80,
-          opacity: 0,
-          scaleX: 0.3,
-          scaleY: 0.6,
-          duration: 0.4,
-          ease: "power3.in",
-        });
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: "body",
+        start: "top -20",
+        end: "top -120",
+        scrub: 0.5,
       },
     });
+
+    tl.to(navInnerRef.current, {
+      maxWidth: "480px",
+      borderRadius: "14px",
+      paddingLeft: "12px",
+      paddingRight: "12px",
+      boxShadow: "0 12px 25px rgba(0,0,0,0.4)",
+    }).to(
+      [logoRef.current, authRef.current],
+      { autoAlpha: 0, width: 0, padding: 0 },
+      0,
+    );
+
+    return () => ScrollTrigger.getAll().forEach((t) => t.kill());
   }, [mounted]);
+
+  /* ---------------- MOBILE AUTO HIDE ---------------- */
+  useEffect(() => {
+    let last = 0;
+    const onScroll = () => {
+      const cur = window.scrollY;
+      setHideMobile(cur > last && cur > 80);
+      last = cur;
+    };
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const handleLogout = () => {
+    nextSignOut();
+  };
 
   if (!mounted) return null;
 
   return (
     <>
-      {/* Full Nav */}
-      <div ref={fullNavRef} className="w-full flex justify-center z-40 relative">
-        <div className="w-full max-w-5xl bg-zinc-800 text-white shadow-sm mt-5 rounded-xl py-2">
-          <div className="px-4 md:px-10 flex items-center justify-between">
-            <div className="flex items-center flex-1">
-              <Link href="/" className="inline-block">
-                <Image src="/logo-white.svg" alt="Logo" width={160} height={48} />
-              </Link>
+      {/* ================= DESKTOP NAV ================= */}
+      <div className="fixed top-0 left-0 w-full pt-5 z-50 hidden md:flex justify-center pointer-events-none">
+        <div
+          ref={navInnerRef}
+          className="bg-zinc-800 text-white rounded-xl py-2 w-full max-w-5xl pointer-events-auto"
+        >
+          <div className="px-6 flex items-center justify-between">
+            <div ref={logoRef} className="flex-1">
+              <Image src="/logo-white.svg" alt="Logo" width={160} height={48} />
             </div>
-            <div className="hidden md:flex items-center gap-4 flex-1 justify-center">
-              {/* SLIDING NAV INJECTED HERE */}
-              <SlidingNavLinks links={navLinks} />
-            </div>
-            <div className="flex items-center gap-2 flex-1 justify-end">
-              <div className="hidden md:flex items-center gap-5">
-                {loggedIn ? (
-                  <>
-                    {/* PROFILE DROPDOWN WRAPPER */}
-                    {pathname !== "/profile" && (
-                      <div className="relative group">
-                        {/* ICON (click → go to /profile) */}
-                        <button
-                          onClick={() => router.push("/profile")}
-                          className="p-1 cursor-pointer"
-                        >
-                          <UserIcon size={20} />
-                        </button>
 
-                        {/* HOVER DROPDOWN */}
-                        <div className="absolute right-0 mt-3 bg-white text-black border rounded-xl shadow-lg p-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
-                          <ProfileDropdown />
-                        </div>
-                      </div>
-                    )}
+            <SlidingNavLinks links={navLinks} activePath={pathname} />
 
-                    <Link href="/Cart">
-                      <ShoppingCart size={20} />
-                    </Link>
-
-                    <button
-                      onClick={handleLogout}
-                      className="text-sm text-red-500 inline-flex items-center gap-2 uppercase"
-                    >
-                      <LogOut size={18} /> Logout
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    onClick={() => setShowAuthModal(true)}
-                    className="inline-flex items-center gap-2 uppercase text-sm hover:text-sky-400"
-                  >
-                    <LogIn size={18} /> Login
-                  </button>
-                )}
-              </div>
-              <button
-                type="button"
-                className="md:hidden p-2 rounded hover:bg-zinc-700"
-                onClick={() => setOpen((s) => !s)}
-              >
-                {open ? <X size={22} /> : <Menu size={22} />}
-              </button>
+            <div ref={authRef} className="flex-1 flex justify-end gap-5">
+              {loggedIn ? (
+                <>
+                  <UserIcon onClick={() => router.push("/profile")} />
+                  <ShoppingCart />
+                  <LogOut onClick={handleLogout} />
+                </>
+              ) : (
+                <button onClick={() => setShowAuthModal(true)}>Login</button>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Mobile Dropdown */}
-      {open && (
-        <div className="md:hidden border-t bg-white shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-3">
-            {navLinks.map((link) => (
+      {/* ================= MOBILE NAV ================= */}
+      <div
+        className={`md:hidden fixed top-0 left-0 w-full bg-zinc-800 text-white z-50 transition-transform duration-300
+        ${hideMobile ? "-translate-y-full" : "translate-y-0"}`}
+      >
+        <div className="px-4 py-3 flex justify-between items-center">
+          <Image src="/logo-white.svg" alt="Logo" width={120} height={36} />
+          <button onClick={() => setOpen(!open)}>
+            {open ? <X /> : <Menu />}
+          </button>
+        </div>
+
+        <div
+          className={`overflow-hidden transition-all duration-300
+          ${open ? "max-h-[400px] opacity-100" : "max-h-0 opacity-0"}`}
+        >
+          <div className="bg-white text-black px-4 py-3 space-y-2">
+            {navLinks.map((l) => (
               <Link
-                key={link.href}
-                href={link.href}
-                className="block uppercase text-sm py-2 px-2 rounded hover:bg-gray-50"
+                key={l.href}
+                href={l.href}
                 onClick={() => setOpen(false)}
+                className={`block px-3 py-2 rounded-lg transition
+                ${pathname === l.href ? "bg-sky-100 text-sky-600" : ""}`}
               >
-                {link.label}
+                {l.label}
               </Link>
             ))}
-            <div className="pt-2 border-t mt-2 flex items-center justify-between">
-              {loggedIn ? (
-                <div className="flex items-center gap-4">
-                  <Link href="/profile" onClick={() => setOpen(false)}>
-                    <UserIcon size={18} />
-                  </Link>
-                  <Link href="/Cart" onClick={() => setOpen(false)}>
-                    <ShoppingCart size={18} />
-                  </Link>
 
-                  <button
-                    onClick={() => {
-                      setOpen(false);
-                      handleLogout();
-                    }}
-                    className="text-sm text-red-600 inline-flex items-center gap-2"
-                  >
-                    <LogOut size={18} /> Logout
-                  </button>
-                </div>
+            <div className="pt-2 border-t flex gap-4">
+              {loggedIn ? (
+                <>
+                  <UserIcon />
+                  <ShoppingCart />
+                  <LogOut onClick={handleLogout} />
+                </>
               ) : (
-                <button
-                  onClick={() => {
-                    setOpen(false);
-                    setShowAuthModal(true);
-                  }}
-                  className="inline-flex items-center gap-2 text-sm hover:text-sky-500"
-                >
-                  <LogIn size={18} /> Login
+                <button onClick={() => setShowAuthModal(true)}>
+                  <LogIn /> Login
                 </button>
               )}
             </div>
           </div>
         </div>
-      )}
-
-      {/* Floating Nav for All Screens */}
-      <div
-        ref={floatingNavRef}
-        className="fixed top-4 left-1/2 -translate-x-1/2 bg-zinc-900/90 backdrop-blur-md text-white rounded-2xl px-6 py-3 shadow-lg z-50 hidden md:flex items-center justify-between w-auto"
-      >
-        {/* Desktop: Show links */}
-        <div className="hidden md:flex items-center gap-4">
-          {/* SLIDING NAV INJECTED HERE TOO */}
-          <SlidingNavLinks links={navLinks} />
-        </div>
-
-        {/* Mobile: Show Menu Icon */}
-        <div className="flex md:hidden">
-          <button
-            type="button"
-            onClick={() => setOpen((s) => !s)}
-            className="p-2 rounded hover:bg-zinc-800"
-          >
-            {open ? <X size={20} /> : <Menu size={20} />}
-          </button>
-        </div>
       </div>
 
-      {/* Auth Modal */}
+      <div className="h-[64px] md:hidden" />
+
+      {/* ================= AUTH MODAL ================= */}
       <Modal open={showAuthModal} onClose={() => setShowAuthModal(false)}>
         {isLogin ? (
           <LoginCard onSwitch={() => setIsLogin(false)} />
@@ -311,6 +237,4 @@ const Nav = () => {
       </Modal>
     </>
   );
-};
-
-export default Nav;
+}
