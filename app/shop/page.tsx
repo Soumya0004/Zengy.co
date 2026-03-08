@@ -5,6 +5,7 @@ import Card from "../Component/Card";
 import axios from "axios";
 import Loding from "../Component/Loding";
 import { useSession } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 
 interface Product {
   _id: string;
@@ -12,6 +13,7 @@ interface Product {
   description?: string;
   price: number | string;   // IMPORTANT FIX
   img: string;
+  discount?: number;
 }
 
 export default function Page() {
@@ -19,14 +21,18 @@ export default function Page() {
   const [loading, setLoading] = useState(true);
   const [wishlist, setWishlist] = useState<string[]>([]);
   const { data: session } = useSession();
+  const searchParams = useSearchParams();
+  const category = searchParams.get("category");
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await axios.get("/api/products");
-        const data = Array.isArray(res.data)
-          ? res.data
-          : res.data.products;
+        const endpoint = category
+          ? `/api/products/categories/${encodeURIComponent(category)}`
+          : "/api/products";
+
+        const res = await axios.get(endpoint);
+        const data = Array.isArray(res.data) ? res.data : res.data.products;
         setProducts(data || []);
       } catch (error) {
         console.error(error);
@@ -36,7 +42,7 @@ export default function Page() {
     };
 
     fetchProducts();
-  }, []);
+  }, [category]);
 
   useEffect(() => {
     const fetchWishlist = async () => {
@@ -77,7 +83,12 @@ export default function Page() {
 
   return (
     <div className="min-h-screen py-10 px-4 sm:px-8 md:px-12 lg:px-20">
-      <h1 className="font-zentry special-font text-4xl sm:text-5xl lg:text-6xl mb-5 ">S<b>ho</b>p</h1>
+      <h1 className="font-zentry special-font text-4xl sm:text-5xl lg:text-6xl mb-2 ">S<b>ho</b>p</h1>
+      {category ? (
+        <p className="text-lg text-slate-600 mb-5">Category: {category}</p>
+      ) : (
+        <p className="text-lg text-slate-600 mb-5">Browse all products or select a category.</p>
+      )}
 
       <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
         {products.map((p) => (

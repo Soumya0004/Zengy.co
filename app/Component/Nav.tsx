@@ -94,7 +94,7 @@ export default function Nav() {
   const navLinks = [
     { label: "Home", href: "/" },
     { label: "Shop", href: "/shop" },
-    { label: "Sail", href: "/sail" },
+    { label: "Sail", href: "/Sail" },
     { label: "About Us", href: "/about" },
   ];
 

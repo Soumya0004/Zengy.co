@@ -14,6 +14,7 @@ export async function POST(req: Request) {
     let sizes: { size: string; stock: number }[];
     let category: string;
     let rating: number = 0;
+    let discount: number = 0;
     let description: string;
 
     const contentType = req.headers.get("content-type") || "";
@@ -28,6 +29,7 @@ export async function POST(req: Request) {
       category = (formData.get("category") as string) || "";
       rating = Number(formData.get("rating")) || 0;
       description = (formData.get("description") as string) || "";
+      discount = Number(formData.get("discount")) || 0;
 
       // Parse sizes
       const sizesData = formData.get("sizes") as string;
@@ -102,6 +104,7 @@ export async function POST(req: Request) {
       category = body.category;
       rating = Number(body.rating) || 0;
       description = body.description || "";
+      discount = Number(body.discount) || 0;
 
       // ⭐ NORMALIZATION (PERMANENT FIX)
       let normalizedSizes;
@@ -133,6 +136,7 @@ export async function POST(req: Request) {
       price,
       category,
       rating,
+      discount: typeof discount === "number" ? discount : 0,
       sizes,
       description,
     });

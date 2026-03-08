@@ -9,6 +9,7 @@ interface Product {
   title: string;
   price: number | string;   // IMPORTANT FIX
   img?: string;
+  discount?: number;
 }
 
 interface CardProps {
@@ -18,9 +19,22 @@ interface CardProps {
 }
 
 export default function Card({ product, isInWishlist = false, onToggleWishlist }: CardProps) {
+  const rawPrice = typeof product.price === "string" ? Number(product.price) : product.price;
+  const discount = typeof product.discount === "number" ? product.discount : 0;
+  const hasDiscount = discount > 0;
+  const discountedPrice = hasDiscount
+    ? Math.round(rawPrice * (1 - discount / 100))
+    : rawPrice;
+
   return (
     <Link href={`/shop/${product._id}`}>
       <div className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition p-4 cursor-pointer max-w-[320px] mx-auto relative">
+        {hasDiscount && (
+          <span className="absolute top-3 left-3 rounded-full bg-red-500 text-white text-xs px-3 py-1 font-semibold">
+            {Math.round(discount)}% off
+          </span>
+        )}
+
         {onToggleWishlist && (
           <button
             onClick={(e) => {
@@ -46,7 +60,14 @@ export default function Card({ product, isInWishlist = false, onToggleWishlist }
           {product.title}
         </h3>
 
-        <p className="font-semibold mt-1">₹{product.price}</p>
+        <div className="mt-1">
+          <p className="font-semibold">₹{discountedPrice}</p>
+          {hasDiscount && (
+            <p className="text-xs text-gray-400 line-through">
+              ₹{rawPrice}
+            </p>
+          )}
+        </div>
       </div>
     </Link>
   );

@@ -17,19 +17,26 @@ export async function POST(req: Request) {
       );
     }
 
-    const qty = Number(quantity);
-    if (qty <= 0) {
-      return NextResponse.json(
-        { success: false, message: "Quantity must be > 0" },
-        { status: 400 }
-      );
-    }
-
+    // Determine the price to store in the cart (prefer client-supplied, fallback to product pricing)
     const collection = await Collections.findById(productId);
     if (!collection) {
       return NextResponse.json(
         { success: false, message: "Product not found" },
         { status: 404 }
+      );
+    }
+
+    const discount = typeof collection.discount === "number" ? collection.discount : 0;
+    const computedPrice = Math.round(collection.price * (1 - discount / 100));
+
+    const itemPrice = typeof price === "number" && price > 0 ? price : computedPrice;
+    const itemName = name || collection.title;
+
+    const qty = Number(quantity);
+    if (qty <= 0) {
+      return NextResponse.json(
+        { success: false, message: "Quantity must be > 0" },
+        { status: 400 }
       );
     }
 
@@ -82,8 +89,8 @@ export async function POST(req: Request) {
         collection: new mongoose.Types.ObjectId(productId),
         size,
         quantity: qty,
-        price,
-        name,
+        price: itemPrice,
+        name: itemName,
       });
     }
 

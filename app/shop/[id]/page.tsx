@@ -26,7 +26,7 @@ interface Product {
   price: number;
   img?: string;
   rating?: number;
-  originalPrice?: number;
+  discount?: number;
   sizes: SizeStock[];
 }
 
@@ -171,6 +171,11 @@ export default function Page() {
 
   const addToCart = async () => {
     if (!validate()) return;
+
+    const priceToUse = product
+      ? Math.round(product.price * (1 - (product.discount ?? 0) / 100))
+      : 0;
+
     try {
       setAdding(true);
       await axios.post("/api/cart/add", {
@@ -178,6 +183,8 @@ export default function Page() {
         productId: product?._id,
         size: selectedSize,
         quantity: 1,
+        price: priceToUse,
+        name: product?.title,
       });
       alert("Added to cart");
     } catch (err) {
@@ -189,6 +196,11 @@ export default function Page() {
 
   const buyNow = async () => {
     if (!validate()) return;
+
+    const priceToUse = product
+      ? Math.round(product.price * (1 - (product.discount ?? 0) / 100))
+      : 0;
+
     try {
       setBuying(true);
       await axios.post("/api/cart/add", {
@@ -196,6 +208,8 @@ export default function Page() {
         productId: product?._id,
         size: selectedSize,
         quantity: 1,
+        price: priceToUse,
+        name: product?.title,
       });
       router.push("/Cart");
     } catch (err) {
@@ -203,10 +217,6 @@ export default function Page() {
     } finally {
       setBuying(false);
     }
-  };
-
-  const scrollToSimilar = () => {
-    similarRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   /* ================= UI ================= */
@@ -248,11 +258,20 @@ export default function Page() {
             <h1 className="text-4xl font-semibold">{product.title}</h1>
 
             <div>
-              <p className="text-4xl font-bold">₹{product.price}</p>
-              {product.originalPrice && (
-                <p className="text-sm text-gray-400 line-through">
-                  ₹{product.originalPrice}
-                </p>
+              {product.discount && product.discount > 0 ? (
+                <>
+                  <p className="text-4xl font-bold">
+                    ₹{Math.round(product.price * (1 - product.discount / 100))}
+                  </p>
+                  <p className="text-sm text-gray-400 line-through">
+                    ₹{product.price}
+                  </p>
+                  <p className="text-sm text-red-600 font-semibold">
+                    Save {Math.round(product.discount)}%
+                  </p>
+                </>
+              ) : (
+                <p className="text-4xl font-bold">₹{product.price}</p>
               )}
             </div>
 
