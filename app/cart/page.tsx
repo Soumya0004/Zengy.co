@@ -120,82 +120,105 @@ export default function CartPage() {
     name: item.collection.title,
   }));
 
-  return (
-    <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-8" ref={cartRef}>
-      <div className="md:col-span-2 space-y-4">
-        <h1 className="text-2xl font-bold mb-6">Your Cart</h1>
+ return (
 
-        {cart.products.map((item) => (
-          <div
-            key={item._id}
-            className="cart-item flex items-center justify-between border p-4 rounded-lg bg-white shadow-sm"
-          >
-            <div>
-              <p className="font-semibold">{item.collection?.title}</p>
-              <p className="text-gray-500">₹{item.collection?.price}</p>
+  <div
+    ref={cartRef}
+    className="min-h-screen pt-28 pb-10 px-12  bg-zinc-50 grid grid-cols-1 md:grid-cols-3 gap-10
+    "
+  >
+    {/* LEFT SIDE */}
+    <div className="md:col-span-2 space-y-6">
 
-              {item.size && (
-                <p className="text-sm text-gray-400">Size: {item.size}</p>
-              )}
+  <h1 className="font-zentry special-font text-4xl sm:text-5xl lg:text-6xl mb-6">
+    Y<b>o</b>u<b>r</b> C<b>a</b>r<b>t</b>
+  </h1>
 
-              <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
-            </div>
+  {cart.products.map((item) => (
+    <div
+      key={item._id}
+      className="cart-item flex items-center justify-between border p-5 rounded-xl bg-white shadow-sm hover:shadow-md transition"
+    >
+      <div>
+        <p className="font-semibold text-lg">
+          {item.collection?.title}
+        </p>
 
-            <div className="flex items-center gap-4">
-              <Image
-                src={item.collection?.img}
-                alt={item.collection?.title || "Product image"}
-                width={64}
-                height={64}
-                className="w-16 h-16 object-cover rounded-lg"
-              />
+        <p className="text-gray-500">
+          ₹{item.collection?.price}
+        </p>
 
-              <button
-                onClick={() => handleRemove(item._id)}
-                disabled={removing === item._id}
-                className="text-red-500 hover:text-red-700 disabled:opacity-50 cursor-pointer"
-              >
-                <Trash2 size={20} />
-              </button>
-            </div>
-          </div>
-        ))}
+        {item.size && (
+          <p className="text-sm text-gray-400">
+            Size: {item.size}
+          </p>
+        )}
+
+        <p className="text-sm text-gray-500">
+          Qty: {item.quantity}
+        </p>
       </div>
 
-      <div className="border p-6 rounded-lg bg-white shadow-sm h-fit">
-        <h2 className="text-lg font-bold mb-4">Cart Totals</h2>
-
-        <div className="flex justify-between mb-2">
-          <span>Shipping (3-5 Days)</span>
-          <span>Free</span>
-        </div>
-
-        <div className="flex justify-between mb-2">
-          <span>Tax (Estimated)</span>
-          <span>₹0.00</span>
-        </div>
-
-        <div className="flex justify-between font-semibold mb-4">
-          <span>Subtotal</span>
-          <span>₹{subtotal.toFixed(2)}</span>
-        </div>
-
-        <div className="flex justify-between text-lg font-bold mb-6">
-          <span>Total</span>
-          <span>₹{subtotal.toFixed(2)}</span>
-        </div>
-
-        {/* 🔹 FIXED: RazorpayButton receives correct products */}
-        <RazorpayButton
-          amount={subtotal}
-          cartId={cart._id}
-          products={productsForPayment}
+      <div className="flex items-center gap-5">
+        <Image
+          src={item.collection?.img}
+          alt={item.collection?.title || "Product image"}
+          width={70}
+          height={70}
+          className="w-18 h-18 object-cover rounded-lg"
         />
 
-        <button className="w-full mt-2 text-gray-600 hover:underline cursor-pointer">
-          Continue Shopping
+        <button
+          onClick={() => handleRemove(item._id)}
+          disabled={removing === item._id}
+          className="text-red-500 hover:text-red-700 disabled:opacity-50 cursor-pointer"
+        >
+          <Trash2 size={22} />
         </button>
       </div>
     </div>
-  );
+  ))}
+</div>
+
+{/* RIGHT SIDE */}
+<div className="border p-7 rounded-xl bg-white shadow-sm h-fit sticky top-28">
+
+  <h2 className="text-xl font-bold mb-5">
+    Cart Totals
+  </h2>
+
+  <div className="flex justify-between mb-3">
+    <span>Shipping (3-5 Days)</span>
+    <span>Free</span>
+  </div>
+
+  <div className="flex justify-between mb-3">
+    <span>Tax (Estimated)</span>
+    <span>₹0.00</span>
+  </div>
+
+  <div className="flex justify-between font-semibold mb-4">
+    <span>Subtotal</span>
+    <span>₹{subtotal.toFixed(2)}</span>
+  </div>
+
+  <div className="flex justify-between text-lg font-bold mb-6">
+    <span>Total</span>
+    <span>₹{subtotal.toFixed(2)}</span>
+  </div>
+
+  <RazorpayButton
+    amount={subtotal}
+    cartId={cart._id}
+    products={productsForPayment}
+  />
+
+  <button className="w-full mt-3 text-gray-600 hover:underline cursor-pointer">
+    Continue Shopping
+  </button>
+</div>
+
+  </div>
+);
+
 }
