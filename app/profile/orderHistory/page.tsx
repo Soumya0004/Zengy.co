@@ -7,16 +7,27 @@ import Loding from "@/app/Component/Loding";
 
 interface ProductItem {
   _id: string;
-  collection: {
+  product?: {
     _id: string;
     title: string;
     price: number;
     img: string;
-  };
-  size?: string;
+  } | null;
   quantity: number;
+  size?: string;
   price?: number;
   name?: string;
+}
+
+// ✅ ADD ADDRESS TYPE
+interface Address {
+  fullName: string;
+  phoneNumber: string;
+  streetAddress: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
 }
 
 interface OrderItem {
@@ -26,6 +37,7 @@ interface OrderItem {
   status: string;
   paymentId: string;
   createdAt: string;
+  address?: Address; // ✅ ADD THIS
 }
 
 export default function OrderHistoryPage() {
@@ -36,9 +48,10 @@ export default function OrderHistoryPage() {
   useEffect(() => {
     async function fetchOrders() {
       try {
-        const res = await axios.get("/api/users/getUserInfo");
-        if (res.data.orders) {
-          setOrders(res.data.orders);
+        const res = await axios.get("/api/orders/my");
+
+        if (res.data.success) {
+          setOrders(res.data.orders || []);
         }
       } catch (err) {
         console.error("Failed to fetch orders:", err);
@@ -46,18 +59,23 @@ export default function OrderHistoryPage() {
         setLoading(false);
       }
     }
+
     fetchOrders();
   }, []);
 
   if (loading) return <Loding />;
 
-  const filterOrders = () => {
-    if (activeTab === "All") return orders;
-    return orders.filter((order) => order.status === activeTab);
-  };
+  const filteredOrders =
+    activeTab === "All"
+      ? orders
+      : orders.filter((o) => o.status === activeTab);
 
   const tabs = [
     { label: "All", count: orders.length },
+    {
+      label: "Order placed",
+      count: orders.filter((o) => o.status === "Order placed").length,
+    },
     {
       label: "Pending",
       count: orders.filter((o) => o.status === "Pending").length,
@@ -93,72 +111,91 @@ export default function OrderHistoryPage() {
         ))}
       </div>
 
-      {/* Table Header */}
-      <div className="grid grid-cols-4 text-sm font-semibold text-gray-500 px-3 py-2">
-        <p>Item</p>
-        <p>Status</p>
-        <p>Total</p>
-        <p className="text-right">Details</p>
-      </div>
+      {/* EMPTY STATE */}
+      {filteredOrders.length === 0 && (
+        <p className="text-center text-gray-500 mt-10">
+          No orders found
+        </p>
+      )}
 
       {/* Orders */}
-      <div className="mt-2 space-y-4">
-        {filterOrders().map((order) => (
-          <div
-            key={order._id}
-            className="grid grid-cols-4 items-center bg-white shadow-sm rounded-lg px-4 py-4"
-          >
-            {/* Item Info - Image + Title + Qty */}
-            <div className="flex items-center gap-3">
-              <Image
-                src={order.products[0]?.collection?.img || "/boy.png"}
-                width={60}
-                height={60}
-                alt={order.products[0]?.collection?.title || "Product image"}
-                className="rounded object-cover border"
-              />
+      <div className="space-y-4">
+        {filteredOrders.map((order) => {
+          const firstProduct = order.products?.[0] || null;
+          const product = firstProduct?.product || null;
 
+          return (
+            <div
+              key={order._id}
+              className="grid grid-cols-4 items-center bg-white shadow-sm rounded-lg px-4 py-4"
+            >
+              {/* Product */}
+              <div className="flex items-center gap-3">
+                <Image
+                  src={product?.img || "/boy.png"}
+                  width={60}
+                  height={60}
+                  alt="product"
+                  className="rounded object-cover border"
+                />
+
+                <div>
+                  <p className="font-semibold">
+                    {product?.title || firstProduct?.name || "Product"}
+                  </p>
+                  <p className="text-gray-500 text-sm">
+                    Qty: {firstProduct?.quantity || 1}
+                  </p>
+                </div>
+              </div>
+
+              {/* Status */}
               <div>
-                <p className="font-semibold">
-                  {order.products[0]?.collection?.title}
-                </p>
-                <p className="text-gray-500 text-sm">
-                  Qty: {order.products[0]?.quantity}
-                </p>
+                <span
+                  className={`text-sm font-semibold ${
+                    order.status === "Delivered"
+                      ? "text-green-600"
+                      : order.status === "Pending"
+                      ? "text-yellow-500"
+                      : order.status === "Canceled"
+                      ? "text-red-500"
+                      : "text-blue-500"
+                  }`}
+                >
+                  {order.status}
+                </span>
+              </div>
+
+              {/* Total */}
+              <p className="font-semibold">₹{order.totalPrice}</p>
+
+              {/* Button */}
+              <div className="text-right">
+                <button className="px-3 py-1 text-sm rounded-full bg-blue-600 text-white">
+                  Order Details
+                </button>
+              </div>
+
+              {/* ✅ ADDRESS (ONLY ADDITION, UI SAME) */}
+              <div className="col-span-4 text-sm text-gray-600 mt-2">
+                {order.address ? (
+                  <>
+                    <p className="font-medium">
+                      {order.address.fullName} • {order.address.phoneNumber}
+                    </p>
+                    <p>
+                      {order.address.streetAddress}, {order.address.city},{" "}
+                      {order.address.state} {order.address.postalCode},{" "}
+                      {order.address.country}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-gray-400">Address not available</p>
+                )}
               </div>
             </div>
-
-            {/* Status */}
-            <div>
-              <span
-                className={`text-sm font-semibold ${
-                  order.status === "Delivered"
-                    ? "text-green-600"
-                    : order.status === "Pending"
-                    ? "text-yellow-500"
-                    : order.status === "Canceled"
-                    ? "text-red-500"
-                    : "text-blue-500"
-                }`}
-              >
-                {order.status}
-              </span>
-              {order.status === "Pending" && (
-                <p className="text-xs text-gray-400">5d left</p>
-              )}
-            </div>
-
-            {/* Total */}
-            <p className="font-semibold">${order.totalPrice}</p>
-
-            {/* Button */}
-            <div className="text-right">
-              <button className="px-3 py-1 text-sm rounded-full bg-blue-600 text-white">
-                Order Details
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

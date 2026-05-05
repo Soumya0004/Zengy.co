@@ -49,7 +49,8 @@ export default function Page() {
       if (!session?.user?.id) return;
       try {
         const res = await axios.get(`/api/wishlist/get?userId=${session.user.id}`);
-        setWishlist(res.data.map((item: { productId: string }) => item.productId));
+        const wishlistItems = res.data?.wishlist || res.data || [];
+        setWishlist(Array.isArray(wishlistItems) ? wishlistItems.map((item: { productId: string }) => item.productId) : []);
       } catch (err) {
         console.error("Failed to fetch wishlist:", err);
       }

@@ -47,7 +47,7 @@ export default function ProfilePage() {
         );
 
         if (!isMounted) return;
-        setWishlist(wishlistRes.data || []);
+        setWishlist(wishlistRes.data?.wishlist || wishlistRes.data || []);
       } catch (err: unknown) {
         if ((err as { response?: { status?: number } }).response?.status === 401) {
           router.push("/login");

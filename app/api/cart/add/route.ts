@@ -17,6 +17,20 @@ export async function POST(req: Request) {
       );
     }
 
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return NextResponse.json(
+        { success: false, message: "Invalid user ID" },
+        { status: 400 }
+      );
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(productId)) {
+      return NextResponse.json(
+        { success: false, message: "Invalid product ID" },
+        { status: 400 }
+      );
+    }
+
     // Determine the price to store in the cart (prefer client-supplied, fallback to product pricing)
     const collection = await Collections.findById(productId);
     if (!collection) {
@@ -40,15 +54,16 @@ export async function POST(req: Request) {
       );
     }
 
-    const sizeStock = collection.sizes.find((s) => s.size === size);
-    if (!sizeStock) {
+    const sizeStock = collection.sizes?.find((s) => s.size === size);
+    if (!sizeStock || sizeStock.stock <= 0) {
       return NextResponse.json(
-        { success: false, message: "Invalid size selected" },
+        { success: false, message: "Invalid size selected or out of stock" },
         { status: 400 }
       );
     }
 
     const mongoUserId = new mongoose.Types.ObjectId(userId);
+    const productObjId = new mongoose.Types.ObjectId(productId);
 
     let cart = await Cart.findOne({ user: mongoUserId });
 
@@ -61,7 +76,7 @@ export async function POST(req: Request) {
 
     const existingItem = cart.products.find(
       (item: ICartProduct) =>
-        item.collection.toString() === productId.toString() &&
+        item.product && item.product.toString() === productObjId.toString() &&
         item.size === size
     );
 
@@ -86,7 +101,7 @@ export async function POST(req: Request) {
       }
 
       cart.products.push({
-        collection: new mongoose.Types.ObjectId(productId),
+        product: productObjId,
         size,
         quantity: qty,
         price: itemPrice,
@@ -108,10 +123,11 @@ export async function POST(req: Request) {
       cart,
     });
   } catch (error) {
-    console.error("❌ Error adding to cart:", error);
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error("❌ Error adding to cart:", errorMsg, error);
 
     return NextResponse.json(
-      { success: false, message: "Internal Server Error" },
+      { success: false, message: "Internal Server Error", details: errorMsg },
       { status: 500 }
     );
   }

@@ -46,7 +46,7 @@ export default function WishlistPage() {
           `/api/wishlist/get?userId=${session.user.id}`
         );
 
-        const wishlistItems: WishlistItem[] = wishRes.data || [];
+        const wishlistItems: WishlistItem[] = wishRes.data?.wishlist || wishRes.data || [];
 
         // 2️⃣ Fetch product details
         const productPromises = wishlistItems.map((item) =>

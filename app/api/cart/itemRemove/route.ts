@@ -25,7 +25,7 @@ export async function POST(req: Request) {
         },
       },
       { new: true }
-    ).populate("products.collection");
+    ).populate("products.product");
 
     if (!updatedCart) {
       return NextResponse.json({ error: "Cart not found" }, { status: 404 });

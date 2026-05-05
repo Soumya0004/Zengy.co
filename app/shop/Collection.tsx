@@ -49,11 +49,8 @@ const Collection = () => {
     const fetchRecentProducts = async () => {
       try {
         const res = await axios.get("/api/products/recent");
-        const products = Array.isArray(res.data)
-          ? res.data
-          : res.data?.products;
-
-        setCollections(products || []);
+        const products = res.data?.products || res.data || [];
+        setCollections(Array.isArray(products) ? products : []);
       } catch (err) {
         console.error("Failed to fetch recent products:", err);
         setCollections([]);
@@ -70,7 +67,8 @@ const Collection = () => {
       if (!session?.user?.id) return;
       try {
         const res = await axios.get(`/api/wishlist/get?userId=${session.user.id}`);
-        setWishlist(res.data.map((item: { productId: string }) => item.productId));
+        const wishlistItems = res.data?.wishlist || res.data || [];
+        setWishlist(Array.isArray(wishlistItems) ? wishlistItems.map((item: { productId: string }) => item.productId) : []);
       } catch (err) {
         console.error("Failed to fetch wishlist:", err);
       }

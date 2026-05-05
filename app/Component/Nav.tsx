@@ -100,13 +100,12 @@ const authRef = useRef<HTMLDivElement>(null);
 const navLinks = [
 { label: "Home", href: "/" },
 { label: "Shop", href: "/shop" },
-{ label: "Sail", href: "/Sail" },
+{ label: "sales ", href: "/sales" },
 { label: "About Us", href: "/about" },
 ];
 
 const loggedIn = status === "authenticated";
 
-/* ---------------- MOUNT ---------------- */
 
 useEffect(() => setMounted(true), []);
 

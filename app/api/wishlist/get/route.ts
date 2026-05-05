@@ -10,17 +10,19 @@ export async function GET(req: Request) {
 
     if (!userId) {
       return NextResponse.json(
-        { message: "userId is required" },
+        { success: false, message: "userId is required" },
         { status: 400 }
       );
     }
 
-    const wishlist = await Wishlist.find({ userId });
+    const wishlist = await Wishlist.find({ userId }).lean();
 
-    return NextResponse.json(wishlist);
+    return NextResponse.json({ success: true, wishlist });
   } catch (error: unknown) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error("❌ Wishlist GET error:", errorMsg, error);
     return NextResponse.json(
-      { error: (error as Error).message },
+      { success: false, error: "Failed to fetch wishlist", details: errorMsg },
       { status: 500 }
     );
   }

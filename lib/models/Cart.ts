@@ -1,7 +1,9 @@
+// /lib/models/Cart.ts
+
 import mongoose, { Schema, Document, Model } from "mongoose";
 
 export interface ICartProduct {
-  collection: mongoose.Types.ObjectId;
+  product: mongoose.Types.ObjectId;
   quantity: number;
   size?: string;
   price?: number;
@@ -9,21 +11,22 @@ export interface ICartProduct {
 }
 
 export interface ICart extends Document {
-  user: mongoose.Types.ObjectId | string;
+  user: mongoose.Types.ObjectId;
   products: ICartProduct[];
   totalPrice?: number;
 }
 
-const CartProductSchema = new Schema<ICartProduct>(
-  {
-    collection: { type: Schema.Types.ObjectId, ref: "Collections", required: true },
-    quantity: { type: Number, required: true },
-    size: { type: String },
-    price: { type: Number },
-    name: { type: String },
+const CartProductSchema = new Schema<ICartProduct>({
+  product: {
+    type: Schema.Types.ObjectId,
+    ref: "Collections", // MUST match your product model name
+    required: true,
   },
-  { _id: true }
-);
+  quantity: { type: Number, required: true },
+  size: String,
+  price: Number,
+  name: String,
+});
 
 const CartSchema = new Schema<ICart>(
   {
@@ -34,7 +37,5 @@ const CartSchema = new Schema<ICart>(
   { timestamps: true }
 );
 
-const Cart: Model<ICart> =
-  mongoose.models.Cart || mongoose.model<ICart>("Cart", CartSchema);
-
-export default Cart;
+export default mongoose.models.Cart ||
+  mongoose.model<ICart>("Cart", CartSchema);

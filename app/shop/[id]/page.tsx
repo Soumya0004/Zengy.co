@@ -178,7 +178,7 @@ export default function Page() {
 
     try {
       setAdding(true);
-      await axios.post("/api/cart/add", {
+      const res = await axios.post("/api/cart/add", {
         userId: session?.user?.id,
         productId: product?._id,
         size: selectedSize,
@@ -186,9 +186,17 @@ export default function Page() {
         price: priceToUse,
         name: product?.title,
       });
-      alert("Added to cart");
-    } catch (err) {
-      console.error(err);
+
+      if (res.data?.success) {
+        alert("✅ Added to cart successfully");
+      } else {
+        alert(`❌ Error: ${res.data?.message || "Failed to add to cart"}`);
+        console.error("Cart add failed:", res.data);
+      }
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.message || err.message || "Failed to add to cart";
+      alert(`❌ Error: ${errorMsg}`);
+      console.error("❌ Error adding to cart:", err);
     } finally {
       setAdding(false);
     }
@@ -203,7 +211,7 @@ export default function Page() {
 
     try {
       setBuying(true);
-      await axios.post("/api/cart/add", {
+      const res = await axios.post("/api/cart/add", {
         userId: session?.user?.id,
         productId: product?._id,
         size: selectedSize,
@@ -211,9 +219,17 @@ export default function Page() {
         price: priceToUse,
         name: product?.title,
       });
-      router.push("/Cart");
-    } catch (err) {
-      console.error(err);
+
+      if (res.data?.success) {
+        router.push("/Cart");
+      } else {
+        alert(`❌ Error: ${res.data?.message || "Failed to add to cart"}`);
+        console.error("Cart add failed:", res.data);
+      }
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.message || err.message || "Failed to add to cart";
+      alert(`❌ Error: ${errorMsg}`);
+      console.error("❌ Error adding to cart:", err);
     } finally {
       setBuying(false);
     }

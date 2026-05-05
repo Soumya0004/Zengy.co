@@ -6,121 +6,106 @@ import Script from "next/script";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
-declare global {
-  interface Window {
-    Razorpay: new (options: {
-      key: string;
-      amount: number;
-      currency: string;
-      name: string;
-      description: string;
-      order_id: string;
-      handler: (response: {
-        razorpay_payment_id: string;
-        razorpay_order_id: string;
-        razorpay_signature: string;
-      }) => Promise<void>;
-    }) => {
-      open: () => void;
-    };
-  }
-}
-
 export default function RazorpayButton({
   amount,
-  cartId,
   products,
+  addressId,
 }: {
   amount: number;
-  cartId: string;
-  products: unknown[];
+  products: any[];
+  addressId: string;
 }) {
-  const [isReady, setIsReady] = useState(false);
+  const [ready, setReady] = useState(false);
+  const [loading, setLoading] = useState(false);
   const { data: session } = useSession();
   const router = useRouter();
 
-  useEffect(() => {
-    setIsReady(true);
-  }, []);
+  useEffect(() => setReady(true), []);
 
-  const handlePayment = async () => {
+  const pay = async () => {
     if (!session?.user?.id) {
-      alert("Please login first");
+      alert("Please login to continue");
       return;
     }
 
+    if (!addressId) {
+      alert("Please select a delivery address");
+      return;
+    }
+
+    if (!products || products.length === 0) {
+      alert("Your cart is empty");
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      const orderRes = await axios.post("/api/cart/createRazorpayOrder", {
+      const { data } = await axios.post("/api/payment/create-order", {
         amount,
-        cartId,
-        products,
-        userId: session.user.id,
       });
 
-      const { order } = orderRes.data;
-
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY!,
-        amount: order.amount,
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY,
+        amount: data.order.amount,
         currency: "INR",
-        name: "ZENGY.GO",
+        name: "Your Store Name",
         description: "Order Payment",
-        order_id: order.id,
-
-        handler: async function (response: {
-          razorpay_payment_id: string;
-          razorpay_order_id: string;
-          razorpay_signature: string;
-        }) {
+        order_id: data.order.id,
+        handler: async (res: any) => {
           try {
-            const verifyRes = await axios.post("/api/cart/paymentSuccess", {
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_signature: response.razorpay_signature,
-              cartId,
-              userId: session?.user?.id,
+            const verifyRes = await axios.post("/api/payment/verify", {
+              razorpay_order_id: res.razorpay_order_id,
+              razorpay_payment_id: res.razorpay_payment_id,
+              razorpay_signature: res.razorpay_signature,
               products,
+              totalPrice: amount,
+              addressId, // ✅ IMPORTANT: Send addressId
             });
 
             if (verifyRes.data.success) {
               router.push("/profile/orderHistory");
+            } else {
+              alert("Payment verification failed");
             }
-          } catch (err) {
-            console.error("Payment success error:", err);
+          } catch (error) {
+            console.error("Verification error:", error);
             alert("Payment verification failed");
           }
         },
-
         prefill: {
-          name: session.user.name,
-          email: session.user.email,
+          name: session.user.name || "",
+          email: session.user.email || "",
         },
-
-        theme: { color: "#121212" },
+        theme: {
+          color: "#000000",
+        },
+        modal: {
+          ondismiss: () => {
+            setLoading(false);
+          },
+        },
       };
 
-      // Ensure SDK is loaded
-      if (typeof window !== "undefined" && window.Razorpay) {
-        const razor = new window.Razorpay(options);
-        razor.open();
-      } else {
-        alert("Razorpay failed to load. Refresh page.");
-      }
+      const razor = new (window as any).Razorpay(options);
+      razor.open();
     } catch (error) {
       console.error("Payment error:", error);
-      alert("Something went wrong");
+      alert("Failed to initialize payment");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <>
-      <Script src="https://checkout.razorpay.com/v1/checkout.js" />
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       <button
-        onClick={handlePayment}
-        disabled={!isReady}
-        className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-900"
+        onClick={pay}
+        disabled={!ready || loading || !addressId}
+        className="w-full bg-black text-white py-3 rounded font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
       >
-        Pay Now
+        {loading ? "Processing..." : `Pay ₹${amount.toLocaleString()}`}
       </button>
     </>
   );
