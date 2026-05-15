@@ -172,7 +172,7 @@ const Hero = () => {
               </Magnet>
 
               <Magnet padding={10} magnetStrength={10}>
-                <button className="border border-black px-6 py-3 rounded-xl font-bold">
+                <button className="border border-zinc-900 px-6 py-3 rounded-xl font-bold">
                   Explore Product
                 </button>
               </Magnet>

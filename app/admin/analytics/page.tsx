@@ -4,17 +4,18 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { 
   TrendingUp, 
-  TrendingDown, 
   DollarSign, 
   ShoppingCart, 
   Users,
-  Package,
-  Calendar,
   Download,
   ArrowUpRight,
-  ArrowDownRight
+  BarChart3,
+  Calendar,
+  Layers,
+  ChevronRight
 } from "lucide-react";
 
+// 1. Complete Interface Definitions
 interface AnalyticsData {
   overview: {
     totalRevenue: number;
@@ -25,7 +26,11 @@ interface AnalyticsData {
     conversionRate: number;
   };
   revenueByMonth: { month: string; revenue: number; orders: number }[];
-  topProducts: { product: { _id: string; title: string; img: string }; totalSold: number; revenue: number }[];
+  topProducts: { 
+    product: { _id: string; title: string; img: string }; 
+    totalSold: number; 
+    revenue: number 
+  }[];
   topCategories: { category: string; revenue: number; orders: number }[];
   ordersByStatus: Record<string, number>;
   recentActivity: { type: string; description: string; timestamp: string }[];
@@ -36,393 +41,206 @@ interface AnalyticsData {
   };
 }
 
+// 2. Initial State to prevent "Cannot read property of null" errors
+const initialState: AnalyticsData = {
+  overview: { totalRevenue: 0, totalOrders: 0, totalUsers: 0, totalProducts: 0, averageOrderValue: 0, conversionRate: 0 },
+  revenueByMonth: [],
+  topProducts: [],
+  topCategories: [],
+  ordersByStatus: {},
+  recentActivity: [],
+  userStats: { newUsersThisMonth: 0, returningUsers: 0, userGrowth: 0 }
+};
+
 export default function AnalyticsPage() {
-  const [data, setData] = useState<AnalyticsData | null>(null);
+  const [data, setData] = useState<AnalyticsData>(initialState);
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState("30");
 
   useEffect(() => {
+    const fetchAnalytics = async () => {
+      setLoading(true);
+      try {
+        const res = await axios.get(`/api/admin/analytics?range=${dateRange}`);
+        // Ensure we handle cases where API might return null or unexpected structure
+        setData(res.data || initialState);
+      } catch (error) {
+        console.error("Failed to fetch analytics:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchAnalytics();
   }, [dateRange]);
 
-  const fetchAnalytics = async () => {
-    try {
-      const res = await axios.get(`/api/admin/analytics?range=${dateRange}`);
-      setData(res.data);
-    } catch (error) {
-      console.error("Failed to fetch analytics:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const exportReport = () => {
-    if (!data) return;
-    
-    const report = `
-Sales Analytics Report
-Generated: ${new Date().toLocaleDateString()}
-Date Range: Last ${dateRange} days
-
-=== OVERVIEW ===
-Total Revenue: $${data.overview.totalRevenue.toLocaleString()}
-Total Orders: ${data.overview.totalOrders}
-Total Users: ${data.overview.totalUsers}
-Total Products: ${data.overview.totalProducts}
-Average Order Value: $${data.overview.averageOrderValue.toFixed(2)}
-Conversion Rate: ${data.overview.conversionRate.toFixed(2)}%
-
-=== TOP PRODUCTS ===
-${data.topProducts.map((p, i) => `${i+1}. ${p.product.title} - ${p.totalSold} sold - $${p.revenue}`).join('\n')}
-
-=== TOP CATEGORIES ===
-${data.topCategories.map(c => `${c.category} - $${c.revenue} (${c.orders} orders)`).join('\n')}
-
-=== ORDERS BY STATUS ===
-${Object.entries(data.ordersByStatus).map(([status, count]) => `${status}: ${count}`).join('\n')}
-    `.trim();
-
-    const blob = new Blob([report], { type: "text/plain" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `analytics-${new Date().toISOString().split("T")[0]}.txt`;
-    a.click();
-  };
-
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      <div className="flex flex-col items-center justify-center h-screen bg-[#fdfdfd] gap-4">
+        <div className="w-16 h-1 bg-black animate-pulse"></div>
+        <p className="text-[10px] font-black tracking-[0.5em] uppercase italic text-black">ZENGY_GO / CALC_METRICS</p>
       </div>
     );
   }
 
-  const maxRevenue = Math.max(...(data?.revenueByMonth || []).map(r => r.revenue));
+  const maxRevenue = data.revenueByMonth.length > 0 
+    ? Math.max(...data.revenueByMonth.map(r => r.revenue)) 
+    : 0;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-10 bg-[#fdfdfd] min-h-screen text-black p-2 md:p-4 pb-20">
+      {/* Header Section */}
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b-4 border-zinc-900 pb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Analytics</h1>
-          <p className="text-gray-500">Track your store performance</p>
+          <h1 className="text-5xl font-black italic tracking-tighter uppercase leading-none mb-2">Analytics</h1>
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-black/40 italic">Performance_Intel / 2026</p>
         </div>
-        <div className="flex items-center gap-3">
-          <select
-            value={dateRange}
-            onChange={(e) => setDateRange(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-          >
-            <option value="7">Last 7 days</option>
-            <option value="30">Last 30 days</option>
-            <option value="90">Last 90 days</option>
-            <option value="365">Last year</option>
-          </select>
-          <button
-            onClick={exportReport}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-          >
-            <Download size={20} />
-            Export
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="relative flex-1 md:flex-none">
+            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 opacity-40" size={14} />
+            <select
+              value={dateRange}
+              onChange={(e) => setDateRange(e.target.value)}
+              className="w-full pl-10 pr-8 py-3 bg-white border-2 border-zinc-900 font-black uppercase text-[10px] appearance-none outline-none cursor-pointer hover:bg-black hover:text-white transition-colors"
+            >
+              <option value="7">Range: 07_Days</option>
+              <option value="30">Range: 30_Days</option>
+              <option value="90">Range: 90_Days</option>
+            </select>
+          </div>
+          <button className="flex items-center gap-3 px-6 py-3 bg-black text-white hover:bg-[#ffdf00] hover:text-black transition-all duration-300 group">
+            <Download size={16} />
+            <span className="text-xs font-black uppercase tracking-widest">Export_Data</span>
           </button>
         </div>
+      </header>
+
+      {/* Stats Bento */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: "GROSS_REVENUE", val: `$${data.overview.totalRevenue.toLocaleString()}`, icon: DollarSign, color: "bg-white" },
+          { label: "ORDER_VOLUME", val: data.overview.totalOrders, icon: ShoppingCart, color: "bg-white" },
+          { label: "AVG_BASKET", val: `$${data.overview.averageOrderValue.toFixed(2)}`, icon: TrendingUp, color: "bg-white" },
+          { label: "CONV_INDEX", val: `${data.overview.conversionRate.toFixed(2)}%`, icon: BarChart3, color: "bg-[#ffdf00]" },
+        ].map((stat, i) => (
+          <div key={i} className={`border-2 border-zinc-900 p-6 hover:translate-x-1 hover:-translate-y-1 transition-transform ${stat.color}`}>
+            <div className="flex justify-between items-start mb-6 opacity-50 font-black text-[9px] uppercase tracking-widest">
+              {stat.label} <stat.icon size={14} />
+            </div>
+            <p className="text-4xl font-black tracking-tighter italic leading-none">{stat.val}</p>
+          </div>
+        ))}
       </div>
 
-      {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Total Revenue</p>
-              <p className="text-2xl font-bold text-gray-800 mt-1">
-                ${data?.overview.totalRevenue.toLocaleString() || 0}
-              </p>
-            </div>
-            <div className="p-3 bg-green-100 rounded-lg">
-              <DollarSign className="text-green-600" size={24} />
-            </div>
-          </div>
-          <div className="flex items-center gap-1 mt-4">
-            <ArrowUpRight size={16} className="text-green-600" />
-            <span className="text-sm text-green-600 font-medium">+12.5%</span>
-            <span className="text-sm text-gray-400">vs previous</span>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Total Orders</p>
-              <p className="text-2xl font-bold text-gray-800 mt-1">
-                {data?.overview.totalOrders || 0}
-              </p>
-            </div>
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <ShoppingCart className="text-blue-600" size={24} />
-            </div>
-          </div>
-          <div className="flex items-center gap-1 mt-4">
-            <ArrowUpRight size={16} className="text-green-600" />
-            <span className="text-sm text-green-600 font-medium">+8.2%</span>
-            <span className="text-sm text-gray-400">vs previous</span>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Avg Order Value</p>
-              <p className="text-2xl font-bold text-gray-800 mt-1">
-                ${data?.overview.averageOrderValue.toFixed(2) || 0}
-              </p>
-            </div>
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <TrendingUp className="text-purple-600" size={24} />
-            </div>
-          </div>
-          <div className="flex items-center gap-1 mt-4">
-            <ArrowDownRight size={16} className="text-red-600" />
-            <span className="text-sm text-red-600 font-medium">-2.1%</span>
-            <span className="text-sm text-gray-400">vs previous</span>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Conversion Rate</p>
-              <p className="text-2xl font-bold text-gray-800 mt-1">
-                {data?.overview.conversionRate.toFixed(2) || 0}%
-              </p>
-            </div>
-            <div className="p-3 bg-orange-100 rounded-lg">
-              <Users className="text-orange-600" size={24} />
-            </div>
-          </div>
-          <div className="flex items-center gap-1 mt-4">
-            <ArrowUpRight size={16} className="text-green-600" />
-            <span className="text-sm text-green-600 font-medium">+5.3%</span>
-            <span className="text-sm text-gray-400">vs previous</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Revenue Chart */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">
-            Revenue Over Time
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Revenue Timeline */}
+        <div className="lg:col-span-2 border-2 border-zinc-900 bg-white p-8">
+          <h3 className="text-sm font-black uppercase tracking-[0.2em] italic mb-12 flex items-center gap-3">
+            <span className="w-10 h-1 bg-black"></span> Revenue_Stream
           </h3>
           <div className="h-64 flex items-end gap-2">
-            {(data?.revenueByMonth || []).map((item, index) => {
+            {data.revenueByMonth.map((item, index) => {
               const height = maxRevenue > 0 ? (item.revenue / maxRevenue) * 100 : 0;
               return (
-                <div key={index} className="flex-1 flex flex-col items-center">
-                  <div className="w-full relative group">
-                    <div
-                      className="w-full bg-gradient-to-t from-purple-600 to-purple-300 rounded-t-lg hover:from-purple-700 hover:to-purple-400 transition-all cursor-pointer"
-                      style={{ height: `${height}%`, minHeight: "20px" }}
-                    ></div>
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                      ${item.revenue.toLocaleString()}
+                <div key={index} className="flex-1 flex flex-col items-center group">
+                  <div 
+                    className="w-full bg-gray-100 border-x border-t-2 border-zinc-900 group-hover:bg-black transition-all relative"
+                    style={{ height: `${height}%`, minHeight: "4px" }}
+                  >
+                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-black text-white text-[8px] px-1 font-bold whitespace-nowrap z-10">
+                      ${item.revenue}
                     </div>
                   </div>
-                  <span className="text-xs text-gray-500 mt-2">
-                    {item.month.slice(0, 3)}
-                  </span>
+                  <span className="text-[9px] font-black uppercase mt-3 italic opacity-40">{item.month.slice(0, 3)}</span>
                 </div>
               );
             })}
           </div>
         </div>
 
-        {/* Orders by Status */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">
-            Orders by Status
-          </h3>
-          <div className="space-y-4">
-            {Object.entries(data?.ordersByStatus || {}).map(
-              ([status, count]) => {
-                const percentage = data?.overview.totalOrders
-                  ? ((count as number) / data.overview.totalOrders) * 100
-                  : 0;
-                const colors: Record<string, string> = {
-                  Pending: "bg-yellow-500",
-                  "Order placed": "bg-blue-500",
-                  "Out for delivery": "bg-purple-500",
-                  Delivered: "bg-green-500",
-                  Canceled: "bg-red-500",
-                };
-                return (
-                  <div key={status}>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-600">{status}</span>
-                      <span className="font-medium">
-                        {count} ({percentage.toFixed(1)}%)
-                      </span>
-                    </div>
-                    <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full ${colors[status] || "bg-gray-500"} transition-all`}
-                        style={{ width: `${percentage}%` }}
-                      ></div>
-                    </div>
+        {/* Status Analysis */}
+        <div className="bg-black text-white p-8 rounded-tr-[60px]">
+          <h3 className="text-sm font-black uppercase tracking-[0.3em] mb-10 italic">Status_Distribution</h3>
+          <div className="space-y-6">
+            {Object.entries(data.ordersByStatus).map(([status, count]) => {
+              const percentage = data.overview.totalOrders ? (count / data.overview.totalOrders) * 100 : 0;
+              return (
+                <div key={status} className="group">
+                  <div className="flex justify-between items-end text-[10px] font-black uppercase mb-2">
+                    <span className="opacity-60 group-hover:opacity-100 transition-opacity">{status}</span>
+                    <span className="bg-white text-black px-2">{count}</span>
                   </div>
-                );
-              }
-            )}
+                  <div className="h-1 bg-white/20 overflow-hidden">
+                    <div className="h-full bg-[#ffdf00] transition-all duration-700" style={{ width: `${percentage}%` }}></div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
 
-      {/* Top Products & Categories */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top Products */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">
-            Top Selling Products
-          </h3>
-          <div className="space-y-4">
-            {(data?.topProducts || []).slice(0, 5).map((item, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg"
-              >
-                <span className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-semibold">
-                  {index + 1}
-                </span>
-                <div className="w-12 h-12 rounded-lg bg-gray-200 overflow-hidden">
-                  {item.product?.img && (
-                    <img
-                      src={item.product.img}
-                      alt={item.product.title}
-                      className="w-full h-full object-cover"
-                    />
-                  )}
+        {/* Top Units */}
+        <div className="border-2 border-zinc-900 bg-white overflow-hidden">
+          <div className="bg-black text-white p-4 flex justify-between items-center">
+            <h3 className="text-xs font-black uppercase tracking-widest italic text-white">High_Performance_Units</h3>
+            <ArrowUpRight size={16} />
+          </div>
+          <div className="divide-y-2 divide-black/5">
+            {data.topProducts.slice(0, 5).map((item, index) => (
+              <div key={index} className="p-4 flex items-center gap-5 group hover:bg-gray-50">
+                <span className="text-2xl font-black italic opacity-10">0{index + 1}</span>
+                <div className="w-12 h-12 border border-zinc-900 grayscale group-hover:grayscale-0 transition-all overflow-hidden shrink-0">
+                  <img src={item.product?.img} alt="" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-800 truncate">
-                    {item.product?.title || "Unknown"}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {item.totalSold} sold
-                  </p>
+                  <p className="text-sm font-black uppercase italic truncate">{item.product?.title}</p>
+                  <p className="text-[9px] font-bold opacity-40 uppercase">{item.totalSold} Sold</p>
                 </div>
-                <div className="text-right">
-                  <p className="font-semibold text-gray-800">
-                    ${item.revenue.toLocaleString()}
-                  </p>
+                <p className="font-black italic tracking-tighter">${item.revenue.toLocaleString()}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Category Dominance */}
+        <div className="border-2 border-zinc-900 bg-white p-8">
+          <h3 className="text-xs font-black uppercase tracking-widest italic mb-8 flex items-center gap-2">
+            <Layers size={14} /> Category_Dominance
+          </h3>
+          <div className="space-y-6">
+            {data.topCategories.map((cat, i) => (
+              <div key={i}>
+                <div className="flex justify-between text-[10px] font-black uppercase mb-2">
+                  <span>{cat.category}</span>
+                  <span className="opacity-40 italic">{cat.orders} Orders</span>
+                </div>
+                <div className="h-4 border border-zinc-900 p-0.5 bg-gray-50">
+                  <div 
+                    className="h-full bg-black hover:bg-[#ffdf00] transition-colors" 
+                    style={{ width: `${(cat.revenue / (data.overview.totalRevenue || 1)) * 100}%` }}
+                  ></div>
                 </div>
               </div>
             ))}
-            {(!data?.topProducts || data.topProducts.length === 0) && (
-              <p className="text-center text-gray-500 py-4">
-                No sales data yet
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Top Categories */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">
-            Top Categories
-          </h3>
-          <div className="space-y-4">
-            {(data?.topCategories || []).slice(0, 5).map((cat, index) => {
-              const maxCatRevenue = Math.max(...(data?.topCategories || []).map(c => c.revenue));
-              const percentage = maxCatRevenue > 0 ? (cat.revenue / maxCatRevenue) * 100 : 0;
-              return (
-                <div key={index}>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-3">
-                      <span className="w-6 h-6 rounded bg-purple-100 flex items-center justify-center text-purple-700 text-sm font-semibold">
-                        {index + 1}
-                      </span>
-                      <span className="font-medium text-gray-800">
-                        {cat.category || "Uncategorized"}
-                      </span>
-                    </div>
-                    <span className="text-sm text-gray-500">
-                      {cat.orders} orders
-                    </span>
-                  </div>
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-purple-500 to-purple-300"
-                      style={{ width: `${percentage}%` }}
-                    ></div>
-                  </div>
-                  <p className="text-sm text-gray-600 mt-1">
-                    ${cat.revenue.toLocaleString()}
-                  </p>
-                </div>
-              );
-            })}
-            {(!data?.topCategories || data.topCategories.length === 0) && (
-              <p className="text-center text-gray-500 py-4">
-                No category data yet
-              </p>
-            )}
           </div>
         </div>
       </div>
 
-      {/* User Stats */}
-      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">
-          User Analytics
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="text-center p-4 bg-gray-50 rounded-lg">
-            <p className="text-3xl font-bold text-gray-800">
-              {data?.userStats.newUsersThisMonth || 0}
-            </p>
-            <p className="text-sm text-gray-500 mt-1">New Users This Month</p>
-          </div>
-          <div className="text-center p-4 bg-gray-50 rounded-lg">
-            <p className="text-3xl font-bold text-gray-800">
-              {data?.userStats.returningUsers || 0}
-            </p>
-            <p className="text-sm text-gray-500 mt-1">Returning Customers</p>
-          </div>
-          <div className="text-center p-4 bg-gray-50 rounded-lg">
-            <p className="text-3xl font-bold text-green-600">
-              +{data?.userStats.userGrowth || 0}%
-            </p>
-            <p className="text-sm text-gray-500 mt-1">User Growth</p>
-          </div>
+      {/* System Activity */}
+      <div className="border-2 border-zinc-900 bg-white overflow-hidden">
+        <div className="bg-black text-white p-4 flex justify-between items-center">
+          <h3 className="text-xs font-black uppercase tracking-widest italic text-white">System_Audit_Log</h3>
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
         </div>
-      </div>
-
-      {/* Recent Activity */}
-      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">
-          Recent Activity
-        </h3>
-        <div className="space-y-3">
-          {(data?.recentActivity || []).slice(0, 10).map((activity, index) => (
-            <div
-              key={index}
-              className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg"
-            >
-              <div className="w-2 h-2 rounded-full bg-purple-500"></div>
-              <div className="flex-1">
-                <p className="text-gray-800">{activity.description}</p>
-                <p className="text-sm text-gray-500">
-                  {new Date(activity.timestamp).toLocaleString()}
-                </p>
-              </div>
+        <div className="p-4 space-y-1">
+          {data.recentActivity.map((activity, index) => (
+            <div key={index} className="flex items-center gap-4 p-3 border-b border-zinc-900/5 hover:bg-gray-50 transition-colors group">
+              <span className="text-[9px] font-mono opacity-30">{new Date(activity.timestamp).toLocaleTimeString()}</span>
+              <p className="text-[11px] font-black uppercase flex-1">{activity.description}</p>
+              <ChevronRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
           ))}
-          {(!data?.recentActivity || data.recentActivity.length === 0) && (
-            <p className="text-center text-gray-500 py-4">
-              No recent activity
-            </p>
-          )}
         </div>
       </div>
     </div>

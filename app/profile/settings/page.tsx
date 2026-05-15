@@ -48,7 +48,7 @@ export default function ProfilePage() {
             onClick={() => setActiveTab("addresses")}
             className={`pb-3 px-4 font-semibold transition ${
               activeTab === "addresses"
-                ? "border-b-2 border-black text-black"
+                ? "border-b-2 border-zinc-900 text-black"
                 : "text-gray-500 hover:text-gray-700"
             }`}
           >
@@ -58,7 +58,7 @@ export default function ProfilePage() {
             onClick={() => setActiveTab("profile")}
             className={`pb-3 px-4 font-semibold transition ${
               activeTab === "profile"
-                ? "border-b-2 border-black text-black"
+                ? "border-b-2 border-zinc-900 text-black"
                 : "text-gray-500 hover:text-gray-700"
             }`}
           >

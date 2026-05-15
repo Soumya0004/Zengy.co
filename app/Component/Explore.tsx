@@ -155,7 +155,7 @@ const Explore = () => {
               <h3 className="font-semibold text-lg">
                 Stylish Winter T-Shirt for Men
               </h3>
-              <button className="mt-2 border border-black px-3 py-1 text-sm rounded-md hover:bg-zinc-800 hover:text-white">
+              <button className="mt-2 border border-zinc-900 px-3 py-1 text-sm rounded-md hover:bg-zinc-800 hover:text-white">
                 Check Now
               </button>
             </div>
@@ -188,7 +188,7 @@ const Explore = () => {
               <h3 className="font-semibold text-lg">
                 Stylish Winter Shirt for Man
               </h3>
-              <button className="mt-2 border border-black px-3 py-1 text-sm rounded-md hover:bg-zinc-800 hover:text-white text-zinc-800">
+              <button className="mt-2 border border-zinc-900 px-3 py-1 text-sm rounded-md hover:bg-zinc-800 hover:text-white text-zinc-800">
                 Check Now
               </button>
             </div>

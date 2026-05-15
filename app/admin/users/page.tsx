@@ -9,13 +9,13 @@ import {
   Edit2, 
   Trash2,
   Shield,
-  ShieldOff,
   Download,
   X,
   Mail,
   User,
   Calendar,
-  ShoppingCart
+  ShoppingCart,
+  ChevronRight
 } from "lucide-react";
 
 interface User {
@@ -59,19 +59,16 @@ export default function UsersPage() {
       setEditingUser(null);
     } catch (error) {
       console.error("Failed to update user:", error);
-      alert("Failed to update user role");
     }
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) return;
-
+    if (!confirm("TERMINATE USER ACCESS? THIS ACTION IS PERMANENT.")) return;
     try {
       await axios.delete(`/api/admin/users/${userId}`);
       fetchUsers();
     } catch (error) {
       console.error("Failed to delete user:", error);
-      alert("Failed to delete user");
     }
   };
 
@@ -79,404 +76,239 @@ export default function UsersPage() {
     const matchesSearch = 
       user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = 
-      roleFilter === "all" || user.role === roleFilter;
+    const matchesRole = roleFilter === "all" || user.role === roleFilter;
     return matchesSearch && matchesRole;
   });
 
-  const exportUsers = () => {
-    const csv = [
-      ["Name", "Email", "Role", "Joined", "Orders"],
-      ...filteredUsers.map((user) => [
-        user.name || "Unknown",
-        user.email || "N/A",
-        user.role || "user",
-        new Date(user.createdAt).toLocaleDateString(),
-        user.orders?.length || 0,
-      ]),
-    ]
-      .map((row) => row.join(","))
-      .join("\n");
-
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `users-${new Date().toISOString().split("T")[0]}.csv`;
-    a.click();
-  };
-
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      <div className="flex flex-col items-center justify-center h-screen bg-[#fdfdfd] gap-4">
+        <div className="w-12 h-12 border-4 border-zinc-900 border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-[10px] font-black tracking-[0.4em] uppercase italic">User_Base_Sync...</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 bg-[#fdfdfd] min-h-screen text-black p-2 md:p-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b-4 border-zinc-900 pb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Users</h1>
-          <p className="text-gray-500">{users.length} total users</p>
+          <h1 className="text-5xl font-black italic tracking-tighter uppercase leading-none mb-2">Registry</h1>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-black/40 italic">
+            Zengy.go / Identity_Management / {users.length}_Members
+          </p>
         </div>
         <button
-          onClick={exportUsers}
-          className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          onClick={() => {}} // Export Logic
+          className="flex items-center gap-3 px-8 py-4 bg-black text-white hover:bg-[#ffdf00] hover:text-black transition-all duration-300 group"
         >
-          <Download size={20} />
-          Export CSV
+          <Download size={18} className="group-hover:translate-y-1 transition-transform" />
+          <span className="text-xs font-black uppercase tracking-widest">Export_Database</span>
         </button>
       </div>
 
-      {/* Stats */}
+      {/* Stats Bento */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <User className="text-blue-600" size={24} />
-            </div>
+        {[
+          { label: "Total_Members", value: users.length, icon: User, color: "bg-white" },
+          { label: "Admin_Level", value: users.filter(u => u.role === "admin").length, icon: Shield, color: "bg-black text-white" },
+          { label: "Active_shoppers", value: users.filter(u => u.orders && u.orders.length > 0).length, icon: ShoppingCart, color: "bg-[#ffdf00]" }
+        ].map((stat, i) => (
+          <div key={i} className={`border-2 border-zinc-900 p-6 flex justify-between items-end ${stat.color}`}>
             <div>
-              <p className="text-2xl font-bold text-gray-800">{users.length}</p>
-              <p className="text-sm text-gray-500">Total Users</p>
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] mb-4 opacity-60">{stat.label}</p>
+              <p className="text-4xl font-black italic tracking-tighter leading-none">{stat.value}</p>
             </div>
+            <stat.icon size={24} strokeWidth={2.5} />
           </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-green-100 rounded-lg">
-              <Shield className="text-green-600" size={24} />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-gray-800">
-                {users.filter((u) => u.role === "admin").length}
-              </p>
-              <p className="text-sm text-gray-500">Admins</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <ShoppingCart className="text-purple-600" size={24} />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-gray-800">
-                {users.filter((u) => u.orders && u.orders.length > 0).length}
-              </p>
-              <p className="text-sm text-gray-500">With Orders</p>
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="md:col-span-3 relative group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 opacity-30" size={18} />
           <input
             type="text"
-            placeholder="Search by name or email..."
+            placeholder="Search by Identity or Alias..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="w-full pl-12 pr-4 py-4 bg-white border-2 border-zinc-900 outline-none font-bold text-sm"
           />
         </div>
         <div className="relative">
-          <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+          <Filter className="absolute left-4 top-1/2 -translate-y-1/2 opacity-30" size={18} />
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="w-full pl-12 pr-4 py-4 bg-white border-2 border-zinc-900 font-black uppercase text-[10px] appearance-none outline-none cursor-pointer"
           >
-            <option value="all">All Roles</option>
-            <option value="admin">Admin</option>
-            <option value="user">User</option>
+            <option value="all">Access: All_Roles</option>
+            <option value="admin">Admin_Only</option>
+            <option value="user">Regular_Users</option>
           </select>
         </div>
       </div>
 
       {/* Users Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  User
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Email
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Role
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Joined
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Orders
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                  Actions
-                </th>
+      <div className="border-2 border-zinc-900 bg-white overflow-hidden">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-black text-white uppercase text-[9px] font-black tracking-widest italic">
+              <th className="px-6 py-4">Identity</th>
+              <th className="px-6 py-4">Communication</th>
+              <th className="px-6 py-4">Access_Level</th>
+              <th className="px-6 py-4 hidden md:table-cell">Registry_Date</th>
+              <th className="px-6 py-4 hidden md:table-cell">Activity</th>
+              <th className="px-6 py-4 text-right">Ops</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y-2 divide-black/5">
+            {filteredUsers.map((user) => (
+              <tr key={user._id} className="group hover:bg-gray-50 transition-colors">
+                <td className="px-6 py-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 border-2 border-zinc-900 bg-white flex items-center justify-center shrink-0 overflow-hidden grayscale group-hover:grayscale-0 transition-all">
+                      {user.image ? (
+                        <img src={user.image} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-xl font-black italic">{user.name?.charAt(0) || "U"}</span>
+                      )}
+                    </div>
+                    <p className="text-sm font-black uppercase italic tracking-tighter leading-none">{user.name || "GUEST_ID"}</p>
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <p className="text-[11px] font-bold opacity-60 uppercase">{user.email || "N/A"}</p>
+                </td>
+                <td className="px-6 py-4">
+                  <span className={`text-[9px] font-black uppercase px-2 py-1 border-2 ${
+                    user.role === 'admin' ? 'bg-black text-white border-zinc-900' : 'border-zinc-900/10'
+                  }`}>
+                    {user.role}
+                  </span>
+                </td>
+                <td className="px-6 py-4 hidden md:table-cell">
+                  <p className="text-[10px] font-bold opacity-40 uppercase">
+                    {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "??/??/????"}
+                  </p>
+                </td>
+                <td className="px-6 py-4 hidden md:table-cell">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black italic">{user.orders?.length || 0}</span>
+                    <span className="text-[9px] font-bold opacity-30 uppercase italic">Orders</span>
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex items-center justify-end gap-1">
+                    {[
+                      { icon: Eye, color: 'hover:bg-blue-100', action: () => setSelectedUser(user) },
+                      { icon: Edit2, color: 'hover:bg-green-100', action: () => setEditingUser(user) },
+                      { icon: Trash2, color: 'hover:bg-red-100', action: () => handleDeleteUser(user._id) }
+                    ].map((btn, i) => (
+                      <button key={i} onClick={btn.action} className={`p-2 border-2 border-transparent hover:border-zinc-900 transition-all ${btn.color}`}>
+                        <btn.icon size={16} />
+                      </button>
+                    ))}
+                  </div>
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {filteredUsers.map((user) => (
-                <tr key={user._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                        {user.image ? (
-                          <img
-                            src={user.image}
-                            alt={user.name}
-                            className="w-full h-full rounded-full object-cover"
-                          />
-                        ) : (
-                          <span className="text-purple-700 font-semibold">
-                            {user.name?.charAt(0) || "U"}
-                          </span>
-                        )}
-                      </div>
-                      <p className="font-medium text-gray-800">
-                        {user.name || "Unknown"}
-                      </p>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <p className="text-gray-600">{user.email || "No email"}</p>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`px-2 py-1 rounded-full text-sm ${
-                        user.role === "admin"
-                          ? "bg-purple-100 text-purple-700"
-                          : "bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      {user.role || "user"}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <p className="text-gray-600">
-                      {user.createdAt
-                        ? new Date(user.createdAt).toLocaleDateString()
-                        : "N/A"}
-                    </p>
-                  </td>
-                  <td className="px-6 py-4">
-                    <p className="text-gray-600">
-                      {user.orders?.length || 0} orders
-                    </p>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => setSelectedUser(user)}
-                        className="p-2 text-gray-400 hover:text-purple-600 transition-colors"
-                      >
-                        <Eye size={18} />
-                      </button>
-                      <button
-                        onClick={() => setEditingUser(user)}
-                        className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
-                      >
-                        <Edit2 size={18} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteUser(user._id)}
-                        className="p-2 text-gray-400 hover:text-red-600 transition-colors"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {filteredUsers.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-500">No users found</p>
-          </div>
-        )}
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      {/* View User Modal */}
+      {/* Detail Modal */}
       {selectedUser && !editingUser && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between p-6 border-b">
-              <h2 className="text-xl font-semibold text-gray-800">
-                User Details
-              </h2>
-              <button
-                onClick={() => setSelectedUser(null)}
-                className="p-2 hover:bg-gray-100 rounded-lg"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center">
-                  {selectedUser.image ? (
-                    <img
-                      src={selectedUser.image}
-                      alt={selectedUser.name}
-                      className="w-full h-full rounded-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-purple-700 text-2xl font-semibold">
-                      {selectedUser.name?.charAt(0) || "U"}
-                    </span>
-                  )}
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="bg-white border-4 border-zinc-900 w-full max-w-md relative">
+            <button onClick={() => setSelectedUser(null)} className="absolute top-4 right-4 p-2 bg-black text-white transition-transform hover:rotate-90">
+              <X size={20} />
+            </button>
+            <div className="p-8 space-y-8">
+              <div className="flex items-center gap-6">
+                <div className="w-24 h-24 border-4 border-zinc-900 grayscale">
+                   {selectedUser.image ? (
+                     <img src={selectedUser.image} className="w-full h-full object-cover" />
+                   ) : (
+                     <div className="w-full h-full flex items-center justify-center bg-gray-100 text-4xl font-black italic">
+                       {selectedUser.name?.charAt(0)}
+                     </div>
+                   )}
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-800">
-                    {selectedUser.name || "Unknown"}
-                  </h3>
-                  <span
-                    className={`px-2 py-1 rounded-full text-sm ${
-                      selectedUser.role === "admin"
-                        ? "bg-purple-100 text-purple-700"
-                        : "bg-gray-100 text-gray-700"
-                    }`}
-                  >
-                    {selectedUser.role || "user"}
+                  <h3 className="text-3xl font-black uppercase italic tracking-tighter leading-none mb-2">{selectedUser.name}</h3>
+                  <span className="text-[9px] font-black uppercase bg-black text-white px-2 py-1 italic tracking-[0.2em]">
+                    Access_Level: {selectedUser.role}
                   </span>
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 text-gray-600">
-                  <Mail size={18} />
-                  <span>{selectedUser.email || "No email"}</span>
-                </div>
-                <div className="flex items-center gap-3 text-gray-600">
-                  <Calendar size={18} />
-                  <span>
-                    Joined:{" "}
-                    {selectedUser.createdAt
-                      ? new Date(selectedUser.createdAt).toLocaleDateString()
-                      : "N/A"}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 text-gray-600">
-                  <ShoppingCart size={18} />
-                  <span>
-                    {selectedUser.orders?.length || 0} orders placed
-                  </span>
-                </div>
+              <div className="space-y-4 pt-6 border-t-2 border-zinc-900/10 text-[10px] font-black uppercase tracking-widest">
+                <div className="flex items-center gap-3 opacity-60"><Mail size={14} /> {selectedUser.email}</div>
+                <div className="flex items-center gap-3 opacity-60"><Calendar size={14} /> Joined: {new Date(selectedUser.createdAt).toLocaleDateString()}</div>
+                <div className="flex items-center gap-3 opacity-60"><ShoppingCart size={14} /> Transactions: {selectedUser.orders?.length || 0}</div>
               </div>
 
               {selectedUser.address && (
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-sm text-gray-500 mb-1">Address</p>
-                  <p className="text-gray-600">{selectedUser.address}</p>
+                <div className="p-4 bg-gray-100 border-l-4 border-zinc-900 italic font-bold text-xs uppercase tracking-tight">
+                  Loc: {selectedUser.address}
                 </div>
               )}
 
-              <div className="flex justify-end">
-                <button
-                  onClick={() => setSelectedUser(null)}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Role Modal */}
-      {editingUser && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between p-6 border-b">
-              <h2 className="text-xl font-semibold text-gray-800">
-                Update User Role
-              </h2>
-              <button
-                onClick={() => setEditingUser(null)}
-                className="p-2 hover:bg-gray-100 rounded-lg"
-              >
-                <X size={20} />
+              <button onClick={() => setSelectedUser(null)} className="w-full py-4 bg-black text-white font-black uppercase italic tracking-widest hover:bg-[#ffdf00] hover:text-black transition-colors">
+                Close_Registry
               </button>
             </div>
-            <div className="p-6">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
-                  {editingUser.image ? (
-                    <img
-                      src={editingUser.image}
-                      alt={editingUser.name}
-                      className="w-full h-full rounded-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-purple-700 font-semibold">
-                      {editingUser.name?.charAt(0) || "U"}
-                    </span>
-                  )}
-                </div>
-                <div>
-                  <p className="font-medium text-gray-800">
-                    {editingUser.name || "Unknown"}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {editingUser.email || "No email"}
-                  </p>
-                </div>
-              </div>
+          </div>
+        </div>
+      )}
 
+      {/* Role Update Modal */}
+      {editingUser && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="bg-white border-4 border-zinc-900 w-full max-w-md relative overflow-hidden">
+            <div className="p-8">
+              <h2 className="text-2xl font-black uppercase italic tracking-tighter mb-8 border-b-2 border-zinc-900 pb-4">
+                Access_Protocol
+              </h2>
               <div className="space-y-2">
-                <button
-                  onClick={() => handleRoleUpdate(editingUser._id, "user")}
-                  className={`w-full p-4 rounded-lg text-left transition-colors ${
-                    editingUser.role === "user"
-                      ? "bg-purple-100 border-2 border-purple-500"
-                      : "bg-gray-50 hover:bg-gray-100 border-2 border-transparent"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <User size={20} className="text-gray-600" />
+                {[
+                  { id: 'user', label: 'Regular_Client', desc: 'Standard shopping access' },
+                  { id: 'admin', label: 'Root_Admin', desc: 'Full architectural control' }
+                ].map((role) => (
+                  <button
+                    key={role.id}
+                    onClick={() => handleRoleUpdate(editingUser._id, role.id)}
+                    className={`w-full p-6 border-2 flex justify-between items-center transition-all text-left ${
+                      editingUser.role === role.id
+                        ? "bg-black border-zinc-900 text-white"
+                        : "bg-white border-transparent hover:border-zinc-900 text-black/60 hover:text-black"
+                    }`}
+                  >
                     <div>
-                      <p className="font-medium text-gray-800">User</p>
-                      <p className="text-sm text-gray-500">
-                        Regular customer access
-                      </p>
+                      <p className="text-[10px] font-black uppercase tracking-widest mb-1">{role.label}</p>
+                      <p className="text-[8px] font-bold opacity-40 uppercase">{role.desc}</p>
                     </div>
-                  </div>
-                </button>
-                <button
-                  onClick={() => handleRoleUpdate(editingUser._id, "admin")}
-                  className={`w-full p-4 rounded-lg text-left transition-colors ${
-                    editingUser.role === "admin"
-                      ? "bg-purple-100 border-2 border-purple-500"
-                      : "bg-gray-50 hover:bg-gray-100 border-2 border-transparent"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Shield size={20} className="text-purple-600" />
-                    <div>
-                      <p className="font-medium text-gray-800">Admin</p>
-                      <p className="text-sm text-gray-500">
-                        Full admin panel access
-                      </p>
-                    </div>
-                  </div>
-                </button>
+                    <ChevronRight size={14} />
+                  </button>
+                ))}
               </div>
+              <button onClick={() => setEditingUser(null)} className="mt-8 w-full p-3 bg-gray-100 text-[10px] font-black uppercase tracking-widest hover:bg-black hover:text-white transition-colors">
+                Abort_Protocol
+              </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* Footer Quote */}
+      <footer className="mt-16 text-center border-t border-zinc-900/5 pt-8">
+        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-black/30 italic">
+          User Database Managed By Zengy.go © 2026
+        </p>
+      </footer>
     </div>
   );
 }

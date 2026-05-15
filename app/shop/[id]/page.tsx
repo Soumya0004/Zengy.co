@@ -307,7 +307,7 @@ export default function Page() {
                       className={`px-6 py-2 rounded-full border transition ${
                         selectedSize === s.size
                           ? "bg-black text-white"
-                          : "hover:border-black"
+                          : "hover:border-zinc-900"
                       } disabled:opacity-40`}
                     >
                       {s.size}

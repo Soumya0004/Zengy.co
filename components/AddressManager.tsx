@@ -228,7 +228,7 @@ export default function AddressManager({ onSelectAddress, selectMode = false }: 
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-900"></div>
       </div>
     );
   }
@@ -402,7 +402,7 @@ export default function AddressManager({ onSelectAddress, selectMode = false }: 
                     key={address._id}
                     className={`border-2 rounded-lg p-4 transition ${
                       address.isDefault
-                        ? "border-black bg-gray-50"
+                        ? "border-zinc-900 bg-gray-50"
                         : "border-gray-300 hover:border-gray-400"
                     } ${selectMode ? "cursor-pointer hover:shadow-lg" : ""}`}
                     onClick={() => {

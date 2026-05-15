@@ -1,69 +1,52 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/mongodb";
+import mongoose from "mongoose";
+
+// 1. Import the model files
 import Order from "@/lib/models/Order";
 import User from "@/lib/models/User";
-import mongoose from "mongoose";
+import Collections from "@/lib/models/Collections"; 
+import Address from "@/lib/models/Address"; // Ensure this matches your file name exactly
 
 export async function GET() {
   try {
     await dbConnect();
 
     const orders = await Order.find()
+      .populate("user", "name email")
+      // FIX: Pass the Model object (Address) directly instead of the string "address"
       .populate({
-        path: "user",
-        select: "name email",
+        path: "address",
+        model: Address 
       })
       .populate({
         path: "products.productId",
+        model: Collections, // Use the imported model object here too
         select: "title img price",
       })
-      .populate("address") // ✅ Added population for address
       .sort({ createdAt: -1 })
       .lean();
 
-    const missingUserIds = orders
-      .map((o: any) => o.user)
-      .filter((user: any) =>
-        user && (typeof user === "string" || typeof user === "object") &&
-        !Object.prototype.hasOwnProperty.call(user, "name")
-      )
-      .map((user: any) => user.toString())
-      .filter(Boolean);
-
-    let usersMap: Record<string, any> = {};
-
-    if (missingUserIds.length > 0) {
-      const users = await User.find({
-        _id: { $in: missingUserIds.map((id: any) => new mongoose.Types.ObjectId(id)) },
-      }).select("name email").lean();
-
-      usersMap = Object.fromEntries(users.map((u: any) => [u._id.toString(), u]));
-    }
-
     const transformedOrders = (orders as any[]).map((order) => {
-      let userData;
-      if (order.user && typeof order.user === "object" && Object.prototype.hasOwnProperty.call(order.user, "name")) {
-        userData = order.user;
-      } else if (order.user && usersMap[order.user.toString()]) {
-        userData = usersMap[order.user.toString()];
-      } else {
-        userData = { name: "Unknown", email: "No email" };
-      }
-
       return {
         ...order,
-        user: userData,
-        // Ensure address is handled if it's missing from DB
-        address: order.address || "No address provided", 
+        user: order.user && typeof order.user === "object" && "name" in order.user
+            ? order.user
+            : { name: "Deleted User", email: "N/A" },
+        address: order.address || "Address info unavailable",
         products: (order.products || []).map((p: any) => ({
           ...p,
-          product: p.productId || null,
+          product: p.productId || { title: "Product Unavailable", price: 0 },
         })),
       };
     });
 
     return NextResponse.json({ success: true, orders: transformedOrders });
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: "Failed to fetch orders" }, { status: 500 });
+    console.error("ADMIN_ORDERS_GET_ERROR:", error);
+    return NextResponse.json(
+      { success: false, error: error.message || "Failed to fetch orders" },
+      { status: 500 }
+    );
   }
 }

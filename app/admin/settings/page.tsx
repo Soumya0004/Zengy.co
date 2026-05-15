@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import { 
-  Settings, 
   User, 
   Bell, 
   Shield, 
   Palette,
   Save,
-  Loader2
+  Loader2,
+  ChevronRight,
+  ShieldCheck,
+  CheckCircle2
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 
@@ -30,7 +32,6 @@ export default function SettingsPage() {
 
   const handleSave = async () => {
     setSaving(true);
-    // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
     setSaving(false);
     setSaved(true);
@@ -38,231 +39,187 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-8 bg-[#fdfdfd] min-h-screen pb-20">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 border-b-4 border-zinc-900 pb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Settings</h1>
-          <p className="text-gray-500">Manage your store settings</p>
+          <h1 className="text-5xl font-black italic tracking-tighter uppercase leading-none mb-2">Configurations</h1>
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-black/40">Zengy.go / System_Preferences / 2026</p>
         </div>
         <button
           onClick={handleSave}
           disabled={saving}
-          className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+          className="group flex items-center gap-3 px-8 py-4 bg-black text-white hover:bg-[#ffdf00] hover:text-black transition-all duration-300 disabled:opacity-50 relative overflow-hidden"
         >
-          {saving ? <Loader2 size={20} className="animate-spin" /> : <Save size={20} />}
-          {saving ? "Saving..." : "Save Changes"}
+          {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} className="group-hover:rotate-12 transition-transform" />}
+          <span className="text-xs font-black uppercase tracking-widest">{saving ? "Processing..." : "Commit_Changes"}</span>
         </button>
       </div>
 
+      {/* Success Notification */}
       {saved && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
-          Settings saved successfully!
+        <div className="bg-black text-white p-4 flex items-center gap-3 italic font-black uppercase text-xs tracking-widest animate-in slide-in-from-top-4">
+          <CheckCircle2 size={16} className="text-green-400" />
+          Settings Synchronized Successfully_
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Sidebar */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        {/* Navigation Sidebar */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-            <nav className="space-y-2">
-              {[
-                { icon: User, label: "General", id: "general" },
-                { icon: Bell, label: "Notifications", id: "notifications" },
-                { icon: Shield, label: "Security", id: "security" },
-                { icon: Palette, label: "Appearance", id: "appearance" },
-              ].map((item) => (
-                <button
-                  key={item.id}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
-                >
-                  <item.icon size={20} />
-                  <span className="font-medium">{item.label}</span>
-                </button>
-              ))}
-            </nav>
+          <div className="sticky top-6 space-y-1">
+            {[
+              { icon: User, label: "Core_General", id: "general", active: true },
+              { icon: Bell, label: "Alert_Triggers", id: "notifications" },
+              { icon: Shield, label: "Access_Security", id: "security" },
+              { icon: Palette, label: "Brand_Visuals", id: "appearance" },
+            ].map((item) => (
+              <button
+                key={item.id}
+                className={`w-full flex items-center justify-between group px-4 py-4 border-2 transition-all duration-200 ${
+                  item.active ? "bg-black border-zinc-900 text-white" : "bg-white border-transparent hover:border-zinc-900 text-black/60 hover:text-black"
+                }`}
+              >
+                <div className="flex items-center gap-4">
+                  <item.icon size={18} />
+                  <span className="text-[10px] font-black uppercase tracking-widest">{item.label}</span>
+                </div>
+                <ChevronRight size={14} className={`transition-transform ${item.active ? "opacity-100" : "opacity-0 group-hover:opacity-100 translate-x-[-4px] group-hover:translate-x-0"}`} />
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Content */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* General Settings */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">General Settings</h2>
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Store Name
-                  </label>
-                  <input
-                    type="text"
-                    value={settings.storeName}
-                    onChange={(e) => setSettings({ ...settings, storeName: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Store Email
-                  </label>
-                  <input
-                    type="email"
-                    value={settings.storeEmail}
-                    onChange={(e) => setSettings({ ...settings, storeEmail: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Currency
-                  </label>
-                  <select
-                    value={settings.currency}
-                    onChange={(e) => setSettings({ ...settings, currency: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                  >
-                    <option value="USD">USD - US Dollar</option>
-                    <option value="INR">INR - Indian Rupee</option>
-                    <option value="EUR">EUR - Euro</option>
-                    <option value="GBP">GBP - British Pound</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Timezone
-                  </label>
-                  <select
-                    value={settings.timezone}
-                    onChange={(e) => setSettings({ ...settings, timezone: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                  >
-                    <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
-                    <option value="America/New_York">America/New_York (EST)</option>
-                    <option value="Europe/London">Europe/London (GMT)</option>
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Low Stock Threshold
-                </label>
+        {/* Form Content */}
+        <div className="lg:col-span-3 space-y-10">
+          
+          {/* General Section */}
+          <section className="bg-white border-2 border-zinc-900 p-8 relative">
+            <div className="absolute -top-3 -left-1 bg-black text-white px-2 py-0.5 text-[8px] font-black uppercase">Section_01</div>
+            <h2 className="text-xl font-black uppercase tracking-tighter italic mb-8 flex items-center gap-2">
+              <span className="w-2 h-2 bg-black rounded-full"></span> General_Identity
+            </h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-black/50">Store_Label</label>
                 <input
-                  type="number"
-                  min="0"
-                  value={settings.lowStockThreshold}
-                  onChange={(e) => setSettings({ ...settings, lowStockThreshold: parseInt(e.target.value) || 0 })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                  type="text"
+                  value={settings.storeName}
+                  onChange={(e) => setSettings({ ...settings, storeName: e.target.value })}
+                  className="w-full bg-gray-50 border-2 border-zinc-900 p-4 text-sm font-bold focus:bg-white outline-none transition-colors"
                 />
-                <p className="text-sm text-gray-500 mt-1">
-                  Alert when product stock falls below this number
-                </p>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-black/50">Support_Contact</label>
+                <input
+                  type="email"
+                  value={settings.storeEmail}
+                  onChange={(e) => setSettings({ ...settings, storeEmail: e.target.value })}
+                  className="w-full bg-gray-50 border-2 border-zinc-900 p-4 text-sm font-bold focus:bg-white outline-none transition-colors"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-black/50">Transactional_Currency</label>
+                <select
+                  value={settings.currency}
+                  onChange={(e) => setSettings({ ...settings, currency: e.target.value })}
+                  className="w-full bg-gray-50 border-2 border-zinc-900 p-4 text-sm font-bold appearance-none outline-none cursor-pointer"
+                >
+                  <option value="USD">USD ($)</option>
+                  <option value="INR">INR (₹)</option>
+                  <option value="EUR">EUR (€)</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-black/50">Temporal_Zone</label>
+                <select
+                  value={settings.timezone}
+                  onChange={(e) => setSettings({ ...settings, timezone: e.target.value })}
+                  className="w-full bg-gray-50 border-2 border-zinc-900 p-4 text-sm font-bold appearance-none outline-none cursor-pointer"
+                >
+                  <option value="Asia/Kolkata">IST (UTC+5:30)</option>
+                  <option value="America/New_York">EST (UTC-5:00)</option>
+                </select>
               </div>
             </div>
-          </div>
+          </section>
 
-          {/* Notification Settings */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Notification Settings</h2>
+          {/* Notifications Section */}
+          <section className="bg-black text-white p-8 rounded-br-[80px]">
+            <h2 className="text-xl font-black uppercase tracking-tighter italic mb-8 flex items-center gap-2">
+              <span className="w-2 h-2 bg-white rounded-full"></span> Alert_Matrix
+            </h2>
+            
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="font-medium text-gray-800">Email Notifications</p>
-                  <p className="text-sm text-gray-500">Receive email for important updates</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={settings.emailNotifications}
-                    onChange={(e) => setSettings({ ...settings, emailNotifications: e.target.checked })}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                </label>
-              </div>
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="font-medium text-gray-800">New Order Notifications</p>
-                  <p className="text-sm text-gray-500">Get notified when new orders are placed</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={settings.orderNotifications}
-                    onChange={(e) => setSettings({ ...settings, orderNotifications: e.target.checked })}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                </label>
-              </div>
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="font-medium text-gray-800">User Registration Notifications</p>
-                  <p className="text-sm text-gray-500">Get notified when new users register</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={settings.userNotifications}
-                    onChange={(e) => setSettings({ ...settings, userNotifications: e.target.checked })}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          {/* Security Settings */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Security</h2>
-            <div className="space-y-4">
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center justify-between">
+              {[
+                { id: 'emailNotifications', label: 'Primary Email Logs', desc: 'System-critical event synchronization' },
+                { id: 'orderNotifications', label: 'Inbound Sales Alerts', desc: 'Real-time transaction monitoring' },
+                { id: 'userNotifications', label: 'New Member Protocols', desc: 'User registration event tracking' },
+              ].map((notif) => (
+                <div key={notif.id} className="flex items-center justify-between p-4 border-l-4 border-white/20 bg-white/5 hover:bg-white/10 transition-colors">
                   <div>
-                    <p className="font-medium text-gray-800">Two-Factor Authentication</p>
-                    <p className="text-sm text-gray-500">Add an extra layer of security to your account</p>
+                    <p className="text-xs font-black uppercase tracking-widest leading-none mb-1">{notif.label}</p>
+                    <p className="text-[9px] font-bold text-white/40 uppercase">{notif.desc}</p>
                   </div>
-                  <button className="px-4 py-2 border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50 transition-colors">
-                    Enable
-                  </button>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={settings[notif.id as keyof typeof settings] as boolean}
+                      onChange={(e) => setSettings({ ...settings, [notif.id]: e.target.checked })}
+                      className="sr-only peer"
+                    />
+                    <div className="w-10 h-5 bg-white/10 border border-white/20 peer-focus:outline-none rounded-none peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-none after:h-4 after:w-4 after:transition-all peer-checked:bg-[#ffdf00]"></div>
+                  </label>
                 </div>
-              </div>
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-gray-800">Change Password</p>
-                    <p className="text-sm text-gray-500">Update your admin account password</p>
-                  </div>
-                  <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
-                    Update
-                  </button>
-                </div>
-              </div>
+              ))}
             </div>
-          </div>
+          </section>
 
-          {/* Account Info */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Admin Account</h2>
-            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-              <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center">
-                <span className="text-purple-700 text-2xl font-semibold">
+          {/* Security & Account */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <section className="border-2 border-zinc-900 p-6 bg-white">
+              <h3 className="text-xs font-black uppercase tracking-widest mb-6 flex items-center gap-2">
+                <ShieldCheck size={14} /> Security_Protocol
+              </h3>
+              <div className="space-y-4">
+                <button className="w-full bg-black text-white p-3 text-[10px] font-black uppercase tracking-tighter hover:bg-[#ffdf00] hover:text-black transition-colors">
+                  Activate_2FA
+                </button>
+                <button className="w-full border-2 border-zinc-900 p-3 text-[10px] font-black uppercase tracking-tighter hover:bg-gray-100 transition-colors">
+                  Reset_Auth_Keys
+                </button>
+              </div>
+            </section>
+
+            <section className="border-2 border-zinc-900 p-6 bg-white overflow-hidden relative">
+              <div className="flex items-center gap-4 relative z-10">
+                <div className="w-16 h-16 bg-black text-white flex items-center justify-center font-black text-2xl italic tracking-tighter border-4 border-white outline outline-2 outline-black">
                   {session?.user?.name?.charAt(0) || "A"}
-                </span>
+                </div>
+                <div>
+                  <p className="text-sm font-black uppercase italic leading-none mb-1">{session?.user?.name || "Admin_User"}</p>
+                  <p className="text-[10px] font-bold opacity-40 mb-2">{session?.user?.email}</p>
+                  <span className="text-[8px] font-black bg-black text-white px-2 py-0.5 uppercase tracking-widest">
+                    Root_Access
+                  </span>
+                </div>
               </div>
-              <div>
-                <p className="font-medium text-gray-800">{session?.user?.name || "Admin"}</p>
-                <p className="text-sm text-gray-500">{session?.user?.email}</p>
-                <span className="inline-block mt-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs">
-                  {session?.user?.role || "admin"}
-                </span>
+              {/* Background text decoration */}
+              <div className="absolute -bottom-4 -right-4 text-8xl font-black italic opacity-[0.03] select-none pointer-events-none">
+                USER
               </div>
-            </div>
+            </section>
           </div>
         </div>
       </div>
+
+      {/* Footer Quote */}
+      <footer className="mt-20 text-center border-t border-zinc-900/5 pt-10">
+        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-black/30 italic">
+          High Performance Luxury Streetwear Management © 2026
+        </p>
+      </footer>
     </div>
   );
 }

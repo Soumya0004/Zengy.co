@@ -1,8 +1,12 @@
+import { NextResponse } from "next/server";
+import { dbConnect } from "@/lib/mongodb";
+import mongoose from "mongoose";
+
+// 1. CRITICAL: Register all models for population
 import Order from "@/lib/models/Order";
 import User from "@/lib/models/User";
-import { dbConnect } from "@/lib/mongodb";
-import { NextResponse } from "next/server";
-import mongoose from "mongoose";
+import Collections from "@/lib/models/Collections"; 
+import Address from "@/lib/models/Address";
 
 type SafeUser = {
   _id?: string;
@@ -10,9 +14,20 @@ type SafeUser = {
   email: string;
 };
 
-function isPopulatedUser(user: any): user is SafeUser {
-  return user && typeof user === "object" && "name" in user;
-}
+// Helper to handle the common transformation logic for both GET and PUT
+const transformOrderData = (order: any) => {
+  return {
+    ...order,
+    user: (order.user && typeof order.user === "object" && "name" in order.user)
+      ? order.user
+      : { name: "Unknown", email: "No email" },
+    address: order.address || "No address provided",
+    products: (order.products || []).map((p: any) => ({
+      ...p,
+      product: p.productId || null,
+    })),
+  };
+};
 
 export async function GET(
   request: Request,
@@ -21,63 +36,27 @@ export async function GET(
   try {
     await dbConnect();
 
-    const order: any = await Order.findById(params.id)
+    const order = await Order.findById(params.id)
       .populate("user", "name email")
-      .populate("products.productId", "title img price")
+      .populate({
+        path: "products.productId",
+        model: "Collections" // Matches the name in your Collection model file
+      })
       .populate("address")
       .lean();
 
     if (!order) {
-      return NextResponse.json(
-        { success: false, error: "Order not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: "Order not found" }, { status: 404 });
     }
 
-    let userData: SafeUser;
+    return NextResponse.json({ 
+      success: true, 
+      order: transformOrderData(order) 
+    });
 
-    // ✅ CASE 1: populated
-    if (isPopulatedUser(order.user)) {
-      userData = order.user;
-    }
-
-    // ✅ CASE 2: ObjectId → fetch manually
-    else if (order.user && mongoose.Types.ObjectId.isValid(order.user)) {
-      const u: any = await User.findById(order.user)
-        .select("name email")
-        .lean();
-
-      userData = u || {
-        name: "Unknown",
-        email: "No email",
-      };
-    }
-
-    // ❌ CASE 3: missing
-    else {
-      userData = {
-        name: "Unknown",
-        email: "No email",
-      };
-    }
-
-    const transformedOrder = {
-      ...order,
-      user: userData,
-      address: order.address || "No address provided",
-      products: (order.products || []).map((p: any) => ({
-        ...p,
-        product: p.productId || null,
-      })),
-    };
-
-    return NextResponse.json({ success: true, order: transformedOrder });
   } catch (error: any) {
     console.error("❌ Admin order detail error:", error);
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
 
@@ -87,69 +66,36 @@ export async function PUT(
 ) {
   try {
     await dbConnect();
-
     const { status } = await request.json();
 
     if (!status) {
-      return NextResponse.json(
-        { success: false, error: "Status is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: "Status is required" }, { status: 400 });
     }
 
-    const order: any = await Order.findByIdAndUpdate(
+    const order = await Order.findByIdAndUpdate(
       params.id,
       { status },
       { new: true }
     )
       .populate("user", "name email")
-      .populate("products.productId", "title img price")
+      .populate({
+        path: "products.productId",
+        model: "Collections"
+      })
       .populate("address")
       .lean();
 
     if (!order) {
-      return NextResponse.json(
-        { success: false, error: "Order not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: "Order not found" }, { status: 404 });
     }
 
-    let userData: SafeUser;
+    return NextResponse.json({ 
+      success: true, 
+      order: transformOrderData(order) 
+    });
 
-    if (isPopulatedUser(order.user)) {
-      userData = order.user;
-    } else if (order.user && mongoose.Types.ObjectId.isValid(order.user)) {
-      const u: any = await User.findById(order.user)
-        .select("name email")
-        .lean();
-
-      userData = u || {
-        name: "Unknown",
-        email: "No email",
-      };
-    } else {
-      userData = {
-        name: "Unknown",
-        email: "No email",
-      };
-    }
-
-    const transformedOrder = {
-      ...order,
-      user: userData,
-      address: order.address || "No address provided",
-      products: (order.products || []).map((p: any) => ({
-        ...p,
-        product: p.productId || null,
-      })),
-    };
-
-    return NextResponse.json({ success: true, order: transformedOrder });
   } catch (error: any) {
     console.error("❌ Admin order update error:", error);
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
