@@ -3,6 +3,13 @@ import { dbConnect } from "@/lib/mongodb";
 import Cart from "@/lib/models/Cart";
 import mongoose from "mongoose";
 
+// Define a structured interface for the cart's product subdocument
+interface CartProductItem {
+  price?: number;
+  quantity: number;
+  [key: string]: unknown;
+}
+
 export async function POST(req: Request) {
   try {
     await dbConnect();
@@ -16,7 +23,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
     }
 
-    // ✅ REMOVE from CART (not order)
+    // REMOVE from CART
     const updatedCart = await Cart.findByIdAndUpdate(
       cartId,
       {
@@ -31,9 +38,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Cart not found" }, { status: 404 });
     }
 
-    // ✅ Recalculate total price
-    updatedCart.totalPrice = updatedCart.products.reduce(
-      (sum, item) => sum + (item.price || 0) * item.quantity,
+    // ✅ FIXED: Explicitly typed 'sum' as a number to satisfy compiler requirements
+    updatedCart.totalPrice = (updatedCart.products as CartProductItem[]).reduce(
+      (sum: number, item) => sum + (item.price || 0) * item.quantity,
       0
     );
 
@@ -43,7 +50,7 @@ export async function POST(req: Request) {
       success: true,
       cart: updatedCart,
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("❌ Error removing cart product:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
