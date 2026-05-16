@@ -1,7 +1,11 @@
-import { auth } from "@/auth";
+import NextAuth from "next-auth";
+import { authConfig } from "./auth.config";
 import { NextResponse } from "next/server";
 
-const adminRoutes = ["/admin"]; // startsWith will handle sub-paths
+// Initialize NextAuth with only the edge-compatible config
+const { auth } = NextAuth(authConfig);
+
+const adminRoutes = ["/admin"];
 const adminApiRoutes = ["/api/admin"];
 
 export default auth((req) => {
@@ -13,10 +17,9 @@ export default auth((req) => {
   const isAdminRoute = adminRoutes.some((route) => nextUrl.pathname.startsWith(route));
   const isAdminApiRoute = adminApiRoutes.some((route) => nextUrl.pathname.startsWith(route));
   
-  // 1. Redirect Admin to Dashboard if they are on the Homepage or Login
-  // This ensures that as soon as they login, they get "pushed" to /admin
   const isPublicRoute = nextUrl.pathname === "/" || nextUrl.pathname === "/login";
   
+  // 1. Redirect Admin to Dashboard if they are on the Homepage or Login
   if (isLoggedIn && role === "admin" && isPublicRoute) {
     return NextResponse.redirect(new URL("/admin", nextUrl));
   }

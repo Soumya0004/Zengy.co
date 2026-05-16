@@ -1,11 +1,9 @@
 import NextAuth from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
-
-// ❌ REMOVE static database imports
-// import { dbConnect } from "@/lib/mongodb";
-// import User from "@/lib/models/User";
+import { authConfig } from "./auth.config";
+import { dbConnect } from "@/lib/mongodb";
+import User from "@/lib/models/User";
 
 declare module "next-auth" {
   interface Session {
@@ -18,7 +16,6 @@ declare module "next-auth" {
       role?: string;
     };
   }
-
   interface JWT {
     loginType?: string;
     role?: string;
@@ -26,14 +23,9 @@ declare module "next-auth" {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  trustHost: true,
-
+  ...authConfig,
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-
+    ...authConfig.providers, // Spread Google provider from authConfig
     CredentialsProvider({
       name: "Credentials",
       credentials: {
@@ -41,10 +33,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: {},
       },
       async authorize(credentials) {
-        // ✅ Dynamically import database modules inside the function (Node.js runtime)
-        const { dbConnect } = await import("@/lib/mongodb");
-        const User = (await import("@/lib/models/User")).default;
-
         await dbConnect();
 
         if (!credentials?.email || !credentials?.password) {
@@ -84,41 +72,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
-
-  session: { strategy: "jwt" },
-  secret: process.env.AUTH_SECRET,
-
   callbacks: {
-    async jwt({ token, user, account }) {
-      if (user) {
-        token.sub = user.id;
-        token.role = (user as any).role || "user";
-        token.loginType = (user as any).loginType || "credentials";
-      }
-
-      if (account?.provider) {
-        token.loginType = account.provider;
-      }
-
-      return token;
-    },
-
-    async session({ session, token }) {
-      if (token.sub) {
-        session.user.id = token.sub;
-      }
-      session.user.role = token.role as string;
-      session.user.loginType = token.loginType as string;
-
-      return session;
-    },
-
+    ...authConfig.callbacks,
     async signIn({ user, account }) {
       try {
-        // ✅ Dynamically import database modules inside the callback (Node.js runtime)
-        const { dbConnect } = await import("@/lib/mongodb");
-        const User = (await import("@/lib/models/User")).default;
-
         await dbConnect();
 
         if (account?.provider === "google") {
@@ -148,10 +105,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return false;
       }
     },
-  },
-
-  pages: {
-    signIn: "/login",
-    error: "/login",
   },
 });
