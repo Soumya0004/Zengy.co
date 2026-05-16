@@ -25,7 +25,7 @@ declare module "next-auth" {
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   providers: [
-    ...authConfig.providers, // Spread Google provider from authConfig
+    ...authConfig.providers, 
     CredentialsProvider({
       name: "Credentials",
       credentials: {

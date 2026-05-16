@@ -2,7 +2,7 @@ import NextAuth from "next-auth";
 import { authConfig } from "./auth.config";
 import { NextResponse } from "next/server";
 
-// Initialize NextAuth with only the edge-compatible config
+// Initialize NextAuth with the light, edge-safe config only
 const { auth } = NextAuth(authConfig);
 
 const adminRoutes = ["/admin"];
