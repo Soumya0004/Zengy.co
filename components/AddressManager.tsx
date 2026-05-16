@@ -56,9 +56,10 @@ export default function AddressManager({ onSelectAddress, selectMode = false }: 
       } else {
         setError(res.data.error || "Failed to fetch addresses");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error fetching addresses:", error);
-      setError(error.response?.data?.error || error.message || "Failed to fetch addresses");
+      const err = error as { response?: { data?: { error?: string } }; message?: string };
+      setError(err.response?.data?.error || err.message || "Failed to fetch addresses");
     } finally {
       setLoading(false);
     }
@@ -166,9 +167,10 @@ export default function AddressManager({ onSelectAddress, selectMode = false }: 
           alert(res.data.error || "Failed to save address");
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error saving address:", error);
-      const errorMsg = error.response?.data?.error || error.message || "Failed to save address";
+      const err = error as { response?: { data?: { error?: string } }; message?: string };
+      const errorMsg = err.response?.data?.error || err.message || "Failed to save address";
       alert(errorMsg);
     } finally {
       setSubmitting(false);
@@ -200,9 +202,10 @@ export default function AddressManager({ onSelectAddress, selectMode = false }: 
       } else {
         alert(res.data.error || "Failed to delete address");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error deleting address:", error);
-      alert(error.response?.data?.error || "Failed to delete address");
+      const err = error as { response?: { data?: { error?: string } } };
+      alert(err.response?.data?.error || "Failed to delete address");
     }
   };
 
@@ -219,9 +222,10 @@ export default function AddressManager({ onSelectAddress, selectMode = false }: 
       } else {
         alert(res.data.error || "Failed to set default address");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error setting default address:", error);
-      alert(error.response?.data?.error || "Failed to set default address");
+      const err = error as { response?: { data?: { error?: string } } };
+      alert(err.response?.data?.error || "Failed to set default address");
     }
   };
 

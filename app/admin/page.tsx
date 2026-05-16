@@ -13,6 +13,7 @@ import {
   ChevronRight
 } from "lucide-react";
 import axios from "axios";
+import Image from "next/image";
 
 // Interfaces stay the same to ensure your backend connection works
 interface Order {
@@ -213,7 +214,7 @@ export default function DashboardPage() {
               <div key={product._id} className="p-4 flex items-center gap-4 group">
                 <span className="text-2xl font-black italic opacity-10 group-hover:opacity-100 transition-opacity">0{i + 1}</span>
                 <div className="w-12 h-12 bg-gray-100 border-2 border-zinc-900 overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-500">
-                  <img src={product.img} alt="" className="w-full h-full object-cover scale-110 group-hover:scale-100 transition-transform" />
+                  <Image src={product.img} alt="" className="w-full h-full object-cover scale-110 group-hover:scale-100 transition-transform" />
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-black uppercase tracking-tighter leading-none mb-1">{product.title}</p>

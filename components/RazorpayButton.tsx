@@ -6,13 +6,47 @@ import Script from "next/script";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
+interface CartProduct {
+  _id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  [key: string]: unknown; 
+}
+
+interface RazorpaySuccessResponse {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}
+
+interface RazorpayOptions {
+  key: string | undefined;
+  amount: number;
+  currency: string;
+  name: string;
+  description: string;
+  order_id: string;
+  handler: (res: RazorpaySuccessResponse) => Promise<void>;
+  prefill: {
+    name: string;
+    email: string;
+  };
+  theme: {
+    color: string;
+  };
+  modal: {
+    ondismiss: () => void;
+  };
+}
+
 export default function RazorpayButton({
   amount,
   products,
   addressId,
 }: {
   amount: number;
-  products: any[];
+  products: CartProduct[];
   addressId: string;
 }) {
   const [ready, setReady] = useState(false);
@@ -45,14 +79,14 @@ export default function RazorpayButton({
         amount,
       });
 
-      const options = {
+      const options: RazorpayOptions = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY,
         amount: data.order.amount,
         currency: "INR",
         name: "Your Store Name",
         description: "Order Payment",
         order_id: data.order.id,
-        handler: async (res: any) => {
+        handler: async (res: RazorpaySuccessResponse) => {
           try {
             const verifyRes = await axios.post("/api/payment/verify", {
               razorpay_order_id: res.razorpay_order_id,
@@ -60,7 +94,7 @@ export default function RazorpayButton({
               razorpay_signature: res.razorpay_signature,
               products,
               totalPrice: amount,
-              addressId, // ✅ IMPORTANT: Send addressId
+              addressId, 
             });
 
             if (verifyRes.data.success) {
@@ -87,7 +121,9 @@ export default function RazorpayButton({
         },
       };
 
-      const razor = new (window as any).Razorpay(options);
+      // Safe global access using type assertion to avoid explicit 'any' runtime checks
+      const RazorpayConstructor = (window as unknown as { Razorpay: new (opts: RazorpayOptions) => { open: () => void } }).Razorpay;
+      const razor = new RazorpayConstructor(options);
       razor.open();
     } catch (error) {
       console.error("Payment error:", error);

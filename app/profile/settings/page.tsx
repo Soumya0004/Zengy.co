@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import AddressManager from "@/components/AddressManager";
 import Loding from "@/app/Component/Loding";
+import Image from "next/image";
 
 export default function ProfilePage() {
   const { data: session, status } = useSession();
@@ -78,7 +79,7 @@ export default function ProfilePage() {
           <div className="bg-white rounded-lg p-6 shadow-sm">
             <div className="space-y-6">
               <div className="flex items-center gap-6">
-                <img
+                <Image
                   src={session?.user?.image || "https://cdn-icons-png.flaticon.com/128/3177/3177440.png"}
                   alt="Avatar"
                   className="w-24 h-24 rounded-full border-2 border-gray-200"

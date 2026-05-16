@@ -12,6 +12,7 @@ import {
   Filter,
   Package,
 } from "lucide-react";
+import Image from "next/image";
 
 interface Product {
   _id: string;
@@ -309,7 +310,7 @@ export default function ProductsPage() {
               >
                 <td className="px-4 py-4">
                   <div className="flex items-center gap-4">
-                    <img
+                    <Image
                       src={product.img}
                       alt={product.title}
                       className="w-16 h-16 object-cover border"
@@ -626,7 +627,7 @@ export default function ProductsPage() {
             className="bg-white max-w-3xl w-full border-4 border-zinc-900 overflow-hidden"
           >
             <div className="flex flex-col md:flex-row">
-              <img
+              <Image
                 src={viewingProduct.img}
                 alt={viewingProduct.title}
                 className="w-full md:w-1/2 h-[400px] object-cover"

@@ -17,6 +17,7 @@ import {
   ShoppingCart,
   ChevronRight
 } from "lucide-react";
+import Image from "next/image";
 
 interface User {
   _id: string;
@@ -171,7 +172,7 @@ export default function UsersPage() {
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 border-2 border-zinc-900 bg-white flex items-center justify-center shrink-0 overflow-hidden grayscale group-hover:grayscale-0 transition-all">
                       {user.image ? (
-                        <img src={user.image} alt="" className="w-full h-full object-cover" />
+                        <Image src={user.image} alt="" className="w-full h-full object-cover" />
                       ) : (
                         <span className="text-xl font-black italic">{user.name?.charAt(0) || "U"}</span>
                       )}
@@ -230,8 +231,14 @@ export default function UsersPage() {
               <div className="flex items-center gap-6">
                 <div className="w-24 h-24 border-4 border-zinc-900 grayscale">
                    {selectedUser.image ? (
-                     <img src={selectedUser.image} className="w-full h-full object-cover" />
-                   ) : (
+<div className="relative w-full h-full">
+  <Image 
+    src={selectedUser.image || "/fallback-avatar.png"} 
+    alt={selectedUser.name ? `${selectedUser.name}'s profile picture` : "User profile picture"}
+    fill
+    className="object-cover"
+  />
+</div>                   ) : (
                      <div className="w-full h-full flex items-center justify-center bg-gray-100 text-4xl font-black italic">
                        {selectedUser.name?.charAt(0)}
                      </div>

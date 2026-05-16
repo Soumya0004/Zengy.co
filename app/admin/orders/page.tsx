@@ -17,6 +17,7 @@ import {
   ChevronRight,
   Hash
 } from "lucide-react";
+import Image from "next/image";
 
 interface Order {
   _id: string;
@@ -261,8 +262,12 @@ export default function OrdersPage() {
                   {selectedOrder.products?.map((item, index) => (
                     <div key={index} className="flex items-center gap-4 p-4 border-2 border-zinc-900 bg-white group">
                       <div className="w-12 h-12 border border-zinc-900 grayscale group-hover:grayscale-0 transition-all">
-                        <img src={item.product?.img} className="w-full h-full object-cover" />
-                      </div>
+<Image 
+    src={item.product?.img || "/placeholder-product.png"} 
+    alt={item.product?.title || "Product image"} 
+    fill
+    className="object-cover"
+  />                      </div>
                       <div className="flex-1">
                         <p className="text-[11px] font-black uppercase leading-tight">{item.product?.title}</p>
                         <p className="text-[9px] font-bold opacity-40 uppercase">QTY: {item.quantity} × ${item.price}</p>

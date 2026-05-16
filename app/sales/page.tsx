@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Loding from "@/app/Component/Loding";
+import Image from "next/image";
 
 interface Product {
   _id: string;
@@ -103,9 +104,10 @@ export default function SalePage() {
 
           {/* CARD 1 */}
           <div className="relative rounded-3xl overflow-hidden group">
-            <img
+            <Image
               src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab"
               className="w-full h-[350px] object-cover group-hover:scale-110 transition duration-500"
+              alt="Sale Item 1"
             />
             <div className="absolute inset-0 bg-black/40 flex flex-col justify-end p-6 text-white">
               <h3 className="text-xl font-bold">Up to 50% Off</h3>
@@ -119,9 +121,10 @@ export default function SalePage() {
 
           {/* CARD 2 */}
           <div className="relative rounded-3xl overflow-hidden group">
-            <img
+            <Image
               src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d"
               className="w-full h-[350px] object-cover group-hover:scale-110 transition duration-500"
+              alt="Trending Items"
             />
             <div className="absolute inset-0 bg-black/40 flex flex-col justify-end p-6 text-white">
               <h3 className="text-xl font-bold">Trending Now</h3>
@@ -135,9 +138,10 @@ export default function SalePage() {
 
           {/* CARD 3 */}
           <div className="relative rounded-3xl overflow-hidden group">
-            <img
+            <Image
               src="https://images.unsplash.com/photo-1503342217505-b0a15ec3261c"
               className="w-full h-[350px] object-cover group-hover:scale-110 transition duration-500"
+              alt="New Arrivals"
             />
             <div className="absolute inset-0 bg-black/40 flex flex-col justify-end p-6 text-white">
               <h3 className="text-xl font-bold">New Arrivals</h3>

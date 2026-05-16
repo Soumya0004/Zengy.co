@@ -13,6 +13,7 @@ import {
   ChevronRight,
   Layers
 } from "lucide-react";
+import Image from "next/image";
 
 interface Category {
   name: string;
@@ -178,7 +179,7 @@ export default function CategoriesPage() {
                 {category.products.slice(0, 4).map((product) => (
                   <div key={product._id} className="w-10 h-10 border border-black overflow-hidden grayscale hover:grayscale-0 transition-all bg-gray-100">
                     {product.img ? (
-                      <img src={product.img} className="w-full h-full object-cover" alt="" />
+                      <Image src={product.img} className="w-full h-full object-cover" alt="" />
                     ) : (
                       <Package size={12} className="m-auto mt-3 opacity-20" />
                     )}
@@ -275,7 +276,7 @@ export default function CategoriesPage() {
                   <div key={product._id} className="flex items-center gap-4 p-4 border-2 border-black hover:bg-gray-50 transition-colors group">
                     <div className="w-16 h-16 border border-black grayscale group-hover:grayscale-0 transition-all overflow-hidden shrink-0">
                       {product.img ? (
-                        <img src={product.img} alt="" className="w-full h-full object-cover" />
+                        <Image src={product.img} alt="" className="w-full h-full object-cover" />
                       ) : (
                         <Package size={20} className="m-auto mt-5 opacity-10" />
                       )}

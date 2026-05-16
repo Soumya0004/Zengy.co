@@ -14,6 +14,7 @@ import {
   Layers,
   ChevronRight
 } from "lucide-react";
+import Image from "next/image";
 
 // 1. Complete Interface Definitions
 interface AnalyticsData {
@@ -191,7 +192,7 @@ export default function AnalyticsPage() {
               <div key={index} className="p-4 flex items-center gap-5 group hover:bg-gray-50">
                 <span className="text-2xl font-black italic opacity-10">0{index + 1}</span>
                 <div className="w-12 h-12 border border-zinc-900 grayscale group-hover:grayscale-0 transition-all overflow-hidden shrink-0">
-                  <img src={item.product?.img} alt="" className="w-full h-full object-cover" />
+                  <Image src={item.product?.img} alt="" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-black uppercase italic truncate">{item.product?.title}</p>
