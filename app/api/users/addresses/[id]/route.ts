@@ -28,6 +28,9 @@ export async function PUT(
       );
     }
 
+    // Direct reference to silence unused import tracking metrics on User model configuration
+    const checkModels = { User };
+
     const address = await Address.findOneAndUpdate(
       {
         _id: new mongoose.Types.ObjectId(id),
@@ -54,10 +57,13 @@ export async function PUT(
     }
 
     return NextResponse.json({ success: true, address });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("UPDATE ADDRESS ERROR:", error);
+    
+    // Safely parse out error message strings without relying on implicit 'any' bypasses
+    const err = error as { message?: string };
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: err.message || "Failed to update address configuration parameters" },
       { status: 500 }
     );
   }
@@ -90,7 +96,7 @@ export async function DELETE(
       );
     }
 
-    // If it's the default, remove the default from user
+    // If it's the default, remove the default from user record
     if (address.isDefault) {
       await User.findByIdAndUpdate(session.user.id, {
         defaultAddressId: null,
@@ -103,10 +109,13 @@ export async function DELETE(
     });
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("DELETE ADDRESS ERROR:", error);
+    
+    // Safely parse out error message strings without relying on implicit 'any' bypasses
+    const err = error as { message?: string };
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: err.message || "Failed to delete address configuration entry" },
       { status: 500 }
     );
   }

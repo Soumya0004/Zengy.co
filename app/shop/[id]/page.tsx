@@ -3,7 +3,7 @@
 import axios from "axios";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useRef, useMemo, ReactNode } from "react";
 import { useSession } from "next-auth/react";
 import Loding from "@/app/Component/Loding";
 import Card from "@/app/Component/Card";
@@ -35,7 +35,9 @@ interface Product {
 export default function Page() {
   const router = useRouter();
   const params = useParams();
-  const productId = params?.id as string;
+  
+  // Next.js 15 type assertion safety handling for router parameters
+  const productId = (params?.id ?? "") as string;
   const { data: session } = useSession();
 
   const [product, setProduct] = useState<Product | null>(null);
@@ -71,7 +73,7 @@ export default function Page() {
         console.log('Fetched product:', res.data);
         setProduct(res.data);
       } catch (err) {
-        console.error(err);
+        console.error("Failed to fetch product profiles:", err);
       } finally {
         setLoading(false);
       }
@@ -139,7 +141,12 @@ export default function Page() {
     const ctx = gsap.context(() => {
       gsap.from(containerRef.current, { opacity: 0, duration: 0.6 });
       gsap.from(imgRef.current, { scale: 0.95, opacity: 0, duration: 0.6 });
-      gsap.from(detailsRef.current?.children || [], {
+      
+      const elementsToAnimate = detailsRef.current?.children 
+        ? Array.from(detailsRef.current.children) 
+        : [];
+        
+      gsap.from(elementsToAnimate, {
         y: 20,
         opacity: 0,
         stagger: 0.08,
@@ -193,8 +200,10 @@ export default function Page() {
         alert(`❌ Error: ${res.data?.message || "Failed to add to cart"}`);
         console.error("Cart add failed:", res.data);
       }
-    } catch (err: any) {
-      const errorMsg = err.response?.data?.message || err.message || "Failed to add to cart";
+    } catch (err: unknown) {
+      // Replaced 'any' with type assertions matching axios errors
+      const axiosError = err as { response?: { data?: { message?: string } }; message?: string };
+      const errorMsg = axiosError.response?.data?.message || axiosError.message || "Failed to add to cart";
       alert(`❌ Error: ${errorMsg}`);
       console.error("❌ Error adding to cart:", err);
     } finally {
@@ -226,10 +235,12 @@ export default function Page() {
         alert(`❌ Error: ${res.data?.message || "Failed to add to cart"}`);
         console.error("Cart add failed:", res.data);
       }
-    } catch (err: any) {
-      const errorMsg = err.response?.data?.message || err.message || "Failed to add to cart";
+    } catch (err: unknown) {
+      // Replaced 'any' with type assertions matching axios errors
+      const axiosError = err as { response?: { data?: { message?: string } }; message?: string };
+      const errorMsg = axiosError.response?.data?.message || axiosError.message || "Failed to add to cart";
       alert(`❌ Error: ${errorMsg}`);
-      console.error("❌ Error adding to cart:", err);
+      console.error("❌ Error processing direct payment payload:", err);
     } finally {
       setBuying(false);
     }
@@ -251,13 +262,16 @@ export default function Page() {
         <div className="grid lg:grid-cols-2 gap-16">
           {/* IMAGE */}
           <div ref={imgRef} className="bg-white rounded-3xl p-10 shadow-sm">
-            <Image
-              src={product.img || "/placeholder.png"}
-              alt={product.title}
-              width={600}
-              height={600}
-              className="rounded-2xl object-cover w-full h-[32rem] hover:scale-105 transition"
-            />
+            <div className="w-full h-[32rem] relative overflow-hidden rounded-2xl group">
+              <Image
+                src={product.img || "/placeholder.png"}
+                alt={product.title || "Product showroom spotlight"}
+                fill
+                sizes="(max-w-1024px) 100vw, 600px"
+                priority
+                className="object-cover rounded-2xl hover:scale-105 transition duration-300"
+              />
+            </div>
           </div>
 
           {/* DETAILS */}
@@ -335,7 +349,7 @@ export default function Page() {
                 <button
                   onClick={addToCart}
                   disabled={adding}
-                  className="w-full bg-black text-white py-4 rounded-xl hover:scale-[1.02] transition disabled:opacity-50"
+                  className="w-full bg-black text-white py-4 rounded-xl hover:scale-[1.02] transition disabled:opacity-50 cursor-pointer"
                 >
                   {adding ? "Adding..." : "Add to Cart"}
                 </button>
@@ -343,14 +357,12 @@ export default function Page() {
                 <button
                   onClick={buyNow}
                   disabled={buying}
-                  className="w-full border py-4 rounded-xl hover:bg-gray-100 transition disabled:opacity-50"
+                  className="w-full border py-4 rounded-xl hover:bg-gray-100 transition disabled:opacity-50 cursor-pointer"
                 >
                   {buying ? "Processing..." : "Buy Now"}
                 </button>
               </>
             )}
-
-           
           </div>
         </div>
       </div>

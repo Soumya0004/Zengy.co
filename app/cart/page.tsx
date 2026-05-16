@@ -20,10 +20,21 @@ const RazorpayButton = dynamic(() => import("@/components/RazorpayButton"), {
   ssr: false,
 });
 
-// ✅ ADDED: Import AddressManager dynamically at the top (FIX #2)
+// Import AddressManager dynamically
 const AddressManager = dynamic(() => import("@/components/AddressManager"), {
   ssr: false,
 });
+
+// Explicit Type Bindings to drop 'any' properties completely
+interface AddressObject {
+  _id: string;
+  streetAddress: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  isDefault?: boolean;
+}
 
 interface CartProduct {
   _id: string;
@@ -96,10 +107,11 @@ export default function CartPage() {
       try {
         const res = await axios.get("/api/users/addresses");
         if (res.data.success) {
-          const addresses = res.data.addresses;
-          // ✅ FIX #3: Added safety check to only set if no address selected yet
+          const addresses: AddressObject[] = res.data.addresses || [];
+          
+          // Safety check to only set if no address selected yet
           if (addresses.length > 0 && !selectedAddressId) {
-            const defaultAddress = addresses.find((a: any) => a.isDefault) || addresses[0];
+            const defaultAddress = addresses.find((a) => a.isDefault) || addresses[0];
             const fullAddress = `${defaultAddress.streetAddress}, ${defaultAddress.city}, ${defaultAddress.state} ${defaultAddress.postalCode}, ${defaultAddress.country}`;
             setAddress(fullAddress);
             setSelectedAddressId(defaultAddress._id);
@@ -111,7 +123,7 @@ export default function CartPage() {
     };
 
     fetchAddresses();
-  }, [status]);
+  }, [status, selectedAddressId]); // Added missing tracking dependencies
 
   // Fetch Similar Products
   useEffect(() => {
@@ -177,7 +189,7 @@ export default function CartPage() {
       setUpdating(true);
       const res = await axios.post("/api/cart/itemRemove", {
         cartId: cart?._id,
-        cartItemId, // ✅ Fix: Send cartItemId, not productId
+        cartItemId,
       });
 
       if (res.data.success) {
@@ -232,16 +244,16 @@ export default function CartPage() {
     0
   );
 
-  // Format products for payment
+  // Format products for payment securely
   const productsForPayment = cart.products.map((item) => ({
+    _id: item._id, // Add base unique key mapping rules
     productId: item.product?._id,
-    size: item.size,
+    size: item.size || "",
     quantity: item.quantity,
     price: item.product?.price,
     name: item.product?.title,
   }));
 
-  // ✅ ADDED: Debug log (FIX #5 - can be removed later)
   console.log("FINAL ADDRESS ID:", selectedAddressId);
 
   return (
@@ -317,13 +329,15 @@ export default function CartPage() {
 
               {/* Product Image */}
               {item.product?.img && (
-                <Image
-                  src={item.product.img}
-                  alt={item.product?.title || "Product image"}
-                  width={70}
-                  height={70}
-                  className="w-18 h-18 object-cover rounded-lg"
-                />
+                <div className="w-[70px] h-[70px] relative">
+                  <Image
+                    src={item.product.img}
+                    alt={item.product?.title || "Product image"}
+                    fill
+                    sizes="70px"
+                    className="object-cover rounded-lg"
+                  />
+                </div>
               )}
 
               {/* Remove Button */}
@@ -355,13 +369,13 @@ export default function CartPage() {
                     className="border p-4 rounded-xl bg-white shadow-sm hover:shadow-md transition group cursor-pointer"
                     onClick={() => router.push(`/shop/${product._id}`)}
                   >
-                    <div className="relative mb-3 overflow-hidden rounded-lg">
+                    <div className="relative mb-3 overflow-hidden rounded-lg w-full h-40">
                       <Image
                         src={product.img}
                         alt={product.title}
-                        width={300}
-                        height={300}
-                        className="w-full h-40 object-cover group-hover:scale-110 transition duration-300"
+                        fill
+                        sizes="(max-w-768px) 100vw, 300px"
+                        className="object-cover group-hover:scale-110 transition duration-300"
                       />
                       {product.discount && (
                         <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">
@@ -429,7 +443,7 @@ export default function CartPage() {
             </div>
           </div>
 
-          {/* ✅ FIX #4: Payment Button with hard validation */}
+          {/* Payment Button */}
           <div className="mt-6">
             <RazorpayButton
               amount={subtotal}
@@ -463,7 +477,7 @@ export default function CartPage() {
             <div className="p-6">
               <AddressManager
                 selectMode
-                onSelectAddress={(addr: any) => {
+                onSelectAddress={(addr: AddressObject) => {
                   const full = `${addr.streetAddress}, ${addr.city}, ${addr.state} ${addr.postalCode}, ${addr.country}`;
                   setAddress(full);
                   setSelectedAddressId(addr._id);
@@ -477,5 +491,3 @@ export default function CartPage() {
     </div>
   );
 }
-
-// ❌ REMOVED: The duplicate dynamic import from the bottom (FIX #1)

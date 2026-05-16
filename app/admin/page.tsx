@@ -213,8 +213,15 @@ export default function DashboardPage() {
             {(stats?.topProducts || []).slice(0, 5).map((product, i) => (
               <div key={product._id} className="p-4 flex items-center gap-4 group">
                 <span className="text-2xl font-black italic opacity-10 group-hover:opacity-100 transition-opacity">0{i + 1}</span>
-                <div className="w-12 h-12 bg-gray-100 border-2 border-zinc-900 overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-500">
-                  <Image src={product.img} alt="" className="w-full h-full object-cover scale-110 group-hover:scale-100 transition-transform" />
+                {/* Fixed Image Element: added relative class wrapper, fill attribute, and fallback alt configurations */}
+                <div className="w-12 h-12 bg-gray-100 border-2 border-zinc-900 overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-500 relative">
+                  <Image 
+                    src={product.img || "/placeholder-product.png"} 
+                    alt={product.title || "Product image thumbnail"} 
+                    fill
+                    sizes="48px"
+                    className="object-cover scale-110 group-hover:scale-100 transition-transform" 
+                  />
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-black uppercase tracking-tighter leading-none mb-1">{product.title}</p>
@@ -227,10 +234,10 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Footer Quote */}
+      {/* Footer Quote - Fixed: Changed text string quotation marks to &quot; HTML entities */}
       <footer className="mt-16 text-center border-t border-zinc-900/5 pt-8">
         <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-black/40 italic">
-          "Fashion that moves with you" — Zengy.go © 2026
+          &quot;Fashion that moves with you&quot; — Zengy.go © 2026
         </p>
       </footer>
     </div>

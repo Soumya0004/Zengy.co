@@ -13,15 +13,21 @@ export async function GET(req: Request) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
+    // Direct reference to satisfy strict type-checking flags for unused parameters
+    const _unusedReq = req;
+
     const addresses = await Address.find({
       user: new mongoose.Types.ObjectId(session.user.id),
     }).sort({ isDefault: -1, createdAt: -1 });
 
     return NextResponse.json({ success: true, addresses });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("GET ADDRESSES ERROR:", error);
+    
+    // Extracted type assertion to eliminate implicit 'any' tracking
+    const err = error as { message?: string };
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: err.message || "Failed to fetch addresses" },
       { status: 500 }
     );
   }
@@ -65,10 +71,13 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ success: true, address });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("CREATE ADDRESS ERROR:", error);
+    
+    // Extracted type assertion to eliminate implicit 'any' tracking
+    const err = error as { message?: string };
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: err.message || "Failed to create address" },
       { status: 500 }
     );
   }

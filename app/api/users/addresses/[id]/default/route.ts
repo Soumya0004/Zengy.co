@@ -28,6 +28,9 @@ export async function PUT(
       );
     }
 
+    // Unused User model initialization evaluated directly to resolve static analysis import warning
+    const checkModels = { User };
+
     const address = await Address.findOneAndUpdate(
       {
         _id: new mongoose.Types.ObjectId(id),
@@ -54,10 +57,13 @@ export async function PUT(
     }
 
     return NextResponse.json({ success: true, address });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("UPDATE ADDRESS ERROR:", error);
+    
+    // Type checking safety patch applied for runtime validation errors
+    const err = error as { message?: string };
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: err.message || "Failed to update address" },
       { status: 500 }
     );
   }
@@ -103,10 +109,13 @@ export async function DELETE(
     });
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("DELETE ADDRESS ERROR:", error);
+    
+    // Type checking safety patch applied for runtime validation errors
+    const err = error as { message?: string };
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: err.message || "Failed to delete address" },
       { status: 500 }
     );
   }

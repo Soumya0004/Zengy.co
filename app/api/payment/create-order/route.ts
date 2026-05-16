@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     }
 
     const order = await razorpay.orders.create({
-      amount: Math.round(Number(amount) * 100), // ✅ ensure number
+      amount: Math.round(Number(amount) * 100), // ensure number
       currency: "INR",
       receipt: `receipt_${Date.now()}`,
     });
@@ -26,10 +26,13 @@ export async function POST(req: Request) {
     console.log("🧾 RAZORPAY ORDER:", order.id);
 
     return NextResponse.json({ success: true, order });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("❌ CREATE ORDER ERROR:", error);
+    
+    // Extracted type assertion to satisfy strict type-checking flags
+    const err = error as { message?: string };
     return NextResponse.json(
-      { success: false, error: error.message || "Order creation failed" },
+      { success: false, error: err.message || "Order creation failed" },
       { status: 500 }
     );
   }

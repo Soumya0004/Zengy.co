@@ -1,6 +1,6 @@
 // /lib/models/Cart.ts
 
-import mongoose, { Schema, Document, Model } from "mongoose";
+import mongoose, { Schema, Document,  } from "mongoose";
 
 export interface ICartProduct {
   product: mongoose.Types.ObjectId;

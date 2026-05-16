@@ -19,6 +19,18 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 
+// 1. Created clear structural interfaces for addresses instead of using 'any'
+interface AddressDetails {
+  street?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  fullName?: string;
+  streetAddress?: string;
+  postalCode?: string;
+  _id?: string;
+}
+
 interface Order {
   _id: string;
   user: { _id: string; name: string; email: string };
@@ -30,7 +42,7 @@ interface Order {
   totalPrice: number;
   status: string;
   paymentId: string;
-  address?: any;
+  address?: string | AddressDetails | null; // Fixed explicit any type here
   createdAt: string;
   updatedAt: string;
 }
@@ -87,10 +99,16 @@ export default function OrdersPage() {
     }
   };
 
-  const renderAddress = (addr: any) => {
+  // Fixed argument explicit 'any' type to safe structural mapping
+  const renderAddress = (addr: string | AddressDetails | null | undefined): string => {
     if (!addr) return "No physical address provided";
     if (typeof addr === "string") return addr;
-    const parts = [addr.street, addr.city, addr.state, addr.zipCode].filter(Boolean);
+    
+    // Support both schema variations (street/city/state/zipCode vs streetAddress/city/state/postalCode)
+    const streetLine = addr.street || addr.streetAddress;
+    const zipLine = addr.zipCode || addr.postalCode;
+    
+    const parts = [streetLine, addr.city, addr.state, zipLine].filter(Boolean);
     return parts.length > 0 ? parts.join(", ") : "REF: " + (addr._id || "NA");
   };
 
@@ -261,13 +279,16 @@ export default function OrdersPage() {
                 <div className="space-y-2">
                   {selectedOrder.products?.map((item, index) => (
                     <div key={index} className="flex items-center gap-4 p-4 border-2 border-zinc-900 bg-white group">
-                      <div className="w-12 h-12 border border-zinc-900 grayscale group-hover:grayscale-0 transition-all">
-<Image 
-    src={item.product?.img || "/placeholder-product.png"} 
-    alt={item.product?.title || "Product image"} 
-    fill
-    className="object-cover"
-  />                      </div>
+                      {/* Fixed: Added 'relative' class to container box wrapper to prevent absolute layout breakdown of filled Next.js images */}
+                      <div className="w-12 h-12 border border-zinc-900 grayscale group-hover:grayscale-0 transition-all relative">
+                        <Image 
+                          src={item.product?.img || "/placeholder-product.png"} 
+                          alt={item.product?.title || "Product image"} 
+                          fill
+                          sizes="48px"
+                          className="object-cover"
+                        />
+                      </div>
                       <div className="flex-1">
                         <p className="text-[11px] font-black uppercase leading-tight">{item.product?.title}</p>
                         <p className="text-[9px] font-bold opacity-40 uppercase">QTY: {item.quantity} × ${item.price}</p>

@@ -11,7 +11,7 @@ export default function ProfilePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("addresses");
-  const [refreshAddresses, setRefreshAddresses] = useState(0);
+  const [refreshAddresses] = useState(0);
 
   useEffect(() => {
     if (status === "unauthenticated") {
