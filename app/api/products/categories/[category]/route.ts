@@ -4,12 +4,14 @@ import { NextResponse } from "next/server";
 
 export async function GET(
   req: Request,
-  { params }: { params: { category: string } }
+  { params }: { params: Promise<{ category: string }> } // ✅ Type params as a Promise
 ) {
   try {
     await dbConnect();
 
-    const category = decodeURIComponent(params.category).trim();
+    // ✅ Await the params object before pulling properties out of it
+    const resolvedParams = await params;
+    const category = decodeURIComponent(resolvedParams.category).trim();
 
     const products = await Collections.find({
       category: { $regex: new RegExp(`^${category}$`, "i") },
@@ -23,7 +25,7 @@ export async function GET(
       },
       { status: 200 }
     );
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Category fetch error:", error);
 
     return NextResponse.json(
