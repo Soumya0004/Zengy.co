@@ -1,17 +1,17 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import cloudinary from "@/lib/cloudinary";
 import { dbConnect } from "@/lib/mongodb";
 import Collections from "@/lib/models/Collections";
 
-interface Params {
-  params: Promise<{ id: string }>;
-}
-
-export async function PUT(req: Request, { params }: Params) {
+export async function PUT(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
     await dbConnect();
 
-    const { id } = await params;
+    const { id } = await context.params;
+
     const formData = await req.formData();
 
     const file = formData.get("img") as File | null;
@@ -20,13 +20,17 @@ export async function PUT(req: Request, { params }: Params) {
     const category = formData.get("category") as string | null;
     const rating = formData.get("rating") as string | null;
 
-    // 👇 REQUIRED for stock update
+    // stock update
     const size = formData.get("size") as string | null;
     const stock = formData.get("stock") as string | null;
 
     const product = await Collections.findById(id);
+
     if (!product) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Product not found" },
+        { status: 404 }
+      );
     }
 
     /* ---------- IMAGE UPLOAD ---------- */
@@ -38,10 +42,16 @@ export async function PUT(req: Request, { params }: Params) {
           const stream = cloudinary.uploader.upload_stream(
             { folder: "products" },
             (error, result) => {
-              if (error || !result) return reject(error);
-              resolve({ secure_url: result.secure_url });
+              if (error || !result) {
+                return reject(error);
+              }
+
+              resolve({
+                secure_url: result.secure_url,
+              });
             }
           );
+
           stream.end(buffer);
         }
       );
@@ -55,11 +65,13 @@ export async function PUT(req: Request, { params }: Params) {
     if (category !== null) product.category = category;
     if (rating !== null) product.rating = Number(rating);
 
-    /* ---------- ✅ SIZE STOCK UPDATE ---------- */
+    /* ---------- SIZE STOCK UPDATE ---------- */
     if (size !== null && stock !== null) {
       const stockNumber = Number(stock);
 
-      const sizeEntry = product.sizes.find((s) => s.size === size);
+      const sizeEntry = product.sizes.find(
+        (s: { size: string; stock: number }) => s.size === size
+      );
 
       if (!sizeEntry) {
         return NextResponse.json(
@@ -77,12 +89,13 @@ export async function PUT(req: Request, { params }: Params) {
       {
         success: true,
         product,
-        availability: product.availability, // virtual
+        availability: product.availability,
       },
       { status: 200 }
     );
   } catch (error) {
     console.error("❌ Update product error:", error);
+
     return NextResponse.json(
       { error: "Server error" },
       { status: 500 }
