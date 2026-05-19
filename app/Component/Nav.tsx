@@ -228,7 +228,7 @@ export default function Nav() {
 
                   <ShoppingCart
                     className="cursor-pointer hover:text-sky-400 hover:scale-110 transition"
-                    onClick={() => router.push("/Cart")}
+                    onClick={() => router.push("/cart")}
                   />
 
                   <LogOut

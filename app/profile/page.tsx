@@ -117,7 +117,7 @@ export default function ProfilePage() {
       <div className="mt-6 flex gap-4 flex-wrap">
 
         <button
-          onClick={() => router.push("/Wishlist")}
+          onClick={() => router.push("/wishlist")}
           className="px-5 py-2 bg-pink-600 text-white rounded-xl 
           hover:bg-pink-700 transition cursor-pointer"
         >
