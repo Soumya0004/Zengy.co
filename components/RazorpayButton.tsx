@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
 import axios from "axios";
 import Script from "next/script";
 import { useSession } from "next-auth/react";
@@ -59,17 +58,17 @@ export default function RazorpayButton({
 
   const pay = async () => {
     if (!session?.user?.id) {
-      toast.error("Please login to continue");
+      alert("Please login to continue");
       return;
     }
 
     if (!addressId) {
-      toast.error("Please select a delivery address");
+      alert("Please select a delivery address");
       return;
     }
 
     if (!products || products.length === 0) {
-      toast.error("Your cart is empty");
+      alert("Your cart is empty");
       return;
     }
 
@@ -101,11 +100,11 @@ export default function RazorpayButton({
             if (verifyRes.data.success) {
               router.push("/profile/orderHistory");
             } else {
-              toast.error("Payment verification failed");
+              alert("Payment verification failed");
             }
           } catch (error) {
             console.error("Verification error:", error);
-            toast.error("Payment verification failed");
+            alert("Payment verification failed");
           }
         },
         prefill: {
@@ -128,7 +127,7 @@ export default function RazorpayButton({
       razor.open();
     } catch (error) {
       console.error("Payment error:", error);
-      toast.error("Failed to initialize payment");
+      alert("Failed to initialize payment");
     } finally {
       setLoading(false);
     }

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { toast } from "react-toastify";
 import axios from "axios";
+// Ensure requests include cookies for NextAuth session
+axios.defaults.withCredentials = true;
 import { X, Edit, Trash2, Check, AlertCircle } from "lucide-react";
 
 interface Address {
@@ -75,38 +76,38 @@ export default function AddressManager({ onSelectAddress, selectMode = false }: 
 
   const validateForm = () => {
     if (!formData.fullName.trim()) {
-      toast.error("Full name is required");
+        alert("Full name is required");
       return false;
     }
     if (!formData.phoneNumber.trim()) {
-      toast.error("Phone number is required");
+        alert("Phone number is required");
       return false;
     }
     if (!formData.streetAddress.trim()) {
-      toast.error("Street address is required");
+        alert("Street address is required");
       return false;
     }
     if (!formData.city.trim()) {
-      toast.error("City is required");
+        alert("City is required");
       return false;
     }
     if (!formData.state.trim()) {
-      toast.error("State is required");
+        alert("State is required");
       return false;
     }
     if (!formData.postalCode.trim()) {
-      toast.error("Postal code is required");
+        alert("Postal code is required");
       return false;
     }
     // Validate phone number (basic)
     const phoneRegex = /^[0-9+\-\s()]{10,15}$/;
     if (!phoneRegex.test(formData.phoneNumber)) {
-      toast.error("Please enter a valid phone number (10-15 digits)");
+      alert("Please enter a valid phone number (10-15 digits)");
       return false;
     }
     // Validate postal code (6 digits for India)
     if (formData.country === "India" && !/^\d{6}$/.test(formData.postalCode)) {
-      toast.error("Please enter a valid 6-digit postal code");
+      alert("Please enter a valid 6-digit postal code");
       return false;
     }
     return true;
@@ -145,7 +146,7 @@ export default function AddressManager({ onSelectAddress, selectMode = false }: 
             addressType: "Home",
           });
           } else {
-          toast.error(res.data.error || "Failed to update address");
+          alert(res.data.error || "Failed to update address");
         }
       } else {
         // Create new address
@@ -165,14 +166,14 @@ export default function AddressManager({ onSelectAddress, selectMode = false }: 
             addressType: "Home",
           });
         } else {
-          toast.error(res.data.error || "Failed to save address");
+          alert(res.data.error || "Failed to save address");
         }
       }
     } catch (error: unknown) {
       console.error("Error saving address:", error);
       const err = error as { response?: { data?: { error?: string } }; message?: string };
       const errorMsg = err.response?.data?.error || err.message || "Failed to save address";
-      toast.error(errorMsg);
+      alert(errorMsg);
     } finally {
       setSubmitting(false);
     }
@@ -201,12 +202,12 @@ export default function AddressManager({ onSelectAddress, selectMode = false }: 
       if (res.data.success) {
         setAddresses(addresses.filter((addr) => addr._id !== id));
         } else {
-        toast.error(res.data.error || "Failed to delete address");
+        alert(res.data.error || "Failed to delete address");
       }
     } catch (error: unknown) {
       console.error("Error deleting address:", error);
       const err = error as { response?: { data?: { error?: string } } };
-      toast.error(err.response?.data?.error || "Failed to delete address");
+      alert(err.response?.data?.error || "Failed to delete address");
     }
   };
 
@@ -221,12 +222,12 @@ export default function AddressManager({ onSelectAddress, selectMode = false }: 
           }))
         );
       } else {
-        toast.error(res.data.error || "Failed to set default address");
+        alert(res.data.error || "Failed to set default address");
       }
     } catch (error: unknown) {
       console.error("Error setting default address:", error);
       const err = error as { response?: { data?: { error?: string } } };
-      toast.error(err.response?.data?.error || "Failed to set default address");
+      alert(err.response?.data?.error || "Failed to set default address");
     }
   };
 

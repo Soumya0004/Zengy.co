@@ -1,7 +1,6 @@
 "use client";
 
 import axios from "axios";
-import { toast } from "react-toastify";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, useRef, useMemo, ReactNode } from "react";
@@ -10,6 +9,9 @@ import Loding from "@/app/Component/Loding";
 import Card from "@/app/Component/Card";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+// 1. Correct import for react-hot-toast
+import toast from "react-hot-toast";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -37,7 +39,6 @@ export default function Page() {
   const router = useRouter();
   const params = useParams();
   
-  // Next.js 15 type assertion safety handling for router parameters
   const productId = (params?.id ?? "") as string;
   const { data: session } = useSession();
 
@@ -71,7 +72,6 @@ export default function Page() {
       try {
         setLoading(true);
         const res = await axios.get(`/api/products/${productId}`);
-        console.log('Fetched product:', res.data);
         setProduct(res.data);
       } catch (err) {
         console.error("Failed to fetch product profiles:", err);
@@ -122,18 +122,6 @@ export default function Page() {
     inStock &&
     (!hasVariants || (selectedSize && selectedStock > 0));
 
-  useEffect(() => {
-    console.log('Stock debug:', {
-      totalStock,
-      selectedStock,
-      selectedSize,
-      hasVariants,
-      inStock,
-      canAdd,
-      sizes: product?.sizes
-    });
-  }, [totalStock, selectedStock, selectedSize, hasVariants, inStock, canAdd, product?.sizes]);
-
   /* ================= ANIMATION ================= */
 
   useEffect(() => {
@@ -161,15 +149,22 @@ export default function Page() {
 
   const validate = () => {
     if (!session?.user?.id) {
-      toast.error("Please login first");
+      // 2. FIXED: Use base toast() with an icon since .info() doesn't exist
+      toast("Please login first to add items to your cart.", {
+        icon: "🔒",
+      });
       return false;
     }
     if (hasVariants && !selectedSize) {
-      toast.error("Please select a size");
+      // 3. FIXED: Use base toast() with an icon since .warning() doesn't exist
+      toast("Please select a size", {
+        icon: "📏",
+      });
       return false;
     }
     if (selectedStock <= 0) {
-      toast.error("Out of stock");
+      // 4. toast.error() is fully supported
+      toast.error("Sorry, this item is out of stock.");
       return false;
     }
     return true;
@@ -196,16 +191,17 @@ export default function Page() {
       });
 
       if (res.data?.success) {
-        toast.success("✅ Added to cart successfully");
+        // 5. toast.success() is fully supported
+        toast.success(`${product?.title} added to cart!`);
       } else {
-        toast.error(`❌ Error: ${res.data?.message || "Failed to add to cart"}`);
+        toast.error(res.data?.message || "Failed to add to cart");
         console.error("Cart add failed:", res.data);
       }
     } catch (err: unknown) {
-      // Replaced 'any' with type assertions matching axios errors
       const axiosError = err as { response?: { data?: { message?: string } }; message?: string };
       const errorMsg = axiosError.response?.data?.message || axiosError.message || "Failed to add to cart";
-      toast.error(`❌ Error: ${errorMsg}`);
+      
+      toast.error(errorMsg);
       console.error("❌ Error adding to cart:", err);
     } finally {
       setAdding(false);
@@ -233,14 +229,14 @@ export default function Page() {
       if (res.data?.success) {
         router.push("/Cart");
       } else {
-        toast.error(`❌ Error: ${res.data?.message || "Failed to add to cart"}`);
+        toast.error(res.data?.message || "Failed to process order");
         console.error("Cart add failed:", res.data);
       }
     } catch (err: unknown) {
-      // Replaced 'any' with type assertions matching axios errors
       const axiosError = err as { response?: { data?: { message?: string } }; message?: string };
       const errorMsg = axiosError.response?.data?.message || axiosError.message || "Failed to add to cart";
-      toast.error(`❌ Error: ${errorMsg}`);
+      
+      toast.error(errorMsg);
       console.error("❌ Error processing direct payment payload:", err);
     } finally {
       setBuying(false);
