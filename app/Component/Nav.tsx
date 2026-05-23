@@ -171,6 +171,12 @@ export default function Nav() {
     return () => window.removeEventListener("scroll", onScroll);
   }, [isAdmin]);
 
+  /* ---------------- CLOSE MOBILE NAV ON ROUTE CHANGE ---------------- */
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
   /* ---------------- LOGOUT ---------------- */
 
   const handleLogout = () => {
@@ -270,7 +276,7 @@ export default function Nav() {
 
         <div
           className={`overflow-hidden transition-all duration-300
-          ${open ? "max-h-[400px] opacity-100" : "max-h-0 opacity-0"}`}
+          ${open ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}
         >
           <div className="bg-white text-black px-4 py-3 space-y-2">
             {navLinks.map((l) => (
@@ -294,12 +300,18 @@ export default function Nav() {
                 <>
                   <UserIcon
                     className="cursor-pointer"
-                    onClick={() => router.push("/profile")}
+                    onClick={() => {
+                      setOpen(false);
+                      router.push("/profile");
+                    }}
                   />
 
                   <ShoppingCart
                     className="cursor-pointer"
-                    onClick={() => router.push("/Cart")}
+                    onClick={() => {
+                      setOpen(false);
+                      router.push("/cart");
+                    }}
                   />
 
                   <LogOut
@@ -320,7 +332,7 @@ export default function Nav() {
         </div>
       </div>
 
-      <div className="h-[64px] md:hidden" />
+      <div className="h-16 md:hidden" />
 
       {/* ================= AUTH MODAL ================= */}
 

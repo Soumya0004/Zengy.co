@@ -135,9 +135,9 @@ const Hero = () => {
     <main
       ref={containerRef}
       className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] items-center text-zinc-800
-    px-5 sm:px-8 md:px-12 lg:px-20 xl:px-28
-    pt-24 sm:pt-32 lg:pt-0 
-    min-h-screen gap-10 lg:gap-20"
+    px-4 sm:px-6 md:px-8 lg:px-20 xl:px-28
+    pt-10 sm:pt-14 lg:pt-0
+    min-h-[calc(100vh-4rem)] lg:min-h-screen gap-8 lg:gap-20"
     >
       <div
         ref={textRef}
@@ -148,7 +148,7 @@ const Hero = () => {
           <>
             <Shuffle
               tag="h1"
-              className="font-zentry special-font text-5xl sm:text-6xl md:text-7xl lg:text-8xl lg:-leading-tight"
+              className="font-zentry special-font text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl leading-tight"
             >
               <b>F</b>as<b>h</b>ion T<b>ha</b>t <br />
               <span className="block md:ml-0 lg:ml-7">
@@ -156,7 +156,7 @@ const Hero = () => {
               </span>
             </Shuffle>
 
-            <p className="text-base sm:text-lg md:text-xl text-zinc-700 max-w-xl font-circular-web md:mx-auto lg:ml-7">
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-zinc-700 max-w-full sm:max-w-xl font-circular-web md:mx-auto lg:ml-7">
               At Zengy.go, we create fashion that moves with you — comfortable,
               stylish, and bold clothing designed for everyday energy and
               confidence.
@@ -185,7 +185,7 @@ const Hero = () => {
       <div className="flex flex-col items-center lg:items-start w-full">
         <div
           ref={frameRef}
-          className="w-full max-w-xs sm:max-w-md md:max-w-xl lg:max-w-lg rounded-xl overflow-hidden lg:mb-10"
+          className="w-full max-w-full sm:max-w-md md:max-w-xl lg:max-w-lg rounded-xl overflow-hidden -mt-6 sm:-mt-8 lg:mt-0 mb-8 sm:mb-10 mx-auto"
           onMouseLeave={handleMouseLeave}
           onMouseMove={handleMouseMove}
         >

@@ -342,7 +342,7 @@ export default function Page() {
 
             {/* DESKTOP BUTTONS */}
             {canAdd && (
-              <>
+              <div  className="hidden lg:flex gap-4">
                 <button
                   onClick={addToCart}
                   disabled={adding}
@@ -358,7 +358,7 @@ export default function Page() {
                 >
                   {buying ? "Processing..." : "Buy Now"}
                 </button>
-              </>
+              </div>
             )}
           </div>
         </div>

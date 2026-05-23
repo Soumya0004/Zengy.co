@@ -127,10 +127,10 @@ export default function OrderHistoryPage() {
           return (
             <div
               key={order._id}
-              className="grid grid-cols-4 items-center bg-white shadow-sm rounded-lg px-4 py-4"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 items-start bg-white shadow-sm rounded-lg px-4 py-4 gap-4"
             >
               {/* Product */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-start gap-3 col-span-1">
                 <Image
                   src={product?.img || "/boy.png"}
                   width={60}
@@ -150,7 +150,7 @@ export default function OrderHistoryPage() {
               </div>
 
               {/* Status */}
-              <div>
+              <div className="col-span-1">
                 <span
                   className={`text-sm font-semibold ${
                     order.status === "Delivered"
@@ -167,23 +167,23 @@ export default function OrderHistoryPage() {
               </div>
 
               {/* Total */}
-              <p className="font-semibold">₹{order.totalPrice}</p>
+              <p className="font-semibold col-span-1">₹{order.totalPrice}</p>
 
               {/* Button */}
-              <div className="text-right">
+              <div className="col-span-1 text-left sm:text-right">
                 <button className="px-3 py-1 text-sm rounded-full bg-blue-600 text-white">
                   Order Details
                 </button>
               </div>
 
               {/* ✅ ADDRESS (ONLY ADDITION, UI SAME) */}
-              <div className="col-span-4 text-sm text-gray-600 mt-2">
+              <div className="col-span-1 sm:col-span-2 lg:col-span-4 text-sm text-gray-600 mt-2">
                 {order.address ? (
                   <>
                     <p className="font-medium">
                       {order.address.fullName} • {order.address.phoneNumber}
                     </p>
-                    <p>
+                    <p className="wrap-break-word leading-relaxed">
                       {order.address.streetAddress}, {order.address.city},{" "}
                       {order.address.state} {order.address.postalCode},{" "}
                       {order.address.country}
