@@ -14,11 +14,12 @@ export async function POST(req: Request) {
   try {
     await dbConnect();
 
-    const { cartId, productId } = await req.json();
+    const { cartId, cartItemId, productId } = await req.json();
+    const itemId = cartItemId || productId;
 
     if (
       !mongoose.Types.ObjectId.isValid(cartId) ||
-      !mongoose.Types.ObjectId.isValid(productId)
+      !mongoose.Types.ObjectId.isValid(itemId)
     ) {
       return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
     }
@@ -28,7 +29,7 @@ export async function POST(req: Request) {
       cartId,
       {
         $pull: {
-          products: { _id: productId }, // subdocument id
+          products: { _id: itemId }, // subdocument id
         },
       },
       { new: true }

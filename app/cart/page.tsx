@@ -8,6 +8,7 @@ import gsap from "gsap";
 import axios from "axios";
 import { Trash2, ShoppingCart, Plus, Minus } from "lucide-react";
 import Image from "next/image";
+import { toast } from "react-hot-toast";
 import Loding from "../Component/Loding";
 
 // ⚡ Lazy Load RazorpayButton
@@ -69,6 +70,7 @@ export default function CartPage() {
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [itemUpdating, setItemUpdating] = useState<Record<string, boolean>>({});
   const [similarProducts, setSimilarProducts] = useState<SimilarProduct[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
   const [address, setAddress] = useState<string>("");
@@ -157,6 +159,18 @@ export default function CartPage() {
     }
   }, [cart]);
 
+  const markItemUpdating = (cartItemId: string, loading: boolean) => {
+    setItemUpdating((prev) => {
+      const next = { ...prev };
+      if (loading) {
+        next[cartItemId] = true;
+      } else {
+        delete next[cartItemId];
+      }
+      return next;
+    });
+  };
+
   // Update quantity
   const updateQuantity = async (cartItemId: string, newQuantity: number) => {
     if (newQuantity < 1) {
@@ -164,8 +178,19 @@ export default function CartPage() {
       return;
     }
 
+    const previousCart = cart;
+    if (cart) {
+      setCart({
+        ...cart,
+        products: cart.products.map((item) =>
+          item._id === cartItemId ? { ...item, quantity: newQuantity } : item
+        ),
+      });
+    }
+
+    markItemUpdating(cartItemId, true);
+
     try {
-      setUpdating(true);
       const res = await axios.put("/api/cart/update", {
         cartId: cart?._id,
         cartItemId,
@@ -174,19 +199,32 @@ export default function CartPage() {
 
       if (res.data.success) {
         setCart(res.data.cart);
+      } else {
+        toast.error(res.data.message || "Failed to update quantity");
+        if (previousCart) setCart(previousCart);
       }
     } catch (error) {
       console.error("Error updating quantity:", error);
-      alert("Failed to update quantity");
+      toast.error("Failed to update quantity");
+      if (previousCart) setCart(previousCart);
     } finally {
-      setUpdating(false);
+      markItemUpdating(cartItemId, false);
     }
   };
 
   // Remove item
   const handleRemove = async (cartItemId: string) => {
+    const previousCart = cart;
+    if (cart) {
+      setCart({
+        ...cart,
+        products: cart.products.filter((item) => item._id !== cartItemId),
+      });
+    }
+
+    markItemUpdating(cartItemId, true);
+
     try {
-      setUpdating(true);
       const res = await axios.post("/api/cart/itemRemove", {
         cartId: cart?._id,
         cartItemId,
@@ -194,12 +232,16 @@ export default function CartPage() {
 
       if (res.data.success) {
         setCart(res.data.cart);
+      } else {
+        toast.error(res.data.message || "Failed to remove item");
+        if (previousCart) setCart(previousCart);
       }
     } catch (error) {
       console.error("Error removing item:", error);
-      alert("Failed to remove item");
+      toast.error("Failed to remove item");
+      if (previousCart) setCart(previousCart);
     } finally {
-      setUpdating(false);
+      markItemUpdating(cartItemId, false);
     }
   };
 
@@ -312,7 +354,7 @@ export default function CartPage() {
               <div className="flex items-center gap-2 border rounded-lg px-3 py-1">
                 <button
                   onClick={() => updateQuantity(item._id, item.quantity - 1)}
-                  disabled={updating}
+                  disabled={updating || Boolean(itemUpdating[item._id])}
                   className="text-gray-600 hover:text-black disabled:opacity-50"
                 >
                   <Minus size={16} />
@@ -320,7 +362,7 @@ export default function CartPage() {
                 <span className="w-8 text-center font-medium">{item.quantity}</span>
                 <button
                   onClick={() => updateQuantity(item._id, item.quantity + 1)}
-                  disabled={updating}
+                  disabled={updating || Boolean(itemUpdating[item._id])}
                   className="text-gray-600 hover:text-black disabled:opacity-50"
                 >
                   <Plus size={16} />
@@ -343,7 +385,7 @@ export default function CartPage() {
               {/* Remove Button */}
               <button
                 onClick={() => handleRemove(item._id)}
-                disabled={updating}
+                disabled={updating || Boolean(itemUpdating[item._id])}
                 className="text-red-500 hover:text-red-700 disabled:opacity-50 cursor-pointer"
               >
                 <Trash2 size={22} />
