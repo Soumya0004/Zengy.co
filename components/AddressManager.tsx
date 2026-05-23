@@ -267,8 +267,8 @@ export default function AddressManager({ onSelectAddress, selectMode = false }: 
         </div>
       )}
 
-      {/* Add/Edit Form - Show first if no addresses */}
-      {addresses.length === 0 && !selectMode ? (
+      {/* FIXED: Removed the `&& !selectMode` restriction so the initial form can render */}
+      {addresses.length === 0 ? (
         <div className="space-y-4">
           <div className="bg-blue-50 border-2 border-blue-200 p-4 rounded-lg">
             <h2 className="text-lg font-bold text-blue-900 mb-2">Add Your First Address</h2>
@@ -475,174 +475,172 @@ export default function AddressManager({ onSelectAddress, selectMode = false }: 
             )}
           </div>
 
-          {/* Add/Edit Form */}
-          {!selectMode && (
-            <>
-              {!showForm && (
-                <button
-                  onClick={() => {
-                    setShowForm(true);
-                    setEditingId(null);
-                    setFormData({
-                      fullName: "",
-                      phoneNumber: "",
-                      streetAddress: "",
-                      city: "",
-                      state: "",
-                      postalCode: "",
-                      country: "India",
-                      addressType: "Home",
-                    });
-                  }}
-                  className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-900 font-semibold"
-                >
-                  + Add New Address
-                </button>
-              )}
+          {/* FIXED: Removed `!selectMode &&` wrapper to allow adding more addresses in select mode */}
+          <>
+            {!showForm && (
+              <button
+                onClick={() => {
+                  setShowForm(true);
+                  setEditingId(null);
+                  setFormData({
+                    fullName: "",
+                    phoneNumber: "",
+                    streetAddress: "",
+                    city: "",
+                    state: "",
+                    postalCode: "",
+                    country: "India",
+                    addressType: "Home",
+                  });
+                }}
+                className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-900 font-semibold mt-4"
+              >
+                + Add New Address
+              </button>
+            )}
 
-              {showForm && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                  <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                    <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center">
-                      <h3 className="text-xl font-bold">
-                        {editingId ? "Edit Address" : "Add New Address"}
-                      </h3>
+            {showForm && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                  <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center z-10">
+                    <h3 className="text-xl font-bold">
+                      {editingId ? "Edit Address" : "Add New Address"}
+                    </h3>
+                    <button
+                      onClick={() => {
+                        setShowForm(false);
+                        setEditingId(null);
+                      }}
+                      className="p-2 hover:bg-gray-100 rounded-lg"
+                    >
+                      <X size={20} />
+                    </button>
+                  </div>
+                  
+                  <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold mb-2">Full Name *</label>
+                        <input
+                          type="text"
+                          name="fullName"
+                          value={formData.fullName}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold mb-2">Phone Number *</label>
+                        <input
+                          type="tel"
+                          name="phoneNumber"
+                          value={formData.phoneNumber}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                        />
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-semibold mb-2">Street Address *</label>
+                        <textarea
+                          name="streetAddress"
+                          value={formData.streetAddress}
+                          onChange={handleInputChange}
+                          required
+                          rows={2}
+                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black resize-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold mb-2">City *</label>
+                        <input
+                          type="text"
+                          name="city"
+                          value={formData.city}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold mb-2">State *</label>
+                        <input
+                          type="text"
+                          name="state"
+                          value={formData.state}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold mb-2">Postal Code *</label>
+                        <input
+                          type="text"
+                          name="postalCode"
+                          value={formData.postalCode}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold mb-2">Country</label>
+                        <input
+                          type="text"
+                          name="country"
+                          value={formData.country}
+                          onChange={handleInputChange}
+                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold mb-2">Address Type</label>
+                        <select
+                          name="addressType"
+                          value={formData.addressType}
+                          onChange={handleInputChange}
+                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                        >
+                          <option value="Home">Home</option>
+                          <option value="Work">Work</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3 pt-4">
                       <button
+                        type="button"
                         onClick={() => {
                           setShowForm(false);
                           setEditingId(null);
                         }}
-                        className="p-2 hover:bg-gray-100 rounded-lg"
+                        className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg hover:bg-gray-300 font-semibold"
                       >
-                        <X size={20} />
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={submitting}
+                        className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 font-semibold disabled:bg-green-400"
+                      >
+                        {submitting ? "Saving..." : (editingId ? "Update Address" : "Save Address")}
                       </button>
                     </div>
-                    
-                    <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-semibold mb-2">Full Name *</label>
-                          <input
-                            type="text"
-                            name="fullName"
-                            value={formData.fullName}
-                            onChange={handleInputChange}
-                            required
-                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold mb-2">Phone Number *</label>
-                          <input
-                            type="tel"
-                            name="phoneNumber"
-                            value={formData.phoneNumber}
-                            onChange={handleInputChange}
-                            required
-                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black"
-                          />
-                        </div>
-
-                        <div className="md:col-span-2">
-                          <label className="block text-sm font-semibold mb-2">Street Address *</label>
-                          <textarea
-                            name="streetAddress"
-                            value={formData.streetAddress}
-                            onChange={handleInputChange}
-                            required
-                            rows={2}
-                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black resize-none"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold mb-2">City *</label>
-                          <input
-                            type="text"
-                            name="city"
-                            value={formData.city}
-                            onChange={handleInputChange}
-                            required
-                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold mb-2">State *</label>
-                          <input
-                            type="text"
-                            name="state"
-                            value={formData.state}
-                            onChange={handleInputChange}
-                            required
-                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold mb-2">Postal Code *</label>
-                          <input
-                            type="text"
-                            name="postalCode"
-                            value={formData.postalCode}
-                            onChange={handleInputChange}
-                            required
-                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold mb-2">Country</label>
-                          <input
-                            type="text"
-                            name="country"
-                            value={formData.country}
-                            onChange={handleInputChange}
-                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold mb-2">Address Type</label>
-                          <select
-                            name="addressType"
-                            value={formData.addressType}
-                            onChange={handleInputChange}
-                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black"
-                          >
-                            <option value="Home">Home</option>
-                            <option value="Work">Work</option>
-                            <option value="Other">Other</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-3 pt-4">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowForm(false);
-                            setEditingId(null);
-                          }}
-                          className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg hover:bg-gray-300 font-semibold"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="submit"
-                          disabled={submitting}
-                          className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 font-semibold disabled:bg-green-400"
-                        >
-                          {submitting ? "Saving..." : (editingId ? "Update Address" : "Save Address")}
-                        </button>
-                      </div>
-                    </form>
-                  </div>
+                  </form>
                 </div>
-              )}
-            </>
-          )}
+              </div>
+            )}
+          </>
         </>
       )}
     </div>
