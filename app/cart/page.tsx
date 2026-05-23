@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { toast } from "react-toastify";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -177,7 +178,7 @@ export default function CartPage() {
       }
     } catch (error) {
       console.error("Error updating quantity:", error);
-      alert("Failed to update quantity");
+      toast.error("Failed to update quantity");
     } finally {
       setUpdating(false);
     }
@@ -197,7 +198,7 @@ export default function CartPage() {
       }
     } catch (error) {
       console.error("Error removing item:", error);
-      alert("Failed to remove item");
+      toast.error("Failed to remove item");
     } finally {
       setUpdating(false);
     }

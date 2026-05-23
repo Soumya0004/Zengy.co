@@ -1,6 +1,7 @@
 "use client";
 
 import axios from "axios";
+import { toast } from "react-toastify";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, useRef, useMemo, ReactNode } from "react";
@@ -160,15 +161,15 @@ export default function Page() {
 
   const validate = () => {
     if (!session?.user?.id) {
-      alert("Please login first");
+      toast.error("Please login first");
       return false;
     }
     if (hasVariants && !selectedSize) {
-      alert("Please select a size");
+      toast.error("Please select a size");
       return false;
     }
     if (selectedStock <= 0) {
-      alert("Out of stock");
+      toast.error("Out of stock");
       return false;
     }
     return true;
@@ -195,16 +196,16 @@ export default function Page() {
       });
 
       if (res.data?.success) {
-        alert("✅ Added to cart successfully");
+        toast.success("✅ Added to cart successfully");
       } else {
-        alert(`❌ Error: ${res.data?.message || "Failed to add to cart"}`);
+        toast.error(`❌ Error: ${res.data?.message || "Failed to add to cart"}`);
         console.error("Cart add failed:", res.data);
       }
     } catch (err: unknown) {
       // Replaced 'any' with type assertions matching axios errors
       const axiosError = err as { response?: { data?: { message?: string } }; message?: string };
       const errorMsg = axiosError.response?.data?.message || axiosError.message || "Failed to add to cart";
-      alert(`❌ Error: ${errorMsg}`);
+      toast.error(`❌ Error: ${errorMsg}`);
       console.error("❌ Error adding to cart:", err);
     } finally {
       setAdding(false);
@@ -232,14 +233,14 @@ export default function Page() {
       if (res.data?.success) {
         router.push("/Cart");
       } else {
-        alert(`❌ Error: ${res.data?.message || "Failed to add to cart"}`);
+        toast.error(`❌ Error: ${res.data?.message || "Failed to add to cart"}`);
         console.error("Cart add failed:", res.data);
       }
     } catch (err: unknown) {
       // Replaced 'any' with type assertions matching axios errors
       const axiosError = err as { response?: { data?: { message?: string } }; message?: string };
       const errorMsg = axiosError.response?.data?.message || axiosError.message || "Failed to add to cart";
-      alert(`❌ Error: ${errorMsg}`);
+      toast.error(`❌ Error: ${errorMsg}`);
       console.error("❌ Error processing direct payment payload:", err);
     } finally {
       setBuying(false);
