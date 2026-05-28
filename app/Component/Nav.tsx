@@ -269,9 +269,30 @@ export default function Nav() {
             height={36}
           />
 
-          <button onClick={() => setOpen(!open)}>
-            {open ? <X /> : <Menu />}
-          </button>
+          <div className="flex items-center gap-4">
+            {loggedIn ? (
+              <UserIcon
+                className="cursor-pointer hover:text-sky-400 hover:scale-110 transition"
+                onClick={() => router.push("/profile")}
+              />
+            ) : (
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="hover:text-sky-400"
+              >
+                Login
+              </button>
+            )}
+
+            <ShoppingCart
+              className="cursor-pointer hover:text-sky-400 hover:scale-110 transition"
+              onClick={() => router.push("/cart")}
+            />
+
+            <button onClick={() => setOpen(!open)}>
+              {open ? <X /> : <Menu />}
+            </button>
+          </div>
         </div>
 
         <div
@@ -298,22 +319,6 @@ export default function Nav() {
             <div className="pt-2 border-t flex gap-4">
               {loggedIn ? (
                 <>
-                  <UserIcon
-                    className="cursor-pointer"
-                    onClick={() => {
-                      setOpen(false);
-                      router.push("/profile");
-                    }}
-                  />
-
-                  <ShoppingCart
-                    className="cursor-pointer"
-                    onClick={() => {
-                      setOpen(false);
-                      router.push("/cart");
-                    }}
-                  />
-
                   <LogOut
                     className="cursor-pointer"
                     onClick={handleLogout}
