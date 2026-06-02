@@ -164,7 +164,7 @@ const Hero = () => {
 
             <div className="hidden sm:flex flex-wrap gap-4 pt-6 justify-center lg:justify-start lg:ml-7">
               <Magnet padding={10} magnetStrength={10}>
-                <Link href="./shop">
+                <Link href="./cart">
                   <button className="bg-zinc-800 text-white px-6 py-3 rounded-xl font-semibold">
                     <ShinyText text="Buy Product" speed={3} />
                   </button>
@@ -172,9 +172,11 @@ const Hero = () => {
               </Magnet>
 
               <Magnet padding={10} magnetStrength={10}>
-                <button className="border border-zinc-900 px-6 py-3 rounded-xl font-bold">
-                  Explore Product
-                </button>
+                <Link href="./shop">
+                  <button className="border border-zinc-900 px-6 py-3 rounded-xl font-bold">
+                    Explore Product
+                  </button>
+                </Link>
               </Magnet>
             </div>
           </>
