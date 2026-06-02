@@ -245,7 +245,7 @@ export default function Nav() {
               ) : (
                 <button
                   onClick={() => setShowAuthModal(true)}
-                  className="hover:text-sky-400"
+                  className="hover:text-sky-400" 
                 >
                   Login
                 </button>
