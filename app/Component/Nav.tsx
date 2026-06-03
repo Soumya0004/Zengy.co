@@ -179,8 +179,9 @@ export default function Nav() {
 
   /* ---------------- LOGOUT ---------------- */
 
-  const handleLogout = () => {
-    nextSignOut();
+  const handleLogout = async () => {
+    await nextSignOut({ redirect: false });
+    router.push("/");
   };
 
   /* ---------------- PREVENT HYDRATION ---------------- */
@@ -271,10 +272,17 @@ export default function Nav() {
 
           <div className="flex items-center gap-4">
             {loggedIn ? (
-              <UserIcon
-                className="cursor-pointer hover:text-sky-400 hover:scale-110 transition"
-                onClick={() => router.push("/profile")}
-              />
+              <>
+                <UserIcon
+                  className="cursor-pointer hover:text-sky-400 hover:scale-110 transition"
+                  onClick={() => router.push("/profile")}
+                />
+
+                <ShoppingCart
+                  className="cursor-pointer hover:text-sky-400 hover:scale-110 transition"
+                  onClick={() => router.push("/cart")}
+                />
+              </>
             ) : (
               <button
                 onClick={() => setShowAuthModal(true)}
@@ -283,11 +291,6 @@ export default function Nav() {
                 Login
               </button>
             )}
-
-            <ShoppingCart
-              className="cursor-pointer hover:text-sky-400 hover:scale-110 transition"
-              onClick={() => router.push("/cart")}
-            />
 
             <button onClick={() => setOpen(!open)}>
               {open ? <X /> : <Menu />}
