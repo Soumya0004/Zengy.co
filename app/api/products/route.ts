@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import cloudinary from "@/lib/cloudinary";
 import Collections from "@/lib/models/Collections";
 import { dbConnect } from "@/lib/mongodb";
+import {
+  getProductListCache,
+  invalidateProductListCache,
+  setProductListCache,
+} from "@/lib/product-cache";
 
 //  POST = Add product
 export async function POST(req: Request) {
@@ -141,6 +146,8 @@ export async function POST(req: Request) {
       description,
     });
 
+    await invalidateProductListCache();
+
     return NextResponse.json(
       { success: true, product: newProduct },
       { status: 201 },
@@ -154,9 +161,15 @@ export async function POST(req: Request) {
 //  GET = Fetch all products
 export async function GET() {
   try {
+    const cachedProducts = await getProductListCache<unknown[]>();
+    if (cachedProducts !== null) {
+      return NextResponse.json({ products: cachedProducts }, { status: 200 });
+    }
+
     await dbConnect();
 
     const products = await Collections.find().sort({ createdAt: -1 }); // latest first
+    await setProductListCache(products);
 
     return NextResponse.json({ products }, { status: 200 });
   } catch (error: unknown) {

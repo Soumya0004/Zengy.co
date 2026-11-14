@@ -8,6 +8,36 @@ type Message = {
   sender: "user" | "bot";
 };
 
+const delay = (milliseconds: number) =>
+  new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+async function waitForReply(jobId: string): Promise<string> {
+  const deadline = Date.now() + 90_000;
+
+  while (Date.now() < deadline) {
+    await delay(1_500);
+
+    const response = await fetch(`/api/chatbot/${encodeURIComponent(jobId)}`, {
+      cache: "no-store",
+    });
+    const data = await response.json();
+
+    if (!response.ok && response.status !== 202) {
+      throw new Error(data.error || "Failed to get chatbot status");
+    }
+
+    if (data.status === "completed" && typeof data.reply === "string") {
+      return data.reply;
+    }
+
+    if (data.status === "failed") {
+      throw new Error(data.error || "Chatbot job failed");
+    }
+  }
+
+  throw new Error("Chatbot request timed out");
+}
+
 export default function ChatbotWidget() {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -50,10 +80,15 @@ export default function ChatbotWidget() {
       });
 
       const data = await res.json();
+      if (!res.ok || typeof data.jobId !== "string") {
+        throw new Error(data.error || "Failed to queue chatbot request");
+      }
+
+      const reply = await waitForReply(data.jobId);
 
       const botMsg: Message = {
         id: Date.now() + 1,
-        text: data.reply || "Sorry, I didn't get that.",
+        text: reply || "Sorry, I didn't get that.",
         sender: "bot",
       };
 

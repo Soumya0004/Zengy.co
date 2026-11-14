@@ -1,0 +1,57 @@
+x-next-app: &next-app
+  image: zengy-next-app:local
+  build:
+    context: .
+    args:
+      NEXT_PUBLIC_RAZORPAY_KEY: ${NEXT_PUBLIC_RAZORPAY_KEY:-}
+  env_file:
+    - .env
+  environment:
+    NODE_ENV: production
+    HOSTNAME: 0.0.0.0
+    QUEUE_REDIS_URL: redis://queue-redis:6379
+  expose:
+    - "3000"
+  depends_on:
+    - queue-redis
+  restart: unless-stopped
+
+services:
+  queue-redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - queue_redis_data:/data
+    restart: unless-stopped
+
+  app1:
+    <<: *next-app
+
+  app2:
+    <<: *next-app
+
+  worker:
+    image: zengy-next-app:local
+    command: ["node", "worker.mjs"]
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      QUEUE_REDIS_URL: redis://queue-redis:6379
+    depends_on:
+      - queue-redis
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:stable-alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - app1
+      - app2
+    restart: unless-stopped
+
+volumes:
+  queue_redis_data:

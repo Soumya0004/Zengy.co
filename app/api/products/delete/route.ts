@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import cloudinary from "@/lib/cloudinary";
 import Collections from "@/lib/models/Collections";
 import { dbConnect } from "@/lib/mongodb";
+import { invalidateProductListCache } from "@/lib/product-cache";
+import { enqueueProductImageCleanup } from "@/lib/job-queue";
 
 // ✅ Removed the dynamic Params interface since this is a flat path route
 
@@ -22,18 +24,48 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    // Safety fallback check just in case product.img doesn't exist or is empty
+    let imagePublicId: string | null = null;
     if (product.img) {
       const urlParts = product.img.split("/");
       const publicIdWithExt = urlParts[urlParts.length - 1];
       const folder = urlParts[urlParts.length - 2];
-      const publicId = `${folder}/${publicIdWithExt.split(".")[0]}`;
-      await cloudinary.uploader.destroy(publicId);
+      imagePublicId = `${folder}/${publicIdWithExt.split(".")[0]}`;
     }
     
     await product.deleteOne();
+    await invalidateProductListCache();
 
-    return NextResponse.json({ success: true, message: "Product deleted" }, { status: 200 });
+    let imageCleanup: "not_required" | "queued" | "completed" = "not_required";
+    if (imagePublicId) {
+      try {
+        await enqueueProductImageCleanup(imagePublicId);
+        imageCleanup = "queued";
+      } catch (queueError) {
+        console.error(
+          "Failed to queue product image cleanup; trying it synchronously:",
+          queueError
+        );
+
+        try {
+          await cloudinary.uploader.destroy(imagePublicId);
+          imageCleanup = "completed";
+        } catch (cleanupError) {
+          console.error("Product was deleted, but image cleanup failed:", cleanupError);
+          return NextResponse.json(
+            {
+              error: "Product was deleted, but its image could not be removed.",
+              productDeleted: true,
+            },
+            { status: 500 }
+          );
+        }
+      }
+    }
+
+    return NextResponse.json(
+      { success: true, message: "Product deleted", imageCleanup },
+      { status: 200 }
+    );
   } catch (error: unknown) {
     console.error("Delete product error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });

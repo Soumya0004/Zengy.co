@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import { authConfig } from "./auth.config";
 import { NextResponse } from "next/server";
+import { checkRateLimit } from "./lib/rate-limit";
 
 // Initialize NextAuth with the light, edge-safe config only
 const { auth } = NextAuth(authConfig);
@@ -8,8 +9,26 @@ const { auth } = NextAuth(authConfig);
 const adminRoutes = ["/admin"];
 const adminApiRoutes = ["/api/admin"];
 
-export default auth((req) => {
+export default auth(async (req) => {
   const { nextUrl } = req;
+  if (nextUrl.pathname.startsWith("/api/")) {
+    const rateLimit = await checkRateLimit(req);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Too many requests" },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(rateLimit.retryAfter),
+            "RateLimit-Limit": String(rateLimit.limit),
+            "RateLimit-Remaining": "0",
+            "RateLimit-Reset": String(rateLimit.retryAfter),
+          },
+        }
+      );
+    }
+  }
+
   const isLoggedIn = !!req.auth;
   const user = req.auth?.user;
   const role = user?.role;

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import cloudinary from "@/lib/cloudinary";
 import { dbConnect } from "@/lib/mongodb";
 import Collections from "@/lib/models/Collections";
+import { invalidateProductListCache } from "@/lib/product-cache";
 
 export async function PUT(
   req: NextRequest,
@@ -84,6 +85,7 @@ export async function PUT(
     }
 
     await product.save();
+    await invalidateProductListCache();
 
     return NextResponse.json(
       {

@@ -144,6 +144,10 @@ export default function ProductsPage() {
       fetchProducts();
     } catch (error) {
       console.error("Failed to delete product:", error);
+      if (axios.isAxiosError(error) && error.response?.data?.productDeleted) {
+        await fetchProducts();
+        window.alert(error.response.data.error);
+      }
     }
   };
 

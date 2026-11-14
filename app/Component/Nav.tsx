@@ -21,7 +21,6 @@ import { useRouter, usePathname } from "next/navigation";
 
 gsap.registerPlugin(ScrollTrigger);
 
-/* ---------------- SLIDING / LIQUID NAV LINKS ---------------- */
 
 const SlidingNavLinks = ({
   links,
@@ -85,7 +84,6 @@ const SlidingNavLinks = ({
   );
 };
 
-/* ---------------- MAIN NAV ---------------- */
 
 export default function Nav() {
   const { data: session, status } = useSession();
@@ -112,15 +110,12 @@ export default function Nav() {
 
   const loggedIn = status === "authenticated";
 
-  /* ---------------- ADMIN CHECK ---------------- */
 
   const isAdmin = session?.user?.role === "admin";
 
-  /* ---------------- MOUNT ---------------- */
 
   useEffect(() => setMounted(true), []);
 
-  /* ---------------- DESKTOP GSAP ---------------- */
 
   useEffect(() => {
     if (!mounted || window.innerWidth < 768 || isAdmin) return;
@@ -151,7 +146,6 @@ export default function Nav() {
     };
   }, [mounted, isAdmin]);
 
-  /* ---------------- MOBILE AUTO HIDE ---------------- */
 
   useEffect(() => {
     if (isAdmin) return;
@@ -171,30 +165,25 @@ export default function Nav() {
     return () => window.removeEventListener("scroll", onScroll);
   }, [isAdmin]);
 
-  /* ---------------- CLOSE MOBILE NAV ON ROUTE CHANGE ---------------- */
 
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
 
-  /* ---------------- LOGOUT ---------------- */
 
   const handleLogout = async () => {
     await nextSignOut({ redirect: false });
     router.push("/");
   };
 
-  /* ---------------- PREVENT HYDRATION ---------------- */
 
   if (!mounted) return null;
 
-  /* ---------------- HIDE NAV FOR ADMIN ---------------- */
 
   if (isAdmin) return null;
 
   return (
     <>
-      {/* ================= DESKTOP NAV ================= */}
 
       <div className="fixed top-0 left-0 w-full pt-5 z-50 hidden md:flex justify-center pointer-events-none">
         <div
@@ -220,7 +209,6 @@ export default function Nav() {
               activePath={pathname}
             />
 
-            {/* AUTH / ICONS */}
 
             <div
               ref={authRef}
@@ -256,7 +244,6 @@ export default function Nav() {
         </div>
       </div>
 
-      {/* ================= MOBILE NAV ================= */}
 
       <div
         className={`md:hidden fixed top-0 left-0 w-full bg-zinc-800 text-white z-50 transition-transform duration-300
@@ -342,7 +329,6 @@ export default function Nav() {
 
       <div className="h-16 md:hidden" />
 
-      {/* ================= AUTH MODAL ================= */}
 
       <Modal
         open={showAuthModal}
