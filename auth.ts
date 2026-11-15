@@ -33,13 +33,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: {},
       },
       async authorize(credentials) {
-        await dbConnect();
-
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error("Missing email or password");
+        const email =
+          typeof credentials?.email === "string"
+            ? credentials.email.trim().toLowerCase()
+            : "";
+        const password =
+          typeof credentials?.password === "string"
+            ? credentials.password
+            : "";
+        if (!email || email.length > 254 || !password || password.length > 1024) {
+          return null;
         }
 
-        const user = await User.findOne({ email: credentials.email }).lean<{
+        await dbConnect();
+
+        const user = await User.findOne({ email }).lean<{
           _id: unknown;
           email: string;
           name?: string;
@@ -48,17 +56,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           password?: string;
         } | null>();
 
-        if (!user || !user.password) {
-          throw new Error("Invalid credentials");
+        if (!user?.password) {
+          return null;
         }
 
-        const isValid = await bcrypt.compare(
-          credentials.password as string,
-          user.password as string
-        );
+        const isValid = await bcrypt.compare(password, user.password);
 
         if (!isValid) {
-          throw new Error("Invalid credentials");
+          return null;
         }
 
         return {
@@ -95,8 +100,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             });
           }
 
-          (user as any).role = existingUser.role;
-          (user as any).id = existingUser._id.toString();
+          const googleUser = user as typeof user & { role?: string };
+          googleUser.role = existingUser.role;
+          googleUser.id = existingUser._id.toString();
         }
 
         return true;

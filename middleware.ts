@@ -34,7 +34,17 @@ export default auth(async (req) => {
   const role = user?.role;
 
   const isAdminRoute = adminRoutes.some((route) => nextUrl.pathname.startsWith(route));
-  const isAdminApiRoute = adminApiRoutes.some((route) => nextUrl.pathname.startsWith(route));
+  const isProductWriteApiRoute =
+    (nextUrl.pathname === "/api/products" && req.method === "POST") ||
+    (nextUrl.pathname.startsWith("/api/products/add/") &&
+      req.method === "POST") ||
+    (nextUrl.pathname.startsWith("/api/products/update/") &&
+      req.method === "PUT") ||
+    (nextUrl.pathname === "/api/products/delete" &&
+      req.method === "DELETE");
+  const isAdminApiRoute =
+    adminApiRoutes.some((route) => nextUrl.pathname.startsWith(route)) ||
+    isProductWriteApiRoute;
   
   const isPublicRoute = nextUrl.pathname === "/" || nextUrl.pathname === "/login";
   

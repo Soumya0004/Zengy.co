@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "test": "node --experimental-default-type=module --experimental-strip-types --test lib/checkout.test.mjs",
     "worker": "node --env-file-if-exists=.env.local worker.mjs",
     "lint": "next lint",
     "seed:sale": "node scripts/seedSaleProducts.js"

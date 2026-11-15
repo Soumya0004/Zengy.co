@@ -5,17 +5,34 @@ import { dbConnect } from "@/lib/mongodb";
 
 export async function POST(req: Request) {
   try {
-    await dbConnect();
-    const { name, email, password, address } = await req.json();
+    const body = await req.json();
+    const name = typeof body?.name === "string" ? body.name.trim() : "";
+    const email =
+      typeof body?.email === "string"
+        ? body.email.trim().toLowerCase()
+        : "";
+    const password =
+      typeof body?.password === "string" ? body.password : "";
+    const address =
+      typeof body?.address === "string" ? body.address.trim() : "";
 
-    // Validate fields
-    if (!name || !email || !password || !address) {
+    if (
+      !name ||
+      name.length > 100 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
+      email.length > 254 ||
+      !address ||
+      address.length > 500 ||
+      Buffer.byteLength(password, "utf8") < 8 ||
+      Buffer.byteLength(password, "utf8") > 72
+    ) {
       return NextResponse.json(
-        { error: "All fields are required" },
+        { error: "Enter valid signup details and a password of 8 to 72 bytes" },
         { status: 400 }
       );
     }
 
+    await dbConnect();
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -44,7 +61,19 @@ export async function POST(req: Request) {
       { status: 201 }
     );
   } catch (err: unknown) {
-    console.error("Signup Error:", (err as Error).message || err);
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "code" in err &&
+      err.code === 11000
+    ) {
+      return NextResponse.json(
+        { error: "User already exists" },
+        { status: 409 }
+      );
+    }
+
+    console.error("Signup Error:", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

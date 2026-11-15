@@ -1,28 +1,26 @@
 import { NextResponse } from "next/server";
 import Wishlist from "@/lib/models/Wishlist";
 import { dbConnect } from "@/lib/mongodb";
-export async function GET(req: Request) {
+import { getAuthenticatedUserId } from "@/lib/api-auth";
+export async function GET() {
   try {
-    await dbConnect();
-
-    const { searchParams } = new URL(req.url);
-    const userId = searchParams.get("userId");
-
+    const userId = await getAuthenticatedUserId();
     if (!userId) {
       return NextResponse.json(
-        { success: false, message: "userId is required" },
-        { status: 400 }
+        { success: false, message: "Unauthorized" },
+        { status: 401 }
       );
     }
 
-    const wishlist = await Wishlist.find({ userId }).lean();
+    await dbConnect();
+
+    const wishlist = await Wishlist.find({ userId: userId.toString() }).lean();
 
     return NextResponse.json({ success: true, wishlist });
   } catch (error: unknown) {
-    const errorMsg = error instanceof Error ? error.message : String(error);
-    console.error("❌ Wishlist GET error:", errorMsg, error);
+    console.error("Wishlist GET error:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to fetch wishlist", details: errorMsg },
+      { success: false, error: "Failed to fetch wishlist" },
       { status: 500 }
     );
   }

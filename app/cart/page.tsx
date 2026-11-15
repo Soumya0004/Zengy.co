@@ -286,18 +286,6 @@ export default function CartPage() {
     0
   );
 
-  // Format products for payment securely
-  const productsForPayment = cart.products.map((item) => ({
-    _id: item._id, // Add base unique key mapping rules
-    productId: item.product?._id,
-    size: item.size || "",
-    quantity: item.quantity,
-    price: item.product?.price,
-    name: item.product?.title,
-  }));
-
-  console.log("FINAL ADDRESS ID:", selectedAddressId);
-
   return (
     <div
       ref={cartRef}
@@ -489,7 +477,6 @@ export default function CartPage() {
           <div className="mt-6">
             <RazorpayButton
               amount={subtotal}
-              products={productsForPayment}
               addressId={selectedAddressId || ""}
             />
           </div>

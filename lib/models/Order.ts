@@ -35,7 +35,7 @@ const OrderSchema = new Schema<IOrder>(
     userEmail: { type: String, required: true },
     products: { type: [OrderProductSchema], required: true },
     totalPrice: { type: Number, required: true },
-    paymentId: { type: String, required: true },
+    paymentId: { type: String, required: true, unique: true },
     status: {
       type: String,
       enum: ["Pending", "Order placed", "Out for delivery", "Delivered", "Canceled"],

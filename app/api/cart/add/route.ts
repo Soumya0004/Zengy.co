@@ -3,23 +3,25 @@ import { dbConnect } from "@/lib/mongodb";
 import Cart, { ICartProduct } from "@/lib/models/Cart";
 import Collections from "@/lib/models/Collections";
 import mongoose from "mongoose";
+import { getAuthenticatedUserId } from "@/lib/api-auth";
 
 export async function POST(req: Request) {
   try {
-    await dbConnect();
-
-    const { userId, productId, size, quantity, price, name } = await req.json();
-
-    if (!userId || !productId || !quantity) {
+    const mongoUserId = await getAuthenticatedUserId();
+    if (!mongoUserId) {
       return NextResponse.json(
-        { success: false, message: "Missing required fields" },
-        { status: 400 }
+        { success: false, message: "Unauthorized" },
+        { status: 401 }
       );
     }
 
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
+    await dbConnect();
+
+    const { productId, size, quantity } = await req.json();
+
+    if (!productId || !quantity) {
       return NextResponse.json(
-        { success: false, message: "Invalid user ID" },
+        { success: false, message: "Missing required fields" },
         { status: 400 }
       );
     }
@@ -31,7 +33,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Determine the price to store in the cart (prefer client-supplied, fallback to product pricing)
     const collection = await Collections.findById(productId);
     if (!collection) {
       return NextResponse.json(
@@ -40,16 +41,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const discount = typeof collection.discount === "number" ? collection.discount : 0;
-    const computedPrice = Math.round(collection.price * (1 - discount / 100));
-
-    const itemPrice = typeof price === "number" && price > 0 ? price : computedPrice;
-    const itemName = name || collection.title;
-
     const qty = Number(quantity);
-    if (qty <= 0) {
+    if (!Number.isSafeInteger(qty) || qty <= 0) {
       return NextResponse.json(
-        { success: false, message: "Quantity must be > 0" },
+        { success: false, message: "Quantity must be a positive integer" },
         { status: 400 }
       );
     }
@@ -62,7 +57,6 @@ export async function POST(req: Request) {
       );
     }
 
-    const mongoUserId = new mongoose.Types.ObjectId(userId);
     const productObjId = new mongoose.Types.ObjectId(productId);
 
     let cart = await Cart.findOne({ user: mongoUserId });
@@ -104,8 +98,8 @@ export async function POST(req: Request) {
         product: productObjId,
         size,
         quantity: qty,
-        price: itemPrice,
-        name: itemName,
+        price: collection.price,
+        name: collection.title,
       });
     }
 
@@ -123,11 +117,10 @@ export async function POST(req: Request) {
       cart,
     });
   } catch (error) {
-    const errorMsg = error instanceof Error ? error.message : String(error);
-    console.error("❌ Error adding to cart:", errorMsg, error);
+    console.error("Error adding to cart:", error);
 
     return NextResponse.json(
-      { success: false, message: "Internal Server Error", details: errorMsg },
+      { success: false, message: "Internal Server Error" },
       { status: 500 }
     );
   }

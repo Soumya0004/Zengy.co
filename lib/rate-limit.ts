@@ -14,7 +14,9 @@ type RateLimitPolicy = {
 
 const policies: Array<{ path: string; policy: RateLimitPolicy }> = [
   { path: "/api/auth/signup", policy: { limit: 5, windowMs: 15 * 60 * 1000 } }, 
+  { path: "/api/auth/callback/credentials", policy: { limit: 10, windowMs: 60 * 1000 } },
   { path: "/api/chatbot", policy: { limit: 20, windowMs: 60 * 1000 } },
+  { path: "/api/payment", policy: { limit: 10, windowMs: 60 * 1000 } },
 ];
 const defaultPolicy: RateLimitPolicy = { limit: 120, windowMs: 60 * 1000 };
 const chatbotStatusPolicy: RateLimitPolicy = { limit: 60, windowMs: 60 * 1000 };

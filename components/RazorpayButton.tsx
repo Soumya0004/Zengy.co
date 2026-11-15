@@ -7,14 +7,6 @@ import Script from "next/script";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
-interface CartProduct {
-  _id: string;
-  name: string;
-  price: number;
-  quantity: number;
-  [key: string]: unknown; 
-}
-
 interface RazorpaySuccessResponse {
   razorpay_order_id: string;
   razorpay_payment_id: string;
@@ -43,11 +35,9 @@ interface RazorpayOptions {
 
 export default function RazorpayButton({
   amount,
-  products,
   addressId,
 }: {
   amount: number;
-  products: CartProduct[];
   addressId: string;
 }) {
   const [ready, setReady] = useState(false);
@@ -68,7 +58,7 @@ export default function RazorpayButton({
       return;
     }
 
-    if (!products || products.length === 0) {
+    if (amount <= 0) {
       toast.error("Your cart is empty");
       return;
     }
@@ -77,7 +67,7 @@ export default function RazorpayButton({
 
     try {
       const { data } = await axios.post("/api/payment/create-order", {
-        amount,
+        addressId,
       });
 
       const options: RazorpayOptions = {
@@ -93,9 +83,6 @@ export default function RazorpayButton({
               razorpay_order_id: res.razorpay_order_id,
               razorpay_payment_id: res.razorpay_payment_id,
               razorpay_signature: res.razorpay_signature,
-              products,
-              totalPrice: amount,
-              addressId, 
             });
 
             if (verifyRes.data.success) {

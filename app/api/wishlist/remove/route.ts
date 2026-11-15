@@ -1,26 +1,34 @@
 import Wishlist from "@/lib/models/Wishlist";
 import { dbConnect } from "@/lib/mongodb";
 import { NextResponse } from "next/server";
+import mongoose from "mongoose";
+import { getAuthenticatedUserId } from "@/lib/api-auth";
 
 export async function DELETE(req: Request) {
   try {
-    await dbConnect();
-    const { userId, productId } = await req.json();
+    const userId = await getAuthenticatedUserId();
+    if (!userId) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
 
-    if (!userId || !productId) {
+    await dbConnect();
+    const { productId } = await req.json();
+
+    if (!productId || !mongoose.Types.ObjectId.isValid(productId)) {
       return NextResponse.json(
-        { message: "userId and productId required" },
+        { message: "A valid productId is required" },
         { status: 400 }
       );
     }
 
-    await Wishlist.findOneAndDelete({ userId, productId });
+    await Wishlist.findOneAndDelete({
+      userId: userId.toString(),
+      productId,
+    });
 
     return NextResponse.json({ message: "Removed from wishlist" });
   } catch (error: unknown) {
-    return NextResponse.json(
-      { error: (error as Error).message },
-      { status: 500 }
-    );
+    console.error("Wishlist remove error:", error);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

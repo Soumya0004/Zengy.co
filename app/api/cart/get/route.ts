@@ -36,7 +36,7 @@ export async function GET() {
     return NextResponse.json(
       {
         success: false,
-        message: err instanceof Error ? err.message : "Something went wrong",
+        message: "Something went wrong",
       },
       { status: 500 }
     );

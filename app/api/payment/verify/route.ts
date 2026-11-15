@@ -1,102 +1,181 @@
 import { NextResponse } from "next/server";
-import crypto from "crypto";
-import mongoose from "mongoose";
-import { dbConnect } from "@/lib/mongodb";
-import Order from "@/lib/models/Order";
-import User from "@/lib/models/User";
-import Address from "@/lib/models/Address";
+import crypto from "node:crypto";
+import Razorpay from "razorpay";
+import { getAuthenticatedUserId } from "@/lib/api-auth";
+import { signaturesMatch } from "@/lib/checkout";
 import Cart from "@/lib/models/Cart";
-import { auth } from "@/auth";
-
-// 1. Declare explicit product mapping type boundaries to remove 'any'
-interface IncomingProductItem {
-  productId?: string;
-  _id?: string;
-  quantity: number;
-  price: number;
-  size?: string;
-  name?: string;
-}
+import Order from "@/lib/models/Order";
+import PaymentAttempt from "@/lib/models/PaymentAttempt";
+import User from "@/lib/models/User";
+import { dbConnect } from "@/lib/mongodb";
 
 export async function POST(req: Request) {
   try {
-    await dbConnect();
-    const session = await auth();
-
-    if (!session?.user?.id) {
+    const userId = await getAuthenticatedUserId();
+    if (!userId) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
+    const keyId = process.env.RAZORPAY_KEY_ID;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    if (!keyId || !keySecret) {
+      console.error("Razorpay credentials are not configured");
+      return NextResponse.json(
+        { success: false, error: "Payment service is unavailable" },
+        { status: 503 }
+      );
+    }
+
+    const body = await req.json();
     const {
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
-      products,
-      totalPrice,
-      addressId, 
-    } = await req.json();
-
-    // Validate inputs
-    if (!addressId || !mongoose.Types.ObjectId.isValid(addressId)) {
-      return NextResponse.json({ success: false, error: "Valid address is required" }, { status: 400 });
+      razorpay_order_id: razorpayOrderId,
+      razorpay_payment_id: razorpayPaymentId,
+      razorpay_signature: razorpaySignature,
+    } = body ?? {};
+    if (
+      typeof razorpayOrderId !== "string" ||
+      typeof razorpayPaymentId !== "string" ||
+      typeof razorpaySignature !== "string" ||
+      razorpayOrderId.length > 100 ||
+      razorpayPaymentId.length > 100
+    ) {
+      return NextResponse.json(
+        { success: false, error: "Invalid payment details" },
+        { status: 400 }
+      );
     }
 
-    // Security: Verify the address belongs to the current user
-    const addressDoc = await Address.findOne({
-      _id: new mongoose.Types.ObjectId(addressId),
-      user: new mongoose.Types.ObjectId(session.user.id),
+    await dbConnect();
+    const attempt = await PaymentAttempt.findOne({
+      razorpayOrderId,
+      user: userId,
     });
-
-    if (!addressDoc) {
-      return NextResponse.json({ success: false, error: "Unauthorized address" }, { status: 403 });
+    if (!attempt) {
+      return NextResponse.json(
+        { success: false, error: "Payment order not found" },
+        { status: 404 }
+      );
     }
 
-    // Verify Razorpay Signature
-    const generatedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET!)
-      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+    const expectedSignature = crypto
+      .createHmac("sha256", keySecret)
+      .update(`${razorpayOrderId}|${razorpayPaymentId}`)
       .digest("hex");
-
-    if (generatedSignature !== razorpay_signature) {
-      return NextResponse.json({ success: false, error: "Invalid payment" }, { status: 400 });
+    if (!signaturesMatch(expectedSignature, razorpaySignature)) {
+      return NextResponse.json(
+        { success: false, error: "Invalid payment signature" },
+        { status: 400 }
+      );
     }
 
-    // Get User details for the order document
-    const user = await User.findById(session.user.id);
-    if (!user) {
-      return NextResponse.json({ success: false, error: "User profile missing" }, { status: 404 });
-    }
-
-    // Create the Order with type constraints applied to the iterator array
-    const order = await Order.create({
-      user: session.user.id,
-      userName: user.name,
-      userEmail: user.email,
-      products: (products as IncomingProductItem[]).map((p) => ({
-        productId: new mongoose.Types.ObjectId(p.productId || p._id),
-        quantity: p.quantity,
-        price: p.price,
-        size: p.size,
-        name: p.name,
-      })),
-      totalPrice,
-      paymentId: razorpay_payment_id,
-      address: new mongoose.Types.ObjectId(addressId), 
-      status: "Order placed",
-    });
-
-    // Clear the User's Cart
-    await Cart.findOneAndUpdate(
-      { user: session.user.id },
-      { $set: { products: [], totalPrice: 0 } }
+    const razorpay = new Razorpay({ key_id: keyId, key_secret: keySecret });
+    const [gatewayOrder, paymentList] = await Promise.all([
+      razorpay.orders.fetch(razorpayOrderId),
+      razorpay.orders.fetchPayments(razorpayOrderId),
+    ]);
+    const payment = paymentList.items.find(
+      (item) => item.id === razorpayPaymentId
     );
+    const expectedAmount = Math.round(attempt.totalPrice * 100);
+    if (
+      gatewayOrder.status !== "paid" ||
+      gatewayOrder.amount !== expectedAmount ||
+      gatewayOrder.currency !== "INR" ||
+      !payment ||
+      payment.order_id !== razorpayOrderId ||
+      payment.status !== "captured" ||
+      payment.amount !== expectedAmount ||
+      payment.currency !== "INR"
+    ) {
+      return NextResponse.json(
+        { success: false, error: "Payment has not been captured" },
+        { status: 400 }
+      );
+    }
+
+    const existingOrder = await Order.findOne({ paymentId: razorpayPaymentId });
+    if (existingOrder) {
+      if (existingOrder.user.toString() !== userId.toString()) {
+        return NextResponse.json(
+          { success: false, error: "Payment is already associated with another order" },
+          { status: 409 }
+        );
+      }
+
+      await Promise.all([
+        Cart.findOneAndUpdate(
+          { user: userId },
+          { $set: { products: [], totalPrice: 0 } }
+        ),
+        PaymentAttempt.updateOne(
+          { _id: attempt._id },
+          { $set: { status: "paid", paymentId: razorpayPaymentId } }
+        ),
+      ]);
+      return NextResponse.json({ success: true, order: existingOrder });
+    }
+
+    const claimedAttempt = await PaymentAttempt.findOneAndUpdate(
+      { _id: attempt._id, status: "created" },
+      { $set: { status: "processing", paymentId: razorpayPaymentId } },
+      { new: true }
+    );
+    if (!claimedAttempt) {
+      return NextResponse.json(
+        { success: false, error: "Payment verification is already in progress" },
+        { status: 409 }
+      );
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      await PaymentAttempt.updateOne(
+        { _id: attempt._id, status: "processing" },
+        { $set: { status: "created" }, $unset: { paymentId: 1 } }
+      );
+      return NextResponse.json(
+        { success: false, error: "User profile missing" },
+        { status: 404 }
+      );
+    }
+
+    let order;
+    try {
+      order = await Order.create({
+        user: userId,
+        userName: user.name,
+        userEmail: user.email,
+        products: attempt.products,
+        totalPrice: attempt.totalPrice,
+        paymentId: razorpayPaymentId,
+        address: attempt.address,
+        status: "Order placed",
+      });
+    } catch (error) {
+      await PaymentAttempt.updateOne(
+        { _id: attempt._id, status: "processing" },
+        { $set: { status: "created" }, $unset: { paymentId: 1 } }
+      );
+      throw error;
+    }
+
+    await Promise.all([
+      Cart.findOneAndUpdate(
+        { user: userId },
+        { $set: { products: [], totalPrice: 0 } }
+      ),
+      PaymentAttempt.updateOne(
+        { _id: attempt._id, status: "processing" },
+        { $set: { status: "paid" } }
+      ),
+    ]);
 
     return NextResponse.json({ success: true, order });
   } catch (error: unknown) {
-    console.error("VERIFY ERROR:", error);
-    
-    // Type checking safety patch applied for runtime validation errors
-    const err = error as { message?: string };
-    return NextResponse.json({ success: false, error: err.message || "Internal server setup verification error" }, { status: 500 });
+    console.error("Payment verification failed:", error);
+    return NextResponse.json(
+      { success: false, error: "Unable to verify payment" },
+      { status: 500 }
+    );
   }
 }
