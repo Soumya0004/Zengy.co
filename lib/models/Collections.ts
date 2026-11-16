@@ -51,6 +51,18 @@ const CollectionSchema = new Schema<ICollection>(
   }
 );
 
+CollectionSchema.index(
+  { createdAt: -1, _id: -1 },
+  { name: "products_created_at_desc" }
+);
+CollectionSchema.index(
+  { category: 1, createdAt: -1, _id: -1 },
+  {
+    name: "products_category_created_at_desc",
+    collation: { locale: "en", strength: 2 },
+  }
+);
+
 /* ================= VIRTUAL ================= */
 
 CollectionSchema.virtual("availability").get(function (this: ICollection) {

@@ -19,30 +19,43 @@ interface Product {
 export default function Page() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [wishlist, setWishlist] = useState<string[]>([]);
   const { data: session } = useSession();
   const searchParams = useSearchParams();
   const category = searchParams.get("category");
 
   useEffect(() => {
+    setPage(1);
+  }, [category]);
+
+  useEffect(() => {
+    const controller = new AbortController();
     const fetchProducts = async () => {
+      setLoading(true);
       try {
         const endpoint = category
           ? `/api/products/categories/${encodeURIComponent(category)}`
           : "/api/products";
 
-        const res = await axios.get(endpoint);
+        const res = await axios.get(endpoint, {
+          params: { page, limit: 24 },
+          signal: controller.signal,
+        });
         const data = Array.isArray(res.data) ? res.data : res.data.products;
         setProducts(data || []);
+        setTotalPages(res.data.totalPages || 1);
       } catch (error) {
-        console.error(error);
+        if (!axios.isCancel(error)) console.error(error);
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     };
 
     fetchProducts();
-  }, [category]);
+    return () => controller.abort();
+  }, [category, page]);
 
   useEffect(() => {
     const fetchWishlist = async () => {
@@ -101,6 +114,30 @@ export default function Page() {
           />
         ))}
       </div>
+
+      {totalPages > 1 && (
+        <div className="mt-8 flex items-center justify-center gap-4">
+          <button
+            type="button"
+            onClick={() => setPage((current) => Math.max(1, current - 1))}
+            disabled={page === 1}
+            className="rounded border border-black px-4 py-2 disabled:opacity-40"
+          >
+            Previous
+          </button>
+          <span aria-live="polite">
+            Page {page} of {totalPages}
+          </span>
+          <button
+            type="button"
+            onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+            disabled={page === totalPages}
+            className="rounded border border-black px-4 py-2 disabled:opacity-40"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 }

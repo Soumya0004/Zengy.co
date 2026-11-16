@@ -3,10 +3,9 @@ import cloudinary from "@/lib/cloudinary";
 import Collections from "@/lib/models/Collections";
 import { dbConnect } from "@/lib/mongodb";
 import {
-  getProductListCache,
-  invalidateProductListCache,
-  setProductListCache,
-} from "@/lib/product-cache";
+  findProductPage,
+  parseProductPagination,
+} from "@/lib/product-query";
 
 //  POST = Add product
 export async function POST(req: Request) {
@@ -146,8 +145,6 @@ export async function POST(req: Request) {
       description,
     });
 
-    await invalidateProductListCache();
-
     return NextResponse.json(
       { success: true, product: newProduct },
       { status: 201 },
@@ -158,20 +155,43 @@ export async function POST(req: Request) {
   }
 }
 
-//  GET = Fetch all products
-export async function GET() {
+// GET = Fetch a product page
+export async function GET(req: Request) {
   try {
-    const cachedProducts = await getProductListCache<unknown[]>();
-    if (cachedProducts !== null) {
-      return NextResponse.json({ products: cachedProducts }, { status: 200 });
+    const url = new URL(req.url);
+    const pagination = parseProductPagination(url.searchParams);
+
+    if (!pagination) {
+      return NextResponse.json(
+        { error: "page must be a positive integer and limit must be between 1 and 100" },
+        { status: 400 }
+      );
     }
 
     await dbConnect();
 
-    const products = await Collections.find().sort({ createdAt: -1 }); // latest first
-    await setProductListCache(products);
+    const category = url.searchParams.get("category")?.trim();
+    const search = url.searchParams.get("search")?.trim();
+    const includeDetails = url.searchParams.get("admin") === "1";
+    const filter: Record<string, unknown> = {};
 
-    return NextResponse.json({ products }, { status: 200 });
+    if (category && category !== "all") {
+      filter.category = category;
+    }
+
+    if (search) {
+      const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      filter.title = { $regex: escapedSearch, $options: "i" };
+    }
+
+    const result = await findProductPage(
+      filter,
+      pagination.page,
+      pagination.limit,
+      includeDetails
+    );
+
+    return NextResponse.json(result, { status: 200 });
   } catch (error: unknown) {
     console.error("Get products error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });

@@ -8,6 +8,7 @@ export async function GET() {
 
     // Find latest 4 products (sorted by createdAt)
     const products = await Collections.find()
+      .select("_id title price img discount category")
       .sort({ createdAt: -1 })
       .limit(4)
       .lean();

@@ -1,33 +1,84 @@
 import { dbConnect } from "@/lib/mongodb";
 import Collections from "@/lib/models/Collections";
 import { NextResponse } from "next/server";
+import {
+  findProductPage,
+  parseProductPagination,
+} from "@/lib/product-query";
 
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ category: string }> } // ✅ Type params as a Promise
+  { params }: { params: Promise<{ category: string }> }
 ) {
   try {
-    await dbConnect();
+    const pagination = parseProductPagination(new URL(req.url).searchParams);
+    if (!pagination) {
+      return NextResponse.json(
+        { error: "page must be a positive integer and limit must be between 1 and 100" },
+        { status: 400 }
+      );
+    }
 
-    // ✅ Await the params object before pulling properties out of it
     const resolvedParams = await params;
-    const category = decodeURIComponent(resolvedParams.category).trim();
+    const category = resolvedParams.category.trim();
+    if (!category) {
+      return NextResponse.json(
+        { success: false, message: "Category is required" },
+        { status: 400 }
+      );
+    }
 
-    const products = await Collections.find({
-      category: { $regex: new RegExp(`^${category}$`, "i") },
-    });
+    await dbConnect();
+    const result = await findProductPage(
+      { category },
+      pagination.page,
+      pagination.limit
+    );
 
     return NextResponse.json(
       {
         success: true,
-        products,
-        count: products.length,
+        ...result,
       },
       { status: 200 }
     );
   } catch (error: unknown) {
     console.error("Category fetch error:", error);
 
+    return NextResponse.json(
+      { success: false, message: "Server error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(
+  _req: Request,
+  { params }: { params: Promise<{ category: string }> }
+) {
+  try {
+    const { category: rawCategory } = await params;
+    const category = rawCategory.trim();
+    if (!category) {
+      return NextResponse.json(
+        { success: false, message: "Category is required" },
+        { status: 400 }
+      );
+    }
+
+    await dbConnect();
+    const result = await Collections.updateMany(
+      { category },
+      { $set: { category: "" } },
+      { collation: { locale: "en", strength: 2 } }
+    );
+
+    return NextResponse.json({
+      success: true,
+      updatedCount: result.modifiedCount,
+    });
+  } catch (error: unknown) {
+    console.error("Category update error:", error);
     return NextResponse.json(
       { success: false, message: "Server error" },
       { status: 500 }

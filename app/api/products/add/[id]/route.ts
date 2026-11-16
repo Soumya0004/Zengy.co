@@ -1,7 +1,6 @@
 import { dbConnect } from "@/lib/mongodb";
 import Collections from "@/lib/models/Collections";
 import { NextResponse } from "next/server";
-import { invalidateProductListCache } from "@/lib/product-cache";
 
 export async function POST(req: Request) {
   try {
@@ -48,8 +47,6 @@ export async function POST(req: Request) {
       discount: body.discount || 0,
       description,
     });
-
-    await invalidateProductListCache();
 
     return NextResponse.json(product, { status: 201 });
   } catch (err) {

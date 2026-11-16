@@ -10,7 +10,6 @@ import {
   Eye,
   X,
   Filter,
-  Package,
 } from "lucide-react";
 import Image from "next/image";
 
@@ -30,6 +29,10 @@ interface Product {
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [refreshVersion, setRefreshVersion] = useState(0);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -55,20 +58,8 @@ export default function ProductsPage() {
   });
 
   useEffect(() => {
-    fetchProducts();
     fetchCategories();
   }, []);
-
-  const fetchProducts = async () => {
-    try {
-      const res = await axios.get("/api/products");
-      setProducts(res.data.products || res.data);
-    } catch (error) {
-      console.error("Failed to fetch products:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const fetchCategories = async () => {
     try {
@@ -78,6 +69,44 @@ export default function ProductsPage() {
       console.error("Failed to fetch categories:", error);
     }
   };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const timeout = window.setTimeout(async () => {
+      setLoading(true);
+      try {
+        const params: Record<string, string | number> = {
+          admin: 1,
+          page,
+          limit: 50,
+        };
+        if (searchTerm.trim()) params.search = searchTerm.trim();
+        if (categoryFilter !== "all") params.category = categoryFilter;
+
+        const res = await axios.get("/api/products", {
+          params,
+          signal: controller.signal,
+        });
+        setProducts(res.data.products || []);
+        setTotalProducts(res.data.totalCount || 0);
+        setTotalPages(res.data.totalPages || 1);
+        if (page > (res.data.totalPages || 1)) {
+          setPage(Math.max(1, res.data.totalPages || 1));
+        }
+      } catch (error) {
+        if (!axios.isCancel(error)) {
+          console.error("Failed to fetch products:", error);
+        }
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    }, searchTerm.trim() ? 250 : 0);
+
+    return () => {
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [page, searchTerm, categoryFilter, refreshVersion]);
 
   const resetForm = () => {
     setEditingProduct(null);
@@ -125,7 +154,8 @@ export default function ProductsPage() {
 
       resetForm();
 
-      fetchProducts();
+      setPage(1);
+      setRefreshVersion((version) => version + 1);
     } catch (error) {
       console.error("Failed to save product:", error);
     } finally {
@@ -141,11 +171,11 @@ export default function ProductsPage() {
         data: { id },
       });
 
-      fetchProducts();
+      setRefreshVersion((version) => version + 1);
     } catch (error) {
       console.error("Failed to delete product:", error);
       if (axios.isAxiosError(error) && error.response?.data?.productDeleted) {
-        await fetchProducts();
+        setRefreshVersion((version) => version + 1);
         window.alert(error.response.data.error);
       }
     }
@@ -204,18 +234,6 @@ export default function ProductsPage() {
     });
   };
 
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch = product.title
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-
-    const matchesCategory =
-      categoryFilter === "all" ||
-      product.category === categoryFilter;
-
-    return matchesSearch && matchesCategory;
-  });
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -234,7 +252,7 @@ export default function ProductsPage() {
           </h1>
 
           <p className="text-xs mt-2 font-bold">
-            Total Products: {products.length}
+            Total Products: {totalProducts}
           </p>
         </div>
 
@@ -263,7 +281,10 @@ export default function ProductsPage() {
             autoComplete="off"
             placeholder="Search products..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setPage(1);
+            }}
             className="w-full border-2 border-zinc-900 pl-10 pr-4 py-3 outline-none"
           />
         </div>
@@ -276,9 +297,10 @@ export default function ProductsPage() {
 
           <select
             value={categoryFilter}
-            onChange={(e) =>
-              setCategoryFilter(e.target.value)
-            }
+            onChange={(e) => {
+              setCategoryFilter(e.target.value);
+              setPage(1);
+            }}
             className="w-full border-2 border-zinc-900 pl-10 pr-4 py-3 outline-none"
           >
             <option value="all">All Categories</option>
@@ -307,7 +329,7 @@ export default function ProductsPage() {
           </thead>
 
           <tbody>
-            {filteredProducts.map((product) => (
+            {products.map((product) => (
               <tr
                 key={product._id}
                 className="border-t border-gray-200 hover:bg-gray-50"
@@ -388,6 +410,30 @@ export default function ProductsPage() {
           </tbody>
         </table>
       </div>
+
+      {totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-center gap-4">
+          <button
+            type="button"
+            onClick={() => setPage((current) => Math.max(1, current - 1))}
+            disabled={page === 1}
+            className="border-2 border-zinc-900 px-4 py-2 disabled:opacity-40"
+          >
+            Previous
+          </button>
+          <span>
+            Page {page} of {totalPages}
+          </span>
+          <button
+            type="button"
+            onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+            disabled={page === totalPages}
+            className="border-2 border-zinc-900 px-4 py-2 disabled:opacity-40"
+          >
+            Next
+          </button>
+        </div>
+      )}
 
       {/* Modal */}
       {showModal && (

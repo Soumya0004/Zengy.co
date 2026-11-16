@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import cloudinary from "@/lib/cloudinary";
 import Collections from "@/lib/models/Collections";
 import { dbConnect } from "@/lib/mongodb";
-import { invalidateProductListCache } from "@/lib/product-cache";
 import { enqueueProductImageCleanup } from "@/lib/job-queue";
 
 // ✅ Removed the dynamic Params interface since this is a flat path route
@@ -33,7 +32,6 @@ export async function DELETE(req: Request) {
     }
     
     await product.deleteOne();
-    await invalidateProductListCache();
 
     let imageCleanup: "not_required" | "queued" | "completed" = "not_required";
     if (imagePublicId) {

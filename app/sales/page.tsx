@@ -6,42 +6,30 @@ import axios from "axios";
 import Loding from "@/app/Component/Loding";
 import Image from "next/image";
 
-interface Product {
-  _id: string;
-  category?: string;
-}
-
 export default function SalePage() {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchCategories = async () => {
       try {
-        const res = await axios.get("/api/products");
-        const items: Product[] = res.data?.products || [];
-        setProducts(items);
+        const res = await axios.get("/api/products/categories");
+        setCategories(res.data?.categories || []);
       } catch (err) {
-        console.error("Failed to fetch products", err);
+        console.error("Failed to fetch categories", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProducts();
+    fetchCategories();
   }, []);
 
   if (loading) return <Loding />;
 
-  const categories = [
+  const categoryLinks = [
     "All",
-    ...Array.from(
-      new Set(
-        products
-          .map((p) => p.category)
-          .filter((c): c is string => Boolean(c))
-      )
-    ),
+    ...categories,
   ];
 
   return (
@@ -75,7 +63,7 @@ export default function SalePage() {
         </h2>
 
         <div className="flex flex-wrap justify-center gap-4">
-          {categories.map((cat) => (
+          {categoryLinks.map((cat) => (
             <Link
               key={cat}
               href={

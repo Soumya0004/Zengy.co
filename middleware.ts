@@ -41,7 +41,9 @@ export default auth(async (req) => {
     (nextUrl.pathname.startsWith("/api/products/update/") &&
       req.method === "PUT") ||
     (nextUrl.pathname === "/api/products/delete" &&
-      req.method === "DELETE");
+      req.method === "DELETE") ||
+    (nextUrl.pathname.startsWith("/api/products/categories/") &&
+      req.method === "PATCH");
   const isAdminApiRoute =
     adminApiRoutes.some((route) => nextUrl.pathname.startsWith(route)) ||
     isProductWriteApiRoute;

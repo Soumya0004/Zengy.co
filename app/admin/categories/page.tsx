@@ -43,25 +43,7 @@ export default function CategoriesPage() {
   const fetchCategories = async () => {
     try {
       const res = await axios.get("/api/products/categories");
-      const categoryNames = res.data.categories;
-
-      const categoryData = await Promise.all(
-        categoryNames.map(async (catName: string) => {
-          try {
-            const productsRes = await axios.get(
-              `/api/products/categories/${encodeURIComponent(catName)}`
-            );
-            return {
-              name: catName,
-              productCount: productsRes.data.products?.length || 0,
-              products: productsRes.data.products || [],
-            };
-          } catch {
-            return { name: catName, productCount: 0, products: [] };
-          }
-        })
-      );
-      setCategories(categoryData);
+      setCategories(res.data.categorySummaries || []);
     } catch (error) {
       console.error("Failed to fetch categories:", error);
     } finally {
@@ -93,15 +75,9 @@ export default function CategoriesPage() {
   const handleDeleteCategory = async (categoryName: string) => {
     if (!confirm(`CONFIRM REMOVAL OF CLASS: "${categoryName}"?`)) return;
     try {
-      const category = categories.find(c => c.name === categoryName);
-      if (category?.products) {
-        for (const product of category.products) {
-          await axios.put("/api/products/update", {
-            id: product._id,
-            category: ""
-          });
-        }
-      }
+      await axios.patch(
+        `/api/products/categories/${encodeURIComponent(categoryName)}`
+      );
       fetchCategories();
     } catch (error) {
       console.error("Failed to delete category:", error);
@@ -269,6 +245,11 @@ export default function CategoriesPage() {
                 <p className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-40 italic">
                   Class_Load: {selectedCategory.productCount}_Active_Units
                 </p>
+                {selectedCategory.productCount > selectedCategory.products.length && (
+                  <p className="mt-2 text-[10px] font-bold uppercase opacity-50">
+                    Showing latest {selectedCategory.products.length} products
+                  </p>
+                )}
               </header>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

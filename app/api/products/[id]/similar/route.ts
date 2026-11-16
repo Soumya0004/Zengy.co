@@ -24,7 +24,9 @@ export async function GET(
     }
 
     
-    const product = await Collections.findById(id).lean();
+    const product = await Collections.findById(id)
+      .select("category")
+      .lean();
 
     if (!product) {
       return NextResponse.json([], { status: 404 });
@@ -35,6 +37,7 @@ export async function GET(
       _id: { $ne: new mongoose.Types.ObjectId(id) }, // ✅ safer comparison
       category: product.category, // ✅ faster than regex
     })
+      .select("_id title price img discount category")
       .limit(8)
       .lean();
 
@@ -47,6 +50,7 @@ export async function GET(
           },
         },
         { $sample: { size: 8 } }, // ✅ true random
+        { $project: { _id: 1, title: 1, price: 1, img: 1, discount: 1, category: 1 } },
       ]);
     }
 
