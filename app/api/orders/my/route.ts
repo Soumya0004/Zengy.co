@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/mongodb";
 import Order from "@/lib/models/Order";
+import Collections from "@/lib/models/Collections";
+import Address from "@/lib/models/Address";
 import { auth } from "@/auth";
 import mongoose from "mongoose";
 
@@ -53,8 +55,15 @@ export async function GET() {
       : { user: userId };
 
     const orders = await Order.find(query)
-      .populate("products.productId", "title img price")
-      .populate("address") // for showing address
+      .populate({
+        path: "products.productId",
+        model: Collections,
+        select: "title img price",
+      })
+      .populate({
+        path: "address",
+        model: Address,
+      })
       .sort({ createdAt: -1 })
       .lean<LeanUserOrder[]>(); // Directly specify our lean payload type mapping here
 
