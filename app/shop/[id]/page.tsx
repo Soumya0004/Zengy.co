@@ -191,8 +191,8 @@ export default function Page() {
       });
 
       if (res.data?.success) {
-        // 5. toast.success() is fully supported
         toast.success(`${product?.title} added to cart!`);
+        router.push("/cart");
       } else {
         toast.error(res.data?.message || "Failed to add to cart");
         console.error("Cart add failed:", res.data);
@@ -227,7 +227,7 @@ export default function Page() {
       });
 
       if (res.data?.success) {
-        router.push("/Cart");
+        router.push("/cart");
       } else {
         toast.error(res.data?.message || "Failed to process order");
         console.error("Cart add failed:", res.data);

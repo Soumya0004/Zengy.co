@@ -86,7 +86,8 @@ export default function RazorpayButton({
             });
 
             if (verifyRes.data.success) {
-              router.push("/profile/orderHistory");
+              router.replace("/profile/orderHistory");
+              router.refresh();
             } else {
               toast.error("Payment verification failed");
             }
