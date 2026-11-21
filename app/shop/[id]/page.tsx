@@ -7,6 +7,7 @@ import { useEffect, useState, useRef, useMemo, ReactNode } from "react";
 import { useSession } from "next-auth/react";
 import Loding from "@/app/Component/Loding";
 import Card from "@/app/Component/Card";
+import NotFound from "@/app/Component/NotFound";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -246,12 +247,7 @@ export default function Page() {
   /* ================= UI ================= */
 
   if (loading) return <Loding />;
-  if (!product)
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        Product not found
-      </div>
-    );
+  if (!product) return <NotFound />;
 
   return (
     <div ref={containerRef} className="bg-gray-50 min-h-screen py-28">
