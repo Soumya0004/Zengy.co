@@ -37,10 +37,12 @@ export default function Card({ product, isInWishlist = false, onToggleWishlist }
 
         {onToggleWishlist && (
           <button
+            type="button"
             onClick={(e) => {
               e.preventDefault();
               onToggleWishlist(product._id);
             }}
+            aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
             className="absolute top-2 right-2 z-10 p-2 bg-white/80 rounded-full shadow-sm hover:bg-white transition"
           >
             <Heart

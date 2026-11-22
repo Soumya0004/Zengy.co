@@ -2,9 +2,9 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Link } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -92,10 +92,11 @@ const Explore = () => {
               videoLoaded[0] ? "opacity-100" : "opacity-0"
             }`}
           />
-         <Link href="./shop">
-          <button className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white text-zinc-800 px-4 py-2 rounded-md font-medium shadow hover:bg-gray-100">
+          <Link
+            href="/shop"
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white text-zinc-800 px-4 py-2 rounded-md font-medium shadow hover:bg-gray-100"
+          >
             Explore Now
-          </button>
           </Link>
         </div>
 
@@ -123,11 +124,12 @@ const Explore = () => {
             }`}
           />
 
-         <Link href="./shop">
-           <button className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white text-zinc-800 px-4 py-2 rounded-md font-medium shadow hover:bg-gray-100">
+          <Link
+            href="/shop"
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white text-zinc-800 px-4 py-2 rounded-md font-medium shadow hover:bg-gray-100"
+          >
             Explore Now
-          </button>
-         </Link>
+          </Link>
         </div>
 
         {/* ---------------- RIGHT SIDE IMAGES ---------------- */}
@@ -159,9 +161,9 @@ const Explore = () => {
               <h3 className="font-semibold text-lg">
                 Stylish Winter T-Shirt for Men
               </h3>
-              <button className="mt-2 border border-zinc-900 px-3 py-1 text-sm rounded-md hover:bg-zinc-800 hover:text-white">
+              <Link href="/shop" className="mt-2 inline-block border border-zinc-900 px-3 py-1 text-sm rounded-md hover:bg-zinc-800 hover:text-white">
                 Check Now
-              </button>
+              </Link>
             </div>
           </div>
 
@@ -192,9 +194,9 @@ const Explore = () => {
               <h3 className="font-semibold text-lg">
                 Stylish Winter Shirt for Man
               </h3>
-              <button className="mt-2 border border-zinc-900 px-3 py-1 text-sm rounded-md hover:bg-zinc-800 hover:text-white text-zinc-800">
+              <Link href="/shop" className="mt-2 inline-block border border-zinc-900 px-3 py-1 text-sm rounded-md hover:bg-zinc-800 hover:text-white text-zinc-800">
                 Check Now
-              </button>
+              </Link>
             </div>
           </div>
 

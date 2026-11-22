@@ -87,6 +87,28 @@ export default function AnalyticsPage() {
     ? Math.max(...data.revenueByMonth.map(r => r.revenue)) 
     : 0;
 
+  const exportAnalytics = () => {
+    const rows = [
+      ["section", "label", "value"],
+      ...Object.entries(data.overview).map(([label, value]) => ["overview", label, String(value)]),
+      ...data.revenueByMonth.map((item) => ["revenue_by_month", item.month, `${item.revenue}; orders=${item.orders}`]),
+      ...data.topProducts.map((item) => ["top_product", item.product.title, `sold=${item.totalSold}; revenue=${item.revenue}`]),
+      ...data.topCategories.map((item) => ["top_category", item.category, `orders=${item.orders}; revenue=${item.revenue}`]),
+      ...Object.entries(data.ordersByStatus).map(([label, value]) => ["orders_by_status", label, String(value)]),
+      ...data.recentActivity.map((item) => ["recent_activity", item.timestamp, item.description]),
+      ...Object.entries(data.userStats).map(([label, value]) => ["user_stats", label, String(value)]),
+    ];
+    const csv = rows
+      .map((row) => row.map((value) => `"${value.replace(/"/g, '""')}"`).join(","))
+      .join("\r\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const downloadLink = document.createElement("a");
+    downloadLink.href = url;
+    downloadLink.download = "zengy-analytics.csv";
+    downloadLink.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
   return (
     <div className="space-y-10 bg-[#fdfdfd] min-h-screen text-black p-2 md:p-4 pb-20">
       {/* Header Section */}
@@ -108,7 +130,7 @@ export default function AnalyticsPage() {
               <option value="90">Range: 90_Days</option>
             </select>
           </div>
-          <button className="flex items-center gap-3 px-6 py-3 bg-black text-white hover:bg-[#ffdf00] hover:text-black transition-all duration-300 group">
+          <button type="button" onClick={exportAnalytics} className="flex items-center gap-3 px-6 py-3 bg-black text-white hover:bg-[#ffdf00] hover:text-black transition-all duration-300 group">
             <Download size={16} />
             <span className="text-xs font-black uppercase tracking-widest">Export_Data</span>
           </button>

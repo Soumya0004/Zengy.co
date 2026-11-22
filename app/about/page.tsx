@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
+import Link from "next/link";
 import { ImageTrail } from "@/components/ui/image-trail";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -254,7 +255,7 @@ export default function AboutUs() {
         </section>
 
         {/* Contact Section */}
-        <section className="relative px-6 lg:px-20 py-5 mt-32 flex flex-col items-center justify-center text-center">
+        <section id="contact-us" className="relative px-6 lg:px-20 py-5 mt-32 flex flex-col items-center justify-center text-center">
           <h2 className="text-5xl md:text-7xl font-bold relative inline-block">
             <span className="relative z-10">CONTACT US</span>
             <svg
@@ -276,9 +277,9 @@ export default function AboutUs() {
           <p className="mt-6 text-gray-500 text-lg">
             Let’s build something great together. Reach out today.
           </p>
-          <button className="mt-8 px-8 py-3 bg-green-400 text-black rounded-full font-semibold hover:bg-green-300 transition">
+          <Link href="/about#contact-us" className="mt-8 px-8 py-3 bg-green-400 text-black rounded-full font-semibold hover:bg-green-300 transition">
             Get in Touch →
-          </button>
+          </Link>
         </section>
       </div>
     </div>

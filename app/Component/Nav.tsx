@@ -279,7 +279,12 @@ export default function Nav() {
               </button>
             )}
 
-            <button onClick={() => setOpen(!open)}>
+            <button
+              type="button"
+              aria-label={open ? "Close navigation menu" : "Open navigation menu"}
+              aria-expanded={open}
+              onClick={() => setOpen(!open)}
+            >
               {open ? <X /> : <Menu />}
             </button>
           </div>

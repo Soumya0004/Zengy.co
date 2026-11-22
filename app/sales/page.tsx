@@ -49,10 +49,8 @@ export default function SalePage() {
           Limited-time deals on premium fashion. Grab your favorites before they’re gone.
         </p>
 
-        <Link href="/shop">
-          <button className="mt-8 px-8 py-3 bg-black text-white rounded-full hover:scale-105 transition">
+        <Link href="/shop" className="mt-8 inline-block px-8 py-3 bg-black text-white rounded-full hover:scale-105 transition">
             Shop Now
-          </button>
         </Link>
       </section>
 
@@ -99,10 +97,8 @@ export default function SalePage() {
             />
             <div className="absolute inset-0 bg-black/40 flex flex-col justify-end p-6 text-white">
               <h3 className="text-xl font-bold">Up to 50% Off</h3>
-              <Link href="/shop">
-                <button className="mt-2 text-sm underline">
+              <Link href="/shop" className="mt-2 inline-block text-sm underline">
                   Explore
-                </button>
               </Link>
             </div>
           </div>
@@ -116,10 +112,8 @@ export default function SalePage() {
             />
             <div className="absolute inset-0 bg-black/40 flex flex-col justify-end p-6 text-white">
               <h3 className="text-xl font-bold">Trending Now</h3>
-              <Link href="/shop">
-                <button className="mt-2 text-sm underline">
+              <Link href="/shop" className="mt-2 inline-block text-sm underline">
                   Explore
-                </button>
               </Link>
             </div>
           </div>
@@ -133,10 +127,8 @@ export default function SalePage() {
             />
             <div className="absolute inset-0 bg-black/40 flex flex-col justify-end p-6 text-white">
               <h3 className="text-xl font-bold">New Arrivals</h3>
-              <Link href="/shop">
-                <button className="mt-2 text-sm underline">
+              <Link href="/shop" className="mt-2 inline-block text-sm underline">
                   Explore
-                </button>
               </Link>
             </div>
           </div>

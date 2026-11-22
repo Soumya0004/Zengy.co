@@ -5,7 +5,6 @@ import {
   User, 
   Bell, 
   Shield, 
-  Palette,
   Save,
   Loader2,
   ChevronRight,
@@ -72,10 +71,10 @@ export default function SettingsPage() {
               { icon: User, label: "Core_General", id: "general", active: true },
               { icon: Bell, label: "Alert_Triggers", id: "notifications" },
               { icon: Shield, label: "Access_Security", id: "security" },
-              { icon: Palette, label: "Brand_Visuals", id: "appearance" },
             ].map((item) => (
-              <button
+              <a
                 key={item.id}
+                href={`#${item.id}`}
                 className={`w-full flex items-center justify-between group px-4 py-4 border-2 transition-all duration-200 ${
                   item.active ? "bg-black border-zinc-900 text-white" : "bg-white border-transparent hover:border-zinc-900 text-black/60 hover:text-black"
                 }`}
@@ -85,7 +84,7 @@ export default function SettingsPage() {
                   <span className="text-[10px] font-black uppercase tracking-widest">{item.label}</span>
                 </div>
                 <ChevronRight size={14} className={`transition-transform ${item.active ? "opacity-100" : "opacity-0 group-hover:opacity-100 translate-x-[-4px] group-hover:translate-x-0"}`} />
-              </button>
+              </a>
             ))}
           </div>
         </div>
@@ -94,7 +93,7 @@ export default function SettingsPage() {
         <div className="lg:col-span-3 space-y-10">
           
           {/* General Section */}
-          <section className="bg-white border-2 border-zinc-900 p-8 relative">
+          <section id="general" className="bg-white border-2 border-zinc-900 p-8 relative">
             <div className="absolute -top-3 -left-1 bg-black text-white px-2 py-0.5 text-[8px] font-black uppercase">Section_01</div>
             <h2 className="text-xl font-black uppercase tracking-tighter italic mb-8 flex items-center gap-2">
               <span className="w-2 h-2 bg-black rounded-full"></span> General_Identity
@@ -146,7 +145,7 @@ export default function SettingsPage() {
           </section>
 
           {/* Notifications Section */}
-          <section className="bg-black text-white p-8 rounded-br-[80px]">
+          <section id="notifications" className="bg-black text-white p-8 rounded-br-[80px]">
             <h2 className="text-xl font-black uppercase tracking-tighter italic mb-8 flex items-center gap-2">
               <span className="w-2 h-2 bg-white rounded-full"></span> Alert_Matrix
             </h2>
@@ -178,15 +177,15 @@ export default function SettingsPage() {
 
           {/* Security & Account */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <section className="border-2 border-zinc-900 p-6 bg-white">
+            <section id="security" className="border-2 border-zinc-900 p-6 bg-white">
               <h3 className="text-xs font-black uppercase tracking-widest mb-6 flex items-center gap-2">
                 <ShieldCheck size={14} /> Security_Protocol
               </h3>
               <div className="space-y-4">
-                <button className="w-full bg-black text-white p-3 text-[10px] font-black uppercase tracking-tighter hover:bg-[#ffdf00] hover:text-black transition-colors">
+                <button type="button" disabled title="Two-factor authentication is not configured" className="w-full bg-black text-white p-3 text-[10px] font-black uppercase tracking-tighter opacity-50 cursor-not-allowed">
                   Activate_2FA
                 </button>
-                <button className="w-full border-2 border-zinc-900 p-3 text-[10px] font-black uppercase tracking-tighter hover:bg-gray-100 transition-colors">
+                <button type="button" disabled title="Authentication key reset is not configured" className="w-full border-2 border-zinc-900 p-3 text-[10px] font-black uppercase tracking-tighter opacity-50 cursor-not-allowed">
                   Reset_Auth_Keys
                 </button>
               </div>

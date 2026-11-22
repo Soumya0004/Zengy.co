@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import Image from "next/image";
 import React, { useRef, useEffect } from "react";
 import { gsap } from "gsap";
@@ -142,10 +143,10 @@ const Promotion: React.FC = () => {
               <b>v</b>al
             </p>
             <Button
+              asChild
               className="mt-6 sm:mt-8 cursor-pointer bg-blue-50 text-black hover:text-white px-4 sm:px-4 py-2 sm:py-1 rounded-xl text-sm sm:text-base"
-              id="contact-us"
             >
-              Explore Now
+              <Link href="/shop">Explore Now</Link>
             </Button>
           </div>
         </div>

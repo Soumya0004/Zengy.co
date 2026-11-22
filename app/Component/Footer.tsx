@@ -34,10 +34,10 @@ const Footer = () => {
               <Link href="/privacy-policy" className="hover:text-white">
                 Privacy Policy
               </Link>
-              <Link href="/about " className="hover:text-white">
+              <Link href="/about" className="hover:text-white">
                 About Us
               </Link>
-              <Link href="/contact-us" className="hover:text-white">
+              <Link href="/about#contact-us" className="hover:text-white">
                 Contact Us
               </Link>
             </div>
